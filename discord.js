@@ -209,8 +209,12 @@ router.get('/callback', async (req, res) => {
       console.error('[auth] Background guild scan failed:', err)
     );
 
-    // ── Step 8: Redirect to dashboard ────────────────────────────────────────
-    res.redirect('/dashboard');
+    // ── Step 8: Redirect to dashboard (Vercel frontend) ──────────────────────
+    // Set CORS headers for cross-origin cookie (for Vercel frontend)
+    res.setHeader('Access-Control-Allow-Origin', 'https://cordfold.vercel.app');
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    // Redirect to Vercel dashboard
+    res.redirect('https://cordfold.vercel.app/dashboard.html');
 
   } catch (err) {
     console.error('[auth] OAuth callback error:', err);

@@ -14,9 +14,7 @@ generator client {
 
 datasource db {
   provider  = "postgresql"
-  url       = env("DATABASE_URL")
   // Neon requires pgbouncer for connection pooling in serverless
-  directUrl = env("DATABASE_URL_DIRECT") // non-pooled for migrations
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
