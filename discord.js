@@ -245,7 +245,7 @@ router.get('/callback', async (req, res) => {
         console.error('[auth] Session save error:', err);
         return res.redirect('/?error=session');
       }
-      res.redirect('https://dashboard.cordfol.org/');
+      res.redirect('https://dashboard.cordfol.org/dashboard.html');
     });
 
   } catch (err) {
