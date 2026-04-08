@@ -1,10 +1,4 @@
-// ── CORS for cross-domain session sharing ───────────────────────────────────
 const cors = require('cors');
-const FRONTEND_ORIGIN = 'https://cordfold.vercel.app';
-app.use(cors({
-  origin: FRONTEND_ORIGIN,
-  credentials: true,
-}));
 // ─────────────────────────────────────────────────────────────────────────────
 // Cordfol.io — Express Server Entry Point (server.js)
 //
@@ -27,10 +21,18 @@ const connectPg    = require('connect-pg-simple');
 const { Pool }     = require('pg');
 const path         = require('path');
 
+
 const { router: authRouter }   = require('./discord');
 const { router: verifyRouter } = require('./scan');
 const app  = express();
 const PORT = process.env.PORT || 3000;
+
+// ── CORS for cross-domain session sharing ───────────────────────────────────
+const FRONTEND_ORIGIN = 'https://cordfold.vercel.app';
+app.use(cors({
+  origin: FRONTEND_ORIGIN,
+  credentials: true,
+}));
 
 // ── Database pool (shared) ────────────────────────────────────────────────────
 const db = new Pool({
@@ -167,6 +169,36 @@ app.get('/api/profile/:slug', async (req, res) => {
 
   } catch (err) {
     console.error('[server] /api/profile error:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// POST /api/profile — update user profile (auth required)
+app.post('/api/profile', async (req, res) => {
+  try {
+    const userId = req.session?.userId;
+    if (!userId) return res.status(401).json({ error: 'Not authenticated' });
+
+    const { display_name, slug, bio, social_links } = req.body;
+    if (!slug || !display_name) return res.status(400).json({ error: 'Missing required fields' });
+
+    // Check for slug conflict
+    const conflict = await db.query('SELECT id FROM users WHERE slug = $1 AND id != $2', [slug, userId]);
+    if (conflict.rowCount > 0) return res.status(409).json({ error: 'Slug already taken' });
+
+    await db.query(`
+      UPDATE users SET
+        display_name = $1,
+        slug = $2,
+        bio = $3,
+        social_links = $4,
+        updated_at = NOW()
+      WHERE id = $5
+    `, [display_name, slug, bio, social_links, userId]);
+
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('[server] /api/profile POST error:', err);
     res.status(500).json({ error: 'Server error' });
   }
 });
