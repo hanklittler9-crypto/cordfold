@@ -1017,12 +1017,12 @@ async function loadRoles(user) {
     }
     roleList.innerHTML = data.roles.map(role => `
       <div class="role-row">
-        <div class="server-icon" style="background:rgba(88,101,242,0.15);color:#8b9fff">${role.guild_name ? role.guild_name[0] : '?'}</div>
+        <div class="server-icon" style="background:rgba(88,101,242,0.15);color:#8b9fff">${role.guildName ? role.guildName[0] : '?'}</div>
         <div class="role-info">
-          <div class="role-name">${role.role_name}</div>
-          <div class="role-meta">${role.guild_name}</div>
+          <div class="role-name">${role.roleName}</div>
+          <div class="role-meta">${role.guildName}</div>
         </div>
-        <div class="proof-chip"><div class="proof-dot" style="background:var(--neon)"></div>${role.proof_type}</div>
+        <div class="proof-chip"><div class="proof-dot" style="background:var(--neon)"></div>${role.proofType}</div>
         <div class="badge badge-v">Verified</div>
         <div class="toggle on"></div>
       </div>
@@ -1041,13 +1041,13 @@ async function loadProfile(user) {
     const res = await fetch(`${API_BASE}/profile/${user.slug}`);
     if (!res.ok) throw new Error('No profile');
     const data = await res.json();
-    document.getElementById('displayName').value = data.display_name || '';
-    document.getElementById('slug').value = data.slug || '';
-    document.getElementById('bioText').value = data.bio || '';
-    document.getElementById('twitterInput').value = data.social_links?.twitter || '';
-    document.getElementById('githubInput').value = data.social_links?.github || '';
-    document.getElementById('youtubeInput').value = data.social_links?.youtube || '';
-    document.getElementById('websiteInput').value = data.social_links?.website || '';
+    document.getElementById('displayName').value = data.profile.displayName || '';
+    document.getElementById('slug').value = data.profile.slug || '';
+    document.getElementById('bioText').value = data.profile.bio || '';
+    document.getElementById('twitterInput').value = data.profile.socialLinks?.twitter || '';
+    document.getElementById('githubInput').value = data.profile.socialLinks?.github || '';
+    document.getElementById('youtubeInput').value = data.profile.socialLinks?.youtube || '';
+    document.getElementById('websiteInput').value = data.profile.socialLinks?.website || '';
     updatePreview();
   } catch {
     // leave blank
@@ -1086,8 +1086,16 @@ function updatePreview() {
     <div class="lp-avatar">${document.getElementById('displayName').value[0] || '?'}</div>
     <div class="lp-name">${document.getElementById('displayName').value || ''}</div>
     <div class="lp-bio">${document.getElementById('bioText').value || ''}</div>
-    <div class="lp-roles">(roles update on save)</div>
+    <div class="lp-roles" id="lp-roles"></div>
   `;
+  // Load real roles into preview
+  fetch(`${API_BASE}/profile/${document.getElementById('slug').value}`)
+    .then(res => res.json())
+    .then(data => {
+      const roles = data.roles || [];
+      const rolesHtml = roles.map(role => `<div class="lp-role"><div class="lp-dot"></div>${role.roleName}</div>`).join('');
+      document.getElementById('lp-roles').innerHTML = rolesHtml;
+    });
 }
 
 function logout() {

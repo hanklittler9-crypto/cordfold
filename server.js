@@ -1,3 +1,10 @@
+// ── CORS for cross-domain session sharing ───────────────────────────────────
+const cors = require('cors');
+const FRONTEND_ORIGIN = 'https://cordfold.vercel.app';
+app.use(cors({
+  origin: FRONTEND_ORIGIN,
+  credentials: true,
+}));
 // ─────────────────────────────────────────────────────────────────────────────
 // Cordfol.io — Express Server Entry Point (server.js)
 //
@@ -46,9 +53,10 @@ app.use(session({
   saveUninitialized: false,
   cookie: {
     httpOnly: true,
-    secure:   process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
+    secure:   true,
+    sameSite: 'none',
     maxAge:   7 * 24 * 60 * 60 * 1000, // 7 days
+    domain:   '.onrender.com', // allow subdomains if needed, or remove if not needed
   },
 }));
 
