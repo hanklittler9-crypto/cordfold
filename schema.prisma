@@ -1,0 +1,190 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// Cordfol.io — Prisma Schema (prisma/schema.prisma)
+//
+// Run migrations:
+//   npx prisma migrate dev --name init
+//   npx prisma generate
+//
+// Neon PostgreSQL connection string goes in .env as DATABASE_URL
+// ─────────────────────────────────────────────────────────────────────────────
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  // Neon requires pgbouncer for connection pooling in serverless
+  directUrl = env("DATABASE_URL_DIRECT") // non-pooled for migrations
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ENUMS
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum Plan {
+  FREE
+  PRO
+  ENTERPRISE
+}
+
+enum ProofType {
+  OAUTH    // Verified via the user's own OAuth token (guilds.members.read)
+  BOT      // Verified via the helper bot sitting in the server
+  MANUAL   // Admin-approved override (e.g. for legacy roles)
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// USER
+// Central table. One row per Discord user who has logged in.
+// ─────────────────────────────────────────────────────────────────────────────
+
+model User {
+  id               String   @id @default(cuid())
+
+  // Discord identity
+  discordId        String   @unique  @map("discord_id")
+  discordUsername  String   @map("discord_username")
+  discriminator    String?           // Legacy #0000 tag; null for new usernames
+  avatarHash       String?  @map("avatar_hash")
+  email            String?  @unique
+
+  // Tokens — stored AES-256-GCM encrypted in application layer
+  accessToken      String   @map("access_token")
+  refreshToken     String   @map("refresh_token")
+  tokenExpiresAt   DateTime @map("token_expires_at")
+
+  // Public profile
+  slug             String   @unique  // cordfol.io/:slug
+  displayName      String?  @map("display_name")
+  bio              String?  @db.Text
+  avatarUrl        String?  @map("avatar_url")   // custom override (Pro)
+  bannerUrl        String?  @map("banner_url")   // Pro
+  socialLinks      Json     @default("[]") @map("social_links")
+  // Format: [{ platform: "twitter", url: "https://x.com/..." }, ...]
+
+  // Monetization
+  plan             Plan     @default(FREE)
+  planExpiresAt    DateTime? @map("plan_expires_at")
+  stripeCustomerId String?   @unique @map("stripe_customer_id")
+
+  // Relations
+  theme            Theme?   @relation(fields: [themeId], references: [id])
+  themeId          String?  @map("theme_id")
+  verifiedRoles    VerifiedRole[]
+  analyticsEvents  AnalyticsEvent[]
+
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt      @map("updated_at")
+
+  @@index([slug])
+  @@index([discordId])
+  @@index([updatedAt])  // Used by background re-verifier to find stale users
+  @@map("users")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// VERIFIED ROLE
+// One row per unique (user, guild, role) combination.
+// The compound unique key prevents duplicates and enables safe upserts.
+// ─────────────────────────────────────────────────────────────────────────────
+
+model VerifiedRole {
+  id             String    @id @default(cuid())
+
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId         String    @map("user_id")
+
+  // Discord server (guild)
+  guildId        String    @map("guild_id")
+  guildName      String    @map("guild_name")
+  guildIconHash  String?   @map("guild_icon_hash")
+
+  // Discord role
+  roleId         String    @map("role_id")
+  roleName       String    @map("role_name")
+  roleColor      Int?      @map("role_color")  // Discord stores color as integer (hex)
+
+  // Verification metadata
+  verifiedAt     DateTime  @default(now()) @map("verified_at")
+  lastCheckedAt  DateTime  @default(now()) @map("last_checked_at")
+  isActive       Boolean   @default(true)  @map("is_active")
+  // isActive = false means user left the server or lost the role.
+  // We keep the row for history — it just won't show on the public profile.
+  proofType      ProofType @default(OAUTH)  @map("proof_type")
+  // If both OAuth and Bot have verified this role, proof_type = BOT (stronger).
+
+  // Display preferences
+  isPublic       Boolean   @default(true)  @map("is_public")
+  displayOrder   Int       @default(0)     @map("display_order")
+  customLabel    String?   @map("custom_label")  // e.g. "Head Mod" instead of "Moderator"
+
+  @@unique([userId, guildId, roleId])  // Enables ON CONFLICT upserts
+  @@index([userId])
+  @@index([guildId])
+  @@index([isActive])
+  @@map("verified_roles")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// THEME
+// Preset themes live here. Users reference one via themeId.
+// Pro users can fork a preset and customize it.
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Theme {
+  id              String   @id @default(cuid())
+  name            String
+  isDefault       Boolean  @default(false) @map("is_default")
+  isPreset        Boolean  @default(false) @map("is_preset")  // Cordfol built-in
+  isPro           Boolean  @default(false) @map("is_pro")     // Requires Pro plan
+
+  // Colors
+  backgroundColor String   @default("#0d0d0d") @map("background_color")
+  accentColor     String   @default("#5865F2")  @map("accent_color")
+  textColor       String   @default("#ffffff")  @map("text_color")
+  cardColor       String   @default("#111111")  @map("card_color")
+
+  // Glassmorphism (Pro only)
+  glassEnabled    Boolean  @default(false) @map("glass_enabled")
+  glassBlur       Int      @default(12)    @map("glass_blur")     // px
+  glassOpacity    Float    @default(0.15)  @map("glass_opacity")  // 0–1
+  animatedBg      Boolean  @default(false) @map("animated_bg")
+
+  // Custom CSS (Pro only — sandboxed via iframe)
+  customCss       String?  @db.Text @map("custom_css")
+
+  // Music (Pro only)
+  musicUrl        String?  @map("music_url")
+  musicAutoplay   Boolean  @default(false) @map("music_autoplay")
+
+  users           User[]
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  @@map("themes")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ANALYTICS EVENT
+// Lightweight event log. Kept separate from users table to allow easy pruning.
+// We don't track IPs or personal data — just aggregate counts per profile.
+// ─────────────────────────────────────────────────────────────────────────────
+
+model AnalyticsEvent {
+  id        String   @id @default(cuid())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String   @map("user_id")
+
+  // Event types: "profile_view" | "role_click" | "link_click" | "share"
+  type      String
+  // Extra data: { roleId, linkPlatform, referrer, country, etc. }
+  metadata  Json?
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([userId, createdAt])  // Fast queries for analytics dashboard
+  @@index([createdAt])          // For global stats and cleanup jobs
+  @@map("analytics_events")
+}

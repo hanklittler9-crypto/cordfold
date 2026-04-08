@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Cordfol.io — Your Discord Identity, Verified.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Bebas+Neue&family=DM+Sans:wght@300;400;500&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet"/>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --bg:#080808;
+  --surface:#111111;
+  --surface2:#1a1a1a;
+  --discord:#5865F2;
+  --neon:#00FFB2;
+  --hot:#FF3366;
+  --amber:#FFB800;
+  --text:#F0F0F0;
+  --muted:#666;
+}
+html{scroll-behavior:smooth;}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:'DM Sans',sans-serif;
+  overflow-x:hidden;
+  cursor:none;
+}
+
+/* custom cursor */
+#cursor{
+  position:fixed;width:12px;height:12px;background:var(--neon);
+  border-radius:50%;pointer-events:none;z-index:9999;
+  transform:translate(-50%,-50%);transition:transform 0.1s;
+  mix-blend-mode:difference;
+}
+#cursor-trail{
+  position:fixed;width:32px;height:32px;border:1.5px solid var(--neon);
+  border-radius:50%;pointer-events:none;z-index:9998;
+  transform:translate(-50%,-50%);transition:left 0.15s,top 0.15s;
+  opacity:0.4;
+}
+
+/* noise overlay */
+body::before{
+  content:'';position:fixed;inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events:none;z-index:1000;opacity:0.5;
+}
+
+/* scrollbar */
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-track{background:var(--bg);}
+::-webkit-scrollbar-thumb{background:var(--discord);}
+
+/* nav */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  padding:18px 40px;
+  display:flex;align-items:center;justify-content:space-between;
+  border-bottom:1px solid rgba(255,255,255,0.05);
+  background:rgba(8,8,8,0.85);
+  backdrop-filter:blur(12px);
+}
+.nav-logo{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:22px;letter-spacing:2px;
+  color:var(--text);
+}
+.nav-logo span{color:var(--discord);}
+.nav-links{display:flex;gap:28px;align-items:center;}
+.nav-links a{
+  font-family:'Space Mono',monospace;font-size:11px;
+  color:var(--muted);text-decoration:none;letter-spacing:1px;
+  text-transform:uppercase;transition:color 0.2s;
+}
+.nav-links a:hover{color:var(--text);}
+.nav-cta{
+  font-family:'Space Mono',monospace;font-size:11px;letter-spacing:1px;
+  padding:9px 20px;background:var(--discord);color:white;
+  border:none;border-radius:6px;cursor:pointer;text-decoration:none;
+  transition:background 0.2s,transform 0.1s;
+}
+.nav-cta:hover{background:#4752C4;transform:translateY(-1px);}
+
+/* hero */
+.hero{
+  min-height:100vh;display:flex;flex-direction:column;
+  justify-content:center;padding:120px 40px 80px;
+  position:relative;overflow:hidden;
+}
+.hero-grid{
+  position:absolute;inset:0;
+  background-image:
+    linear-gradient(rgba(88,101,242,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(88,101,242,0.04) 1px, transparent 1px);
+  background-size:60px 60px;
+  animation:gridpulse 8s ease-in-out infinite;
+}
+@keyframes gridpulse{0%,100%{opacity:0.5;}50%{opacity:1;}}
+
+.hero-eyebrow{
+  font-family:'Space Mono',monospace;font-size:11px;
+  letter-spacing:3px;color:var(--neon);text-transform:uppercase;
+  margin-bottom:20px;opacity:0;animation:fadein 0.6s 0.2s forwards;
+}
+.hero-title{
+  font-family:'Black Han Sans',sans-serif;
+  font-size:clamp(56px,10vw,130px);
+  line-height:0.9;letter-spacing:-2px;
+  margin-bottom:24px;
+  opacity:0;animation:fadein 0.6s 0.4s forwards;
+}
+.hero-title .line1{display:block;color:var(--text);}
+.hero-title .line2{
+  display:block;
+  -webkit-text-stroke:2px var(--discord);
+  color:transparent;
+  position:relative;
+}
+.hero-title .line2::after{
+  content:attr(data-text);
+  position:absolute;left:4px;top:4px;
+  -webkit-text-stroke:2px var(--hot);
+  color:transparent;
+  z-index:-1;
+}
+.hero-title .line3{display:block;color:var(--neon);}
+
+.hero-sub{
+  font-size:17px;color:rgba(240,240,240,0.6);
+  max-width:480px;line-height:1.7;margin-bottom:40px;
+  opacity:0;animation:fadein 0.6s 0.6s forwards;
+}
+.hero-actions{
+  display:flex;gap:14px;flex-wrap:wrap;
+  opacity:0;animation:fadein 0.6s 0.8s forwards;
+}
+.btn-primary{
+  padding:14px 32px;background:var(--discord);color:white;
+  font-family:'Space Mono',monospace;font-size:13px;letter-spacing:1px;
+  border:none;border-radius:8px;cursor:pointer;text-decoration:none;
+  transition:all 0.2s;display:inline-flex;align-items:center;gap:8px;
+}
+.btn-primary:hover{background:#4752C4;transform:translateY(-2px);box-shadow:0 8px 30px rgba(88,101,242,0.4);}
+.btn-outline{
+  padding:14px 32px;background:transparent;color:var(--text);
+  font-family:'Space Mono',monospace;font-size:13px;letter-spacing:1px;
+  border:1px solid rgba(255,255,255,0.2);border-radius:8px;cursor:pointer;text-decoration:none;
+  transition:all 0.2s;
+}
+.btn-outline:hover{border-color:var(--neon);color:var(--neon);}
+
+/* floating emoji badges */
+.emoji-field{
+  position:absolute;right:0;top:0;bottom:0;
+  width:50%;pointer-events:none;
+  opacity:0;animation:fadein 1s 1s forwards;
+}
+.emoji-badge{
+  position:absolute;
+  background:var(--surface);border:1px solid rgba(255,255,255,0.08);
+  border-radius:12px;padding:10px 16px;
+  font-family:'Space Mono',monospace;font-size:12px;
+  display:flex;align-items:center;gap:8px;
+  white-space:nowrap;
+}
+.emoji-badge .ico{font-size:20px;animation:spin 4s linear infinite;}
+.emoji-badge .ico.rev{animation:spinrev 3s linear infinite;}
+.emoji-badge .ico.slow{animation:spin 8s linear infinite;}
+@keyframes spin{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
+@keyframes spinrev{from{transform:rotate(0deg);}to{transform:rotate(-360deg);}}
+.badge-green{border-color:rgba(0,255,178,0.3);color:var(--neon);}
+.badge-blue{border-color:rgba(88,101,242,0.4);color:#8b9fff;}
+.badge-red{border-color:rgba(255,51,102,0.3);color:var(--hot);}
+.badge-amber{border-color:rgba(255,184,0,0.3);color:var(--amber);}
+
+.float1{top:20%;right:8%;animation:float1 6s ease-in-out infinite;}
+.float2{top:38%;right:22%;animation:float2 7s ease-in-out infinite 0.5s;}
+.float3{top:55%;right:6%;animation:float1 5s ease-in-out infinite 1s;}
+.float4{top:68%;right:30%;animation:float2 8s ease-in-out infinite 0.2s;}
+.float5{top:14%;right:35%;animation:float1 7s ease-in-out infinite 1.5s;}
+.float6{top:82%;right:15%;animation:float2 6s ease-in-out infinite 0.8s;}
+@keyframes float1{0%,100%{transform:translateY(0);}50%{transform:translateY(-14px);}}
+@keyframes float2{0%,100%{transform:translateY(0);}50%{transform:translateY(10px);}}
+
+/* ticker */
+.ticker-wrap{
+  overflow:hidden;border-top:1px solid rgba(255,255,255,0.06);
+  border-bottom:1px solid rgba(255,255,255,0.06);
+  padding:14px 0;background:var(--surface);
+}
+.ticker{
+  display:flex;gap:0;
+  animation:ticker 30s linear infinite;
+  width:max-content;
+}
+.ticker-item{
+  font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:3px;
+  padding:0 40px;color:var(--muted);white-space:nowrap;
+  display:flex;align-items:center;gap:16px;
+}
+.ticker-item span{color:var(--discord);}
+.ticker-dot{width:5px;height:5px;border-radius:50%;background:var(--discord);}
+@keyframes ticker{from{transform:translateX(0);}to{transform:translateX(-50%);}}
+
+/* stats */
+.stats-section{padding:100px 40px;position:relative;}
+.stats-label{
+  font-family:'Space Mono',monospace;font-size:11px;
+  letter-spacing:3px;color:var(--discord);text-transform:uppercase;
+  margin-bottom:60px;
+}
+.stats-grid{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+  gap:2px;
+}
+.stat-card{
+  background:var(--surface);padding:40px 32px;
+  border:1px solid rgba(255,255,255,0.04);
+  transition:border-color 0.2s,background 0.2s;
+}
+.stat-card:hover{border-color:rgba(88,101,242,0.4);background:var(--surface2);}
+.stat-num{
+  font-family:'Bebas Neue',sans-serif;font-size:64px;letter-spacing:-1px;
+  line-height:1;margin-bottom:8px;
+}
+.stat-num.blue{color:var(--discord);}
+.stat-num.green{color:var(--neon);}
+.stat-num.red{color:var(--hot);}
+.stat-num.amber{color:var(--amber);}
+.stat-label{font-size:13px;color:var(--muted);letter-spacing:0.5px;}
+
+/* features */
+.features-section{padding:100px 40px;background:var(--surface);}
+.section-header{
+  display:flex;align-items:flex-end;justify-content:space-between;
+  margin-bottom:60px;
+  border-bottom:1px solid rgba(255,255,255,0.06);
+  padding-bottom:24px;
+}
+.section-title{
+  font-family:'Black Han Sans',sans-serif;
+  font-size:clamp(36px,6vw,72px);line-height:0.95;
+}
+.section-title .accent{color:var(--discord);}
+.section-number{
+  font-family:'Space Mono',monospace;font-size:11px;
+  color:var(--muted);letter-spacing:2px;
+}
+.features-grid{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+  gap:2px;
+}
+.feature-card{
+  padding:36px 32px;background:var(--bg);
+  border:1px solid rgba(255,255,255,0.04);
+  transition:all 0.2s;position:relative;overflow:hidden;
+}
+.feature-card::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(88,101,242,0.06),transparent);
+  opacity:0;transition:opacity 0.3s;
+}
+.feature-card:hover::before{opacity:1;}
+.feature-card:hover{border-color:rgba(88,101,242,0.3);transform:translateY(-2px);}
+.feature-ico{
+  font-size:28px;margin-bottom:20px;
+  display:inline-block;
+}
+.feature-ico.spin{animation:spin 6s linear infinite;}
+.feature-ico.spin2{animation:spinrev 8s linear infinite;}
+.feature-name{
+  font-family:'Bebas Neue',sans-serif;font-size:24px;
+  letter-spacing:1px;margin-bottom:12px;
+}
+.feature-desc{font-size:14px;color:rgba(240,240,240,0.5);line-height:1.7;}
+.feature-tag{
+  display:inline-block;margin-top:16px;
+  font-family:'Space Mono',monospace;font-size:10px;letter-spacing:1px;
+  padding:4px 10px;border-radius:4px;
+}
+.tag-free{background:rgba(0,255,178,0.1);color:var(--neon);}
+.tag-pro{background:rgba(255,184,0,0.1);color:var(--amber);}
+
+/* how it works */
+.how-section{padding:100px 40px;}
+.steps{display:flex;flex-direction:column;gap:0;}
+.step{
+  display:grid;grid-template-columns:80px 1fr;gap:32px;
+  align-items:start;padding:40px 0;
+  border-bottom:1px solid rgba(255,255,255,0.05);
+  transition:background 0.2s;
+}
+.step:last-child{border-bottom:none;}
+.step-num{
+  font-family:'Bebas Neue',sans-serif;font-size:72px;line-height:1;
+  color:rgba(255,255,255,0.07);
+  transition:color 0.2s;
+}
+.step:hover .step-num{color:var(--discord);}
+.step-title{
+  font-family:'Black Han Sans',sans-serif;font-size:28px;
+  margin-bottom:10px;
+}
+.step-desc{font-size:14px;color:rgba(240,240,240,0.5);line-height:1.8;max-width:560px;}
+.step-chip{
+  display:inline-flex;align-items:center;gap:6px;margin-top:14px;
+  font-family:'Space Mono',monospace;font-size:10px;letter-spacing:1px;
+  padding:5px 12px;border-radius:4px;
+  background:rgba(88,101,242,0.12);color:#8b9fff;
+  border:1px solid rgba(88,101,242,0.2);
+}
+
+/* CTA bottom */
+.cta-section{
+  padding:120px 40px;text-align:center;
+  background:var(--surface);
+  position:relative;overflow:hidden;
+}
+.cta-section::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse 60% 60% at 50% 50%,rgba(88,101,242,0.12),transparent);
+}
+.cta-title{
+  font-family:'Black Han Sans',sans-serif;
+  font-size:clamp(48px,8vw,100px);line-height:0.95;
+  margin-bottom:28px;position:relative;
+}
+.cta-title .ghost{
+  display:block;
+  -webkit-text-stroke:1.5px rgba(255,255,255,0.15);
+  color:transparent;font-size:0.7em;
+}
+.cta-sub{
+  font-size:16px;color:rgba(240,240,240,0.5);
+  max-width:440px;margin:0 auto 44px;line-height:1.7;position:relative;
+}
+.cta-btn{
+  display:inline-flex;align-items:center;gap:10px;
+  padding:18px 44px;background:var(--discord);color:white;
+  font-family:'Space Mono',monospace;font-size:14px;letter-spacing:1px;
+  border:none;border-radius:10px;cursor:pointer;text-decoration:none;
+  transition:all 0.25s;position:relative;
+}
+.cta-btn:hover{transform:translateY(-3px);box-shadow:0 16px 48px rgba(88,101,242,0.5);}
+.cta-badge{
+  position:absolute;top:-10px;right:-10px;
+  background:var(--hot);color:white;font-size:9px;
+  padding:3px 8px;border-radius:10px;font-weight:700;letter-spacing:1px;
+}
+
+/* social proof row */
+.proof-row{
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  margin-top:32px;position:relative;
+}
+.proof-avatar{
+  width:32px;height:32px;border-radius:50%;
+  border:2px solid var(--bg);margin-left:-8px;
+  font-size:13px;display:flex;align-items:center;justify-content:center;
+}
+.proof-text{font-size:12px;color:var(--muted);margin-left:8px;}
+.proof-text strong{color:var(--text);}
+
+/* footer */
+footer{
+  padding:40px;border-top:1px solid rgba(255,255,255,0.06);
+  display:flex;align-items:center;justify-content:space-between;
+  flex-wrap:wrap;gap:16px;
+}
+.footer-logo{
+  font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;
+}
+.footer-logo span{color:var(--discord);}
+.footer-links{display:flex;gap:24px;}
+.footer-links a{
+  font-family:'Space Mono',monospace;font-size:10px;letter-spacing:1px;
+  color:var(--muted);text-decoration:none;text-transform:uppercase;
+  transition:color 0.2s;
+}
+.footer-links a:hover{color:var(--text);}
+.footer-right{
+  font-family:'Space Mono',monospace;font-size:10px;
+  color:var(--muted);letter-spacing:1px;
+}
+
+@keyframes fadein{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
+
+/* verified showcase */
+.showcase-section{padding:100px 40px;}
+.showcase-scroll{
+  display:flex;gap:16px;overflow-x:auto;padding-bottom:16px;
+  scrollbar-width:thin;scrollbar-color:var(--discord) var(--bg);
+}
+.showcase-card{
+  min-width:260px;background:var(--surface);
+  border:1px solid rgba(255,255,255,0.06);border-radius:12px;
+  padding:24px;flex-shrink:0;
+  transition:border-color 0.2s,transform 0.2s;
+}
+.showcase-card:hover{border-color:rgba(88,101,242,0.4);transform:translateY(-4px);}
+.sc-avatar{
+  width:48px;height:48px;border-radius:50%;margin-bottom:14px;
+  font-size:20px;display:flex;align-items:center;justify-content:center;
+  background:var(--surface2);
+}
+.sc-name{font-weight:500;font-size:15px;margin-bottom:3px;}
+.sc-handle{font-family:'Space Mono',monospace;font-size:11px;color:var(--muted);margin-bottom:14px;}
+.sc-roles{display:flex;flex-direction:column;gap:6px;}
+.sc-role{
+  display:flex;align-items:center;gap:7px;
+  font-size:12px;padding:6px 10px;
+  background:rgba(255,255,255,0.03);border-radius:6px;
+  border:1px solid rgba(255,255,255,0.05);
+}
+.sc-role-dot{width:7px;height:7px;border-radius:50%;background:var(--neon);flex-shrink:0;}
+.sc-verified{
+  margin-top:12px;font-family:'Space Mono',monospace;
+  font-size:9px;letter-spacing:1px;color:var(--neon);
+  display:flex;align-items:center;gap:5px;
+}
+</style>
+</head>
+<body>
+<div id="cursor"></div>
+<div id="cursor-trail"></div>
+
+<nav>
+  <div class="nav-logo">CORD<span>FOL</span>.IO</div>
+  <div class="nav-links">
+    <a href="#features">Features</a>
+    <a href="#how">How it works</a>
+    <a href="#profiles">Profiles</a>
+    <a href="dashboard.html" class="nav-cta">Login with Discord</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-grid"></div>
+  <div class="hero-eyebrow">// Discord Identity Platform v2.0</div>
+  <h1 class="hero-title">
+    <span class="line1">YOUR</span>
+    <span class="line2" data-text="DISCORD">DISCORD</span>
+    <span class="line3">VERIFIED.</span>
+  </h1>
+  <p class="hero-sub">The only portfolio platform that cryptographically proves your server history. No faking roles. No lying about experience. Just raw, verified proof.</p>
+  <div class="hero-actions">
+    <a href="dashboard.html" class="btn-primary">
+      <svg width="18" height="14" viewBox="0 0 71 55" fill="none" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#clip)"><path d="M60.1045 4.8978C55.5792 2.8214 50.7265 1.2916 45.6527 0.41542C45.5603 0.39851 45.468 0.44077 45.4204 0.52529C44.7963 1.6353 44.105 3.0834 43.6209 4.2216C38.1637 3.4046 32.7345 3.4046 27.3892 4.2216C26.905 3.0581 26.1886 1.6353 25.5617 0.52529C25.5141 0.44359 25.4218 0.40133 25.3294 0.41542C20.2584 1.2888 15.4057 2.8186 10.8776 4.8978C10.8384 4.9147 10.8048 4.9429 10.7825 4.9795C1.57795 18.7309 -0.943561 32.1443 0.293408 45.3914C0.299005 45.4562 0.335386 45.518 0.385761 45.5576C6.45866 50.0174 12.3413 52.7249 18.1147 54.5195C18.2071 54.5477 18.305 54.5139 18.3638 54.4378C19.7295 52.5728 20.9469 50.6063 21.9907 48.5383C22.0523 48.4172 21.9935 48.2735 21.8676 48.2256C19.9366 47.4931 18.0979 46.6 16.3292 45.5858C16.1893 45.5041 16.1781 45.304 16.3068 45.2082C16.679 44.9293 17.0513 44.6391 17.4067 44.3461C17.471 44.2926 17.5606 44.2813 17.6362 44.3151C29.2558 49.6202 41.8354 49.6202 53.3179 44.3151C53.3935 44.2785 53.4831 44.2898 53.5502 44.3433C53.9057 44.6363 54.2779 44.9293 54.6529 45.2082C54.7816 45.304 54.7732 45.5041 54.6333 45.5858C52.8646 46.6197 51.0259 47.4931 49.0921 48.2228C48.9662 48.2707 48.9102 48.4172 48.9718 48.5383C50.0384 50.6035 51.2558 52.5699 52.5959 54.435C52.6519 54.5139 52.7526 54.5477 52.845 54.5195C58.6464 52.7249 64.529 50.0174 70.6019 45.5576C70.6551 45.518 70.6887 45.459 70.6943 45.3942C72.1747 30.0791 68.2147 16.7757 60.1968 4.9823C60.1772 4.9429 60.1437 4.9147 60.1045 4.8978Z" fill="white"/></g><defs><clipPath id="clip"><rect width="71" height="55"/></clipPath></defs></svg>
+      Login with Discord
+    </a>
+    <a href="#how" class="btn-outline">See how it works →</a>
+  </div>
+
+  <!-- floating badges -->
+  <div class="emoji-field">
+    <div class="emoji-badge badge-green float1"><span class="ico">⭐</span> Head Moderator · Verified</div>
+    <div class="emoji-badge badge-blue float2"><span class="ico slow">🔷</span> Developer · SkyCraft</div>
+    <div class="emoji-badge badge-red float3"><span class="ico rev">🎯</span> Esports Coach · RL Pro Hub</div>
+    <div class="emoji-badge badge-amber float4"><span class="ico">🏆</span> Tournament Winner · 2024</div>
+    <div class="emoji-badge badge-green float5"><span class="ico slow">✅</span> 14,200 members verified</div>
+    <div class="emoji-badge badge-blue float6"><span class="ico rev">💎</span> Pro Member · VIP</div>
+  </div>
+</section>
+
+<!-- TICKER -->
+<div class="ticker-wrap">
+  <div class="ticker" id="ticker">
+    <div class="ticker-item"><div class="ticker-dot"></div> VERIFIED ROLES <span>CANNOT</span> BE FAKED</div>
+    <div class="ticker-item"><div class="ticker-dot"></div> DISCORD OAUTH2 POWERED</div>
+    <div class="ticker-item"><div class="ticker-dot"></div> BUILD YOUR <span>REPUTATION</span></div>
+    <div class="ticker-item"><div class="ticker-dot"></div> ESPORTS · CONTENT · MODERATION</div>
+    <div class="ticker-item"><div class="ticker-dot"></div> PROOF OF WORK <span>BADGES</span></div>
+    <div class="ticker-item"><div class="ticker-dot"></div> FREE TO START · PRO UNLOCKS MORE</div>
+    <div class="ticker-item"><div class="ticker-dot"></div> VERIFIED ROLES <span>CANNOT</span> BE FAKED</div>
+    <div class="ticker-item"><div class="ticker-dot"></div> DISCORD OAUTH2 POWERED</div>
+    <div class="ticker-item"><div class="ticker-dot"></div> BUILD YOUR <span>REPUTATION</span></div>
+    <div class="ticker-item"><div class="ticker-dot"></div> ESPORTS · CONTENT · MODERATION</div>
+    <div class="ticker-item"><div class="ticker-dot"></div> PROOF OF WORK <span>BADGES</span></div>
+    <div class="ticker-item"><div class="ticker-dot"></div> FREE TO START · PRO UNLOCKS MORE</div>
+  </div>
+</div>
+
+<!-- STATS -->
+<section class="stats-section">
+  <div class="stats-label">// Platform stats · Live</div>
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-num blue" data-target="24819" data-suffix="">0</div>
+      <div class="stat-label">Verified profiles created</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num green" data-target="187432" data-suffix="">0</div>
+      <div class="stat-label">Roles verified across Discord</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num red" data-target="0" data-suffix="0">0</div>
+      <div class="stat-label">Fake roles that got through</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num amber" data-target="4200" data-suffix="">0</div>
+      <div class="stat-label">Active servers using the bot</div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="features-section" id="features">
+  <div class="section-header">
+    <h2 class="section-title">WHY<br/><span class="accent">CORDFOL?</span></h2>
+    <div class="section-number">02 / FEATURES</div>
+  </div>
+  <div class="features-grid">
+    <div class="feature-card">
+      <div class="feature-ico spin">🛡️</div>
+      <div class="feature-name">Proof of Work Badges</div>
+      <div class="feature-desc">Every role badge is cryptographically verified via Discord's API. If you weren't actually a mod, you don't get the badge. Period.</div>
+      <span class="feature-tag tag-free">FREE</span>
+    </div>
+    <div class="feature-card">
+      <div class="feature-ico">🎨</div>
+      <div class="feature-name">Custom Profile Pages</div>
+      <div class="feature-desc">Your own URL at cordfol.io/you. Bio, social links, verified role history, custom themes — all in one link.</div>
+      <span class="feature-tag tag-free">FREE</span>
+    </div>
+    <div class="feature-card">
+      <div class="feature-ico spin2">💎</div>
+      <div class="feature-name">Glassmorphism Themes</div>
+      <div class="feature-desc">Animated glass themes, custom music players, and VIP short-links for Pro members. Look elite.</div>
+      <span class="feature-tag tag-pro">PRO</span>
+    </div>
+    <div class="feature-card">
+      <div class="feature-ico">🤖</div>
+      <div class="feature-name">Server Bot Integration</div>
+      <div class="feature-desc">Add our bot to any server. It silently syncs role data when users log in to their dashboard. Zero friction, maximum proof.</div>
+      <span class="feature-tag tag-free">FREE</span>
+    </div>
+    <div class="feature-card">
+      <div class="feature-ico spin">📊</div>
+      <div class="feature-name">Profile Analytics</div>
+      <div class="feature-desc">See who's viewing your profile, which roles they click, and where your traffic comes from. Real data, no fluff.</div>
+      <span class="feature-tag tag-pro">PRO</span>
+    </div>
+    <div class="feature-card">
+      <div class="feature-ico">⚡</div>
+      <div class="feature-name">Live Re-verification</div>
+      <div class="feature-desc">Roles are automatically re-checked every 24 hours. Lose the role, lose the badge. Earn it back, it comes back too.</div>
+      <span class="feature-tag tag-free">FREE</span>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="how-section" id="how">
+  <div class="section-header">
+    <h2 class="section-title">HOW IT<br/><span class="accent">WORKS</span></h2>
+    <div class="section-number">03 / PROCESS</div>
+  </div>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">01</div>
+      <div class="step-content">
+        <div class="step-title">Login with Discord</div>
+        <div class="step-desc">OAuth2 login with identify, guilds, and guilds.members.read scopes. We scan your server list in real-time — no stored passwords, no data we don't need.</div>
+        <div class="step-chip">🔒 OAuth2 · Encrypted tokens</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">02</div>
+      <div class="step-content">
+        <div class="step-title">Roles get verified automatically</div>
+        <div class="step-desc">Our system cross-references your Discord user ID against every server you're in. Any server with our bot installed gets enhanced role data with bot-level proof.</div>
+        <div class="step-chip">⚡ Queued · Rate-limit safe · Under 10 seconds</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">03</div>
+      <div class="step-content">
+        <div class="step-title">Choose what to show</div>
+        <div class="step-desc">Toggle which verified roles appear on your public profile. Reorder them. Add custom labels. You're in control — but no one can show a role they don't actually have.</div>
+        <div class="step-chip">🎛️ Full control · No faking</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">04</div>
+      <div class="step-content">
+        <div class="step-title">Share your profile</div>
+        <div class="step-desc">cordfol.io/yourname is live instantly. Paste it in DMs, bios, job applications, or Discord profiles. Anyone clicking it sees a verified, unfakeable resume.</div>
+        <div class="step-chip">🌐 One link · Infinite credibility</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SHOWCASE -->
+<section class="showcase-section" id="profiles">
+  <div class="section-header">
+    <h2 class="section-title">REAL<br/><span class="accent">PROFILES</span></h2>
+    <div class="section-number">04 / SHOWCASE</div>
+  </div>
+  <div class="showcase-scroll">
+    <div class="showcase-card">
+      <div class="sc-avatar">🦊</div>
+      <div class="sc-name">ArcticFox</div>
+      <div class="sc-handle">cordfol.io/arcticfox</div>
+      <div class="sc-roles">
+        <div class="sc-role"><div class="sc-role-dot"></div>Head Admin · MidnightDev</div>
+        <div class="sc-role"><div class="sc-role-dot"></div>Developer · SkyCraft</div>
+        <div class="sc-role"><div class="sc-role-dot" style="background:#8b9fff"></div>Moderator · Valorant Hub</div>
+      </div>
+      <div class="sc-verified">✓ 3 roles verified · OAuth + Bot</div>
+    </div>
+    <div class="showcase-card">
+      <div class="sc-avatar">🌙</div>
+      <div class="sc-name">LunarDev</div>
+      <div class="sc-handle">cordfol.io/lunardev</div>
+      <div class="sc-roles">
+        <div class="sc-role"><div class="sc-role-dot"></div>Staff · YouTube Creator Hub</div>
+        <div class="sc-role"><div class="sc-role-dot"></div>Bot Developer · 5 servers</div>
+        <div class="sc-role"><div class="sc-role-dot" style="background:#FFB800"></div>VIP · Pro Member</div>
+      </div>
+      <div class="sc-verified">✓ 3 roles verified · Bot</div>
+    </div>
+    <div class="showcase-card">
+      <div class="sc-avatar">⚡</div>
+      <div class="sc-name">ZapMod</div>
+      <div class="sc-handle">cordfol.io/zapmod</div>
+      <div class="sc-roles">
+        <div class="sc-role"><div class="sc-role-dot"></div>Esports Coach · RL Pro Hub</div>
+        <div class="sc-role"><div class="sc-role-dot"></div>Tournament Organizer · ESL</div>
+        <div class="sc-role"><div class="sc-role-dot" style="background:#FF3366"></div>Admin · Gaming Central</div>
+      </div>
+      <div class="sc-verified">✓ 3 roles verified · OAuth</div>
+    </div>
+    <div class="showcase-card">
+      <div class="sc-avatar">🎨</div>
+      <div class="sc-name">PixelArt</div>
+      <div class="sc-handle">cordfol.io/pixelart</div>
+      <div class="sc-roles">
+        <div class="sc-role"><div class="sc-role-dot"></div>Creative Director · PixelForge</div>
+        <div class="sc-role"><div class="sc-role-dot"></div>Content Creator · Verified</div>
+        <div class="sc-role"><div class="sc-role-dot" style="background:#8b9fff"></div>Artist · NFT Collective</div>
+      </div>
+      <div class="sc-verified">✓ 3 roles verified · OAuth + Bot</div>
+    </div>
+    <div class="showcase-card">
+      <div class="sc-avatar">🔥</div>
+      <div class="sc-name">FlameKeep</div>
+      <div class="sc-handle">cordfol.io/flamekeep</div>
+      <div class="sc-roles">
+        <div class="sc-role"><div class="sc-role-dot"></div>Senior Mod · 80k Server</div>
+        <div class="sc-role"><div class="sc-role-dot"></div>Event Organizer · Weekly</div>
+        <div class="sc-role"><div class="sc-role-dot" style="background:#FFB800"></div>Tier 3 Sub · StreamerX</div>
+      </div>
+      <div class="sc-verified">✓ 3 roles verified · Bot</div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section">
+  <h2 class="cta-title">
+    <span class="ghost">START FOR FREE.</span>
+    CLAIM YOUR<br/>PROFILE NOW.
+  </h2>
+  <p class="cta-sub">Thousands of Discord users are already building verifiable identities. Don't let someone else take your username.</p>
+  <a href="dashboard.html" class="cta-btn">
+    Create My Profile
+    <span class="cta-badge">FREE</span>
+  </a>
+  <div class="proof-row">
+    <div style="display:flex;margin-left:8px;">
+      <div class="proof-avatar" style="background:#5865F220;color:#8b9fff;z-index:5">🦊</div>
+      <div class="proof-avatar" style="background:#00FFB220;color:#00FFB2;z-index:4">🌙</div>
+      <div class="proof-avatar" style="background:#FF336620;color:#FF3366;z-index:3">⚡</div>
+      <div class="proof-avatar" style="background:#FFB80020;color:#FFB800;z-index:2">🎨</div>
+      <div class="proof-avatar" style="background:#5865F220;color:#8b9fff;z-index:1">🔥</div>
+    </div>
+    <div class="proof-text"><strong>24,819 users</strong> already verified their Discord identity</div>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-logo">CORD<span>FOL</span>.IO</div>
+  <div class="footer-links">
+    <a href="#">Privacy</a>
+    <a href="#">Terms</a>
+    <a href="#">Discord</a>
+    <a href="#">GitHub</a>
+    <a href="#">Status</a>
+  </div>
+  <div class="footer-right">Built for the Discord ecosystem · 2025</div>
+</footer>
+
+<script>
+// cursor
+const cur = document.getElementById('cursor');
+const trail = document.getElementById('cursor-trail');
+document.addEventListener('mousemove', e => {
+  cur.style.left = e.clientX + 'px';
+  cur.style.top = e.clientY + 'px';
+  trail.style.left = e.clientX + 'px';
+  trail.style.top = e.clientY + 'px';
+});
+
+// counter animation
+function animateCounter(el) {
+  const target = parseInt(el.dataset.target);
+  if(target === 0 && el.dataset.suffix === '0') { el.textContent = '0'; return; }
+  const duration = 2000;
+  const start = performance.now();
+  function update(now) {
+    const p = Math.min((now - start) / duration, 1);
+    const ease = 1 - Math.pow(1 - p, 3);
+    el.textContent = Math.floor(ease * target).toLocaleString();
+    if(p < 1) requestAnimationFrame(update);
+  }
+  requestAnimationFrame(update);
+}
+
+// intersection observer for counters
+const obs = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if(e.isIntersecting) { animateCounter(e.target); obs.unobserve(e.target); }
+  });
+}, { threshold: 0.5 });
+document.querySelectorAll('[data-target]').forEach(el => obs.observe(el));
+
+// step hover
+document.querySelectorAll('.step').forEach(s => {
+  s.addEventListener('mouseenter', () => s.querySelector('.step-num').style.color = 'var(--discord)');
+  s.addEventListener('mouseleave', () => s.querySelector('.step-num').style.color = 'rgba(255,255,255,0.07)');
+});
+</script>
+</body>
+</html>
