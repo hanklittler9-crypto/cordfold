@@ -58,7 +58,7 @@ app.use(session({
     secure:   true,
     sameSite: 'none',
     maxAge:   7 * 24 * 60 * 60 * 1000, // 7 days
-    domain:   '.cordfol-backend.onrender.com', // exact backend domain for cross-origin session
+    // domain removed for cross-origin session compatibility
   },
 }));
 
