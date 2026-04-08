@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Astro — Cordfol.io Demo Profile</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet"/>
+  <style>
+    body { background: #0a0a0a; color: #F0F0F0; font-family: 'DM Sans', sans-serif; margin: 0; }
+    .container { max-width: 540px; margin: 48px auto; background: #111; border-radius: 18px; box-shadow: 0 4px 32px #0008; padding: 36px 32px; }
+    .avatar { width: 88px; height: 88px; border-radius: 50%; background: linear-gradient(135deg,#5865F2,#7C3AED); display: flex; align-items: center; justify-content: center; font-size: 38px; font-weight: 700; color: #fff; margin-bottom: 18px; }
+    .name { font-size: 2.1rem; font-family: 'Bebas Neue', sans-serif; letter-spacing: 2px; margin-bottom: 4px; }
+    .slug { color: #5865F2; font-size: 1rem; margin-bottom: 18px; }
+    .bio { color: #aaa; font-size: 1.1rem; margin-bottom: 22px; }
+    .roles { margin-bottom: 22px; }
+    .role { display: inline-block; background: #181818; color: #00FFB2; border-radius: 8px; padding: 7px 16px; margin: 0 7px 7px 0; font-family: 'Space Mono', monospace; font-size: 0.95rem; }
+    .links { margin-bottom: 18px; }
+    .link { color: #5865F2; text-decoration: none; margin-right: 18px; font-size: 1.1rem; }
+    .link:hover { text-decoration: underline; }
+    .footer { color: #555; font-size: 0.95rem; text-align: center; margin-top: 32px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="avatar">A</div>
+    <div class="name">Astro</div>
+    <div class="slug">cordfol.io/astro</div>
+    <div class="bio">Discord mod, bot dev, esports coach. Building cool stuff for the community!</div>
+    <div class="roles">
+      <span class="role">Head Mod</span>
+      <span class="role">Developer</span>
+      <span class="role">Admin</span>
+    </div>
+    <div class="links">
+      <a class="link" href="https://twitter.com/astro" target="_blank">Twitter</a>
+      <a class="link" href="https://github.com/astro" target="_blank">GitHub</a>
+      <a class="link" href="https://youtube.com/astro" target="_blank">YouTube</a>
+      <a class="link" href="https://astro.dev" target="_blank">Website</a>
+    </div>
+  </div>
+  <div class="footer">Demo profile — Cordfol.io</div>
+</body>
+</html>
