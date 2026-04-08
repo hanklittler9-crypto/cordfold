@@ -108,9 +108,9 @@ client.on('interactionCreate', async (interaction) => {
               .setColor(0x5865F2)
               .setTitle('You don\'t have a Cordfol.io account yet')
               .setDescription(
-                `Log in with Discord at **[cordfol.io](${DASHBOARD_URL})** to create your verified profile.\n\nOnce you log in, your roles in **${guild.name}** will be verified automatically.`
+                `Log in with Discord at **[cordfol.org](${DASHBOARD_URL})** to create your verified profile.\n\nOnce you log in, your roles in **${guild.name}** will be verified automatically.`
               )
-              .setFooter({ text: 'cordfol.io — Discord Identity, Verified.' })
+              .setFooter({ text: 'cordfol.org — Discord Identity, Verified.' })
           ]
         });
       }
@@ -173,9 +173,9 @@ client.on('interactionCreate', async (interaction) => {
             .setColor(0x00FFB2)
             .setTitle('✅ Roles verified with bot-level proof!')
             .setDescription(
-              `Your roles in **${guild.name}** have been added to your Cordfol.io profile:\n\n${roleList}${extra}\n\n🔗 [View your profile](${DASHBOARD_URL.replace('/dashboard', '')}/${cordfolUser.slug})`
+              `Your roles in **${guild.name}** have been added to your Cordfol.io profile:\n\n${roleList}${extra}\n\n🔗 [View your profile](https://cordfol.org/${cordfolUser.slug})`
             )
-            .setFooter({ text: 'cordfol.io — These roles cannot be faked.' })
+            .setFooter({ text: 'cordfol.org — These roles cannot be faked.' })
         ]
       });
 
@@ -199,7 +199,7 @@ client.on('interactionCreate', async (interaction) => {
 
       if (row.rowCount === 0) {
         return interaction.editReply({
-          content: `You don't have a Cordfol.io profile yet. Sign up at ${DASHBOARD_URL}`
+          content: `You don't have a Cordfol.io profile yet. Sign up at https://dashboard.cordfol.org/dashboard`
         });
       }
 
@@ -209,8 +209,8 @@ client.on('interactionCreate', async (interaction) => {
           new EmbedBuilder()
             .setColor(0x5865F2)
             .setTitle(`${display_name}'s Cordfol.io Profile`)
-            .setURL(`${DASHBOARD_URL.replace('/dashboard', '')}/${slug}`)
-            .setDescription(`🔗 cordfol.io/${slug}`)
+            .setURL(`https://cordfol.org/${slug}`)
+            .setDescription(`🔗 cordfol.org/${slug}`)
         ]
       });
     } catch (err) {
@@ -239,7 +239,7 @@ client.on('interactionCreate', async (interaction) => {
       `, [target.id]);
 
       if (row.rowCount === 0) {
-        return interaction.editReply({ content: `**${target.username}** doesn't have a Cordfol.io profile yet.` });
+        return interaction.editReply({ content: `**${target.username}** doesn't have a Cordfol.org profile yet.` });
       }
 
       const { slug, display_name, bio, roles } = row.rows[0];
@@ -256,7 +256,7 @@ client.on('interactionCreate', async (interaction) => {
             .setURL(`${DASHBOARD_URL.replace('/dashboard', '')}/${slug}`)
             .setDescription(bio || '')
             .addFields({ name: '🛡️ Verified Roles', value: roleList })
-            .setFooter({ text: `cordfol.io/${slug} · Verified by Discord API` })
+            .setFooter({ text: `cordfol.org/${slug} · Verified by Discord API` })
         ]
       });
 

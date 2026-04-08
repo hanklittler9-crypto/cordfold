@@ -384,7 +384,7 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
 <div class="topbar">
   <a href="index.html" class="topbar-logo">CORD<span>FOL</span>.IO</a>
   <div class="topbar-right" id="topbarRight">
-    <button id="loginBtn" class="btn btn-primary" onclick="window.location.href='https://cordfol-backend.onrender.com/api/auth/discord'">Login with Discord</button>
+    <button id="loginBtn" class="btn btn-primary" onclick="window.location.href='https://api.cordfol.org/api/auth/discord'">Login with Discord</button>
     <div id="userInfo" style="display:none">
       <div class="plan-badge" id="planBadge">FREE PLAN</div>
       <div class="user-trigger" id="userTrigger" onclick="toggleUserMenu()">
@@ -966,7 +966,7 @@ function addBotToServer() {
 </script>
 </body>
 <script>
-const API_BASE = 'https://cordfol-backend.onrender.com/api';
+const API_BASE = 'https://api.cordfol.org/api';
 
 async function checkSession() {
   try {
@@ -990,7 +990,7 @@ function showUser(user) {
   document.getElementById('discordName').textContent = user.discord_username;
   document.getElementById('discordId').textContent = 'ID: ' + user.discord_id;
   document.getElementById('planBadge').textContent = user.plan === 'pro' ? 'PRO PLAN' : 'FREE PLAN';
-  document.getElementById('profileUrl').textContent = `Customize your public page at cordfold.vercel.app/${user.slug}`;
+  document.getElementById('profileUrl').textContent = `Customize your public page at cordfol.org/${user.slug}`;
 }
 
 async function loadRoles(user) {

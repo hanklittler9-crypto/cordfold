@@ -211,10 +211,18 @@ router.get('/callback', async (req, res) => {
 
     // ── Step 8: Redirect to dashboard (Vercel frontend) ──────────────────────
     // Set CORS headers for cross-origin cookie (for Vercel frontend)
-    res.setHeader('Access-Control-Allow-Origin', 'https://cordfold.vercel.app');
-    res.setHeader('Access-Control-Allow-Credentials', 'true');
-    // Redirect to Vercel dashboard
-    res.redirect('https://cordfold.vercel.app/dashboard.html');
+    // Allow both dashboard.cordfol.org and legacy vercel for migration period
+    const allowedOrigins = [
+      'https://dashboard.cordfol.org',
+      'https://cordfold.vercel.app'
+    ];
+    const origin = req.get('Origin');
+    if (allowedOrigins.includes(origin)) {
+      res.setHeader('Access-Control-Allow-Origin', origin);
+      res.setHeader('Access-Control-Allow-Credentials', 'true');
+    }
+    // Redirect to new dashboard domain
+    res.redirect('https://dashboard.cordfol.org/dashboard.html');
 
   } catch (err) {
     console.error('[auth] OAuth callback error:', err);

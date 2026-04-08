@@ -28,7 +28,11 @@ const app  = express();
 const PORT = process.env.PORT || 3000;
 
 // ── CORS for cross-domain session sharing ───────────────────────────────────
-const FRONTEND_ORIGIN = 'https://cordfold.vercel.app';
+// Allow both dashboard.cordfol.org and legacy vercel for migration period
+const FRONTEND_ORIGIN = [
+  'https://dashboard.cordfol.org',
+  'https://cordfold.vercel.app'
+];
 app.use(cors({
   origin: FRONTEND_ORIGIN,
   credentials: true,

@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cordfol.io Profile</title>
+  <link rel="stylesheet" href="/index.html" />
+  <style>
+    body {
+      background: var(--bg, #0d0d0d);
+      color: var(--text, #fff);
+      font-family: 'DM Sans', sans-serif;
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+    }
+    .profile-container {
+      margin-top: 60px;
+      background: var(--surface, #181818);
+      border-radius: 18px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+      padding: 40px 32px;
+      max-width: 480px;
+      width: 100%;
+      text-align: center;
+    }
+    .profile-avatar {
+      width: 96px;
+      height: 96px;
+      border-radius: 50%;
+      margin: 0 auto 18px;
+      background: #222;
+      object-fit: cover;
+      border: 3px solid var(--accent, #5865F2);
+    }
+    .profile-name {
+      font-size: 2.2em;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .profile-bio {
+      color: #aaa;
+      margin-bottom: 18px;
+      font-size: 1.1em;
+    }
+    .profile-roles {
+      margin: 18px 0 0 0;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .role-badge {
+      background: var(--card, #111);
+      color: var(--text, #fff);
+      border-radius: 8px;
+      padding: 8px 14px;
+      display: inline-block;
+      font-size: 1em;
+      margin: 0 auto;
+      border-left: 5px solid var(--accent, #5865F2);
+    }
+    .profile-socials {
+      margin-top: 18px;
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+    }
+    .profile-socials a {
+      color: var(--accent, #5865F2);
+      text-decoration: none;
+      font-size: 1.3em;
+      transition: color 0.2s;
+    }
+    .profile-socials a:hover {
+      color: var(--neon, #00FFB2);
+    }
+  </style>
+</head>
+<body>
+  <div class="profile-container" id="profile">
+    <div>Loading profile...</div>
+  </div>
+  <script>
+    async function renderProfile() {
+      const slug = window.location.pathname.replace(/^\//, '');
+      const res = await fetch(`/api/profile/${slug}`);
+      if (!res.ok) {
+        document.getElementById('profile').innerHTML = '<div>Profile not found.</div>';
+        return;
+      }
+      const data = await res.json();
+      const p = data.profile;
+      const t = data.theme;
+      const roles = data.roles || [];
+      // Set theme
+      document.body.style.setProperty('--bg', t.backgroundColor);
+      document.body.style.setProperty('--surface', t.cardColor);
+      document.body.style.setProperty('--accent', t.accentColor);
+      document.body.style.setProperty('--text', t.textColor);
+      if (t.customCss) {
+        const style = document.createElement('style');
+        style.innerHTML = t.customCss;
+        document.head.appendChild(style);
+      }
+      // Animated background
+      if (t.animatedBg) {
+        document.body.style.background = `linear-gradient(135deg, ${t.backgroundColor} 60%, ${t.accentColor} 100%)`;
+      }
+      // Profile HTML
+      document.getElementById('profile').innerHTML = `
+        <img class="profile-avatar" src="${p.avatarUrl || '/public/avatar.png'}" alt="avatar" />
+        <div class="profile-name">${p.displayName}</div>
+        <div class="profile-bio">${p.bio || ''}</div>
+        <div class="profile-roles">
+          ${roles.map(r => `<span class="role-badge" style="border-left-color:${r.roleColor || t.accentColor}">${r.roleName}</span>`).join('')}
+        </div>
+        <div class="profile-socials">
+          ${p.socialLinks ? Object.entries(p.socialLinks).map(([k,v]) => `<a href="${v}" target="_blank">${k[0].toUpperCase() + k.slice(1)}</a>`).join('') : ''}
+        </div>
+      `;
+    }
+    renderProfile();
+  </script>
+</body>
+</html>
