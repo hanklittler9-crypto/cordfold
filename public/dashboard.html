@@ -383,34 +383,36 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
 <!-- TOPBAR -->
 <div class="topbar">
   <a href="index.html" class="topbar-logo">CORD<span>FOL</span>.IO</a>
-  <div class="topbar-right">
-    <div class="plan-badge">FREE PLAN</div>
-    <div class="user-trigger" id="userTrigger" onclick="toggleUserMenu()">
-      <div class="user-avatar">A</div>
-      <div class="user-name">Astro</div>
-      <div class="user-caret">▾</div>
-      <!-- dropdown -->
-      <div class="user-menu" id="userMenu">
-        <div class="menu-header">
-          <div class="menu-discord-name">Astro#0001</div>
-          <div class="menu-discord-id">ID: 123456789012345678</div>
-        </div>
-        <a class="menu-item" href="#" onclick="switchTab('profile');closeMenu()">
-          <span class="menu-ico">👤</span> My Profile
-        </a>
-        <a class="menu-item" href="#" onclick="switchTab('theme');closeMenu()">
-          <span class="menu-ico">🎨</span> Theme Settings
-        </a>
-        <a class="menu-item" href="index.html" target="_blank">
-          <span class="menu-ico">🌐</span> View Public Page
-        </a>
-        <div class="menu-divider"></div>
-        <a class="menu-item" href="#" onclick="openUpgrade()">
-          <span class="menu-ico">⭐</span> Upgrade to Pro
-        </a>
-        <div class="menu-divider"></div>
-        <div class="menu-item danger" onclick="openSignOutModal()">
-          <span class="menu-ico">🚪</span> Sign Out
+  <div class="topbar-right" id="topbarRight">
+    <button id="loginBtn" class="btn btn-primary" onclick="window.location.href='https://cordfol-backend.onrender.com/api/auth/discord'">Login with Discord</button>
+    <div id="userInfo" style="display:none">
+      <div class="plan-badge" id="planBadge">FREE PLAN</div>
+      <div class="user-trigger" id="userTrigger" onclick="toggleUserMenu()">
+        <div class="user-avatar" id="userAvatar">?</div>
+        <div class="user-name" id="userName">User</div>
+        <div class="user-caret">▾</div>
+        <div class="user-menu" id="userMenu">
+          <div class="menu-header">
+            <div class="menu-discord-name" id="discordName">...</div>
+            <div class="menu-discord-id" id="discordId">ID: ...</div>
+          </div>
+          <a class="menu-item" href="#" onclick="switchTab('profile');closeMenu()">
+            <span class="menu-ico">👤</span> My Profile
+          </a>
+          <a class="menu-item" href="#" onclick="switchTab('theme');closeMenu()">
+            <span class="menu-ico">🎨</span> Theme Settings
+          </a>
+          <a class="menu-item" href="index.html" target="_blank">
+            <span class="menu-ico">🌐</span> View Public Page
+          </a>
+          <div class="menu-divider"></div>
+          <a class="menu-item" href="#" onclick="openUpgrade()">
+            <span class="menu-ico">⭐</span> Upgrade to Pro
+          </a>
+          <div class="menu-divider"></div>
+          <div class="menu-item danger" onclick="logout()">
+            <span class="menu-ico">🚪</span> Sign Out
+          </div>
         </div>
       </div>
     </div>
@@ -463,74 +465,22 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
     <div class="tab active" id="tab-verify">
       <div class="page-title">Verified Role History</div>
       <div class="page-sub">These roles are confirmed via Discord's API. Toggle visibility on your public profile. Roles re-verify every 24h automatically.</div>
-
       <div class="scan-header">
-        <div class="scan-status">
+        <div class="scan-status" id="scanStatus">
           <div class="scan-dot"></div>
-          Last scanned 2 minutes ago · 5 active roles
+          Loading...
         </div>
         <button class="btn btn-ghost" onclick="triggerScan(this)">🔄 Re-scan Guilds</button>
       </div>
-
       <div class="card">
         <div class="card-title">
           Active verified roles
-          <span class="card-subtitle">5 roles · 3 servers</span>
+          <span class="card-subtitle" id="roleCount">Loading...</span>
         </div>
-        <div class="role-list">
-          <div class="role-row">
-            <div class="server-icon" style="background:rgba(88,101,242,0.15);color:#8b9fff">MD</div>
-            <div class="role-info">
-              <div class="role-name">Head Moderator</div>
-              <div class="role-meta">MidnightDev Community · 24,800 members</div>
-            </div>
-            <div class="proof-chip"><div class="proof-dot" style="background:var(--neon)"></div>OAuth</div>
-            <div class="badge badge-v">Verified</div>
-            <div class="toggle on" onclick="this.classList.toggle('on')"></div>
-          </div>
-          <div class="role-row">
-            <div class="server-icon" style="background:rgba(124,58,237,0.15);color:#a78bfa">SC</div>
-            <div class="role-info">
-              <div class="role-name">Developer</div>
-              <div class="role-meta">SkyCraft Network · 51,200 members</div>
-            </div>
-            <div class="proof-chip"><div class="proof-dot" style="background:var(--neon)"></div>Bot</div>
-            <div class="badge badge-v">Verified</div>
-            <div class="toggle on" onclick="this.classList.toggle('on')"></div>
-          </div>
-          <div class="role-row">
-            <div class="server-icon" style="background:rgba(255,184,0,0.1);color:var(--amber)">YT</div>
-            <div class="role-info">
-              <div class="role-name">Staff · Content Team</div>
-              <div class="role-meta">YuuTubers HQ · 8,900 members</div>
-            </div>
-            <div class="proof-chip"><div class="proof-dot" style="background:var(--neon)"></div>OAuth</div>
-            <div class="badge badge-v">Verified</div>
-            <div class="toggle on" onclick="this.classList.toggle('on')"></div>
-          </div>
-          <div class="role-row">
-            <div class="server-icon" style="background:rgba(255,51,102,0.1);color:var(--hot)">RL</div>
-            <div class="role-info">
-              <div class="role-name">Competitive Coach</div>
-              <div class="role-meta">RocketLeague Pro Hub · 140,000 members</div>
-            </div>
-            <div class="proof-chip"><div class="proof-dot" style="background:var(--amber)"></div>Pending</div>
-            <div class="badge badge-p">Re-checking</div>
-            <div class="toggle" onclick="this.classList.toggle('on')"></div>
-          </div>
-          <div class="role-row">
-            <div class="server-icon" style="background:rgba(6,182,212,0.1);color:#22d3ee">PX</div>
-            <div class="role-info">
-              <div class="role-name">Admin</div>
-              <div class="role-meta">PixelForge Studios · 3,400 members</div>
-            </div>
-            <div class="proof-chip"><div class="proof-dot" style="background:var(--neon)"></div>OAuth</div>
-            <div class="badge badge-v">Verified</div>
-            <div class="toggle on" onclick="this.classList.toggle('on')"></div>
-          </div>
+        <div class="role-list" id="roleList">
+          <!-- Roles will be loaded here -->
         </div>
       </div>
-
       <div class="card" style="padding:14px 20px">
         <div style="font-size:12px;color:var(--muted2);line-height:1.7">
           <strong style="color:var(--text)">How verification works:</strong>
@@ -542,62 +492,58 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
     <!-- ── PROFILE TAB ── -->
     <div class="tab" id="tab-profile">
       <div class="page-title">Profile Builder</div>
-      <div class="page-sub">Customize your public page at cordfol.io/astro</div>
-
+      <div class="page-sub" id="profileUrl">Customize your public page at cordfol.io/...</div>
       <div style="display:grid;grid-template-columns:1fr 220px;gap:18px">
         <div>
           <div class="card">
             <div class="card-title">Identity</div>
             <div class="field">
               <div class="field-label">Display Name</div>
-              <input class="field-input" id="displayName" value="Astro" oninput="updatePreview()"/>
+              <input class="field-input" id="displayName" value="" oninput="updatePreview()"/>
             </div>
             <div class="field">
               <div class="field-label">Your URL</div>
               <div class="field-prefix-wrap">
                 <div class="field-pre">cordfol.io/</div>
-                <input class="field-input monospace" id="slug" value="astro" oninput="checkSlug(this)"/>
+                <input class="field-input monospace" id="slug" value="" oninput="checkSlug(this)"/>
               </div>
-              <div class="field-hint" id="slug-hint">✓ Available</div>
+              <div class="field-hint" id="slug-hint">Checking...</div>
             </div>
             <div class="field" style="margin-bottom:0">
               <div class="field-label">Bio</div>
-              <textarea class="field-input" id="bioText" oninput="updatePreview()">Discord mod, bot dev, esports coach. Building things that matter.</textarea>
+              <textarea class="field-input" id="bioText" oninput="updatePreview()"></textarea>
             </div>
           </div>
-
           <div class="card">
             <div class="card-title">Social Links</div>
             <div class="grid-2">
               <div class="field">
                 <div class="field-label">Twitter / X</div>
-                <input class="field-input" value="@astro"/>
+                <input class="field-input" id="twitterInput"/>
               </div>
               <div class="field">
                 <div class="field-label">GitHub</div>
-                <input class="field-input" value="pixelz1x"/>
+                <input class="field-input" id="githubInput"/>
               </div>
               <div class="field">
                 <div class="field-label">YouTube</div>
-                <input class="field-input" placeholder="@channel"/>
+                <input class="field-input" id="youtubeInput"/>
               </div>
               <div class="field">
                 <div class="field-label">Website</div>
-                <input class="field-input" placeholder="https://..."/>
+                <input class="field-input" id="websiteInput"/>
               </div>
             </div>
           </div>
-
           <div class="btn-row right">
-            <button class="btn btn-ghost">Discard</button>
-            <button class="btn btn-primary" onclick="showToast('✅','Profile saved successfully!')">Save Changes</button>
+            <button class="btn btn-ghost" onclick="loadProfile()">Discard</button>
+            <button class="btn btn-primary" onclick="saveProfile()">Save Changes</button>
           </div>
         </div>
-
         <div>
           <div class="card" style="padding:14px">
             <div class="card-title" style="font-size:11px;font-family:'Space Mono',monospace;letter-spacing:1px;color:var(--muted2)">LIVE PREVIEW</div>
-            <div class="live-preview">
+            <div class="live-preview" id="livePreview">
               <div class="lp-avatar" id="lp-initials">A</div>
               <div class="lp-name" id="lp-name">Astro</div>
               <div class="lp-bio" id="lp-bio">Discord mod, bot dev, esports coach.</div>
@@ -1026,4 +972,129 @@ function showToast(icon, msg) {
 }
 </script>
 </body>
+<script>
+const API_BASE = 'https://cordfol-backend.onrender.com/api';
+
+async function checkSession() {
+  try {
+    const res = await fetch(`${API_BASE}/auth/discord/session`, { credentials: 'include' });
+    if (!res.ok) throw new Error('Not logged in');
+    const user = await res.json();
+    showUser(user);
+    loadProfile(user);
+    loadRoles(user);
+  } catch {
+    document.getElementById('loginBtn').style.display = '';
+    document.getElementById('userInfo').style.display = 'none';
+  }
+}
+
+function showUser(user) {
+  document.getElementById('loginBtn').style.display = 'none';
+  document.getElementById('userInfo').style.display = '';
+  document.getElementById('userAvatar').textContent = user.display_name ? user.display_name[0] : '?';
+  document.getElementById('userName').textContent = user.display_name || user.discord_username;
+  document.getElementById('discordName').textContent = user.discord_username;
+  document.getElementById('discordId').textContent = 'ID: ' + user.discord_id;
+  document.getElementById('planBadge').textContent = user.plan === 'pro' ? 'PRO PLAN' : 'FREE PLAN';
+  document.getElementById('profileUrl').textContent = `Customize your public page at cordfold.vercel.app/${user.slug}`;
+}
+
+async function loadRoles(user) {
+  const roleList = document.getElementById('roleList');
+  const roleCount = document.getElementById('roleCount');
+  const scanStatus = document.getElementById('scanStatus');
+  roleList.innerHTML = '<div>Loading...</div>';
+  try {
+    const res = await fetch(`${API_BASE}/profile/${user.slug}`);
+    if (!res.ok) throw new Error('No roles');
+    const data = await res.json();
+    if (!data.roles || !data.roles.length) {
+      roleList.innerHTML = '<div>No verified roles found.</div>';
+      roleCount.textContent = '0 roles';
+      scanStatus.innerHTML = '<div class="scan-dot"></div> No roles found';
+      return;
+    }
+    roleList.innerHTML = data.roles.map(role => `
+      <div class="role-row">
+        <div class="server-icon" style="background:rgba(88,101,242,0.15);color:#8b9fff">${role.guild_name ? role.guild_name[0] : '?'}</div>
+        <div class="role-info">
+          <div class="role-name">${role.role_name}</div>
+          <div class="role-meta">${role.guild_name}</div>
+        </div>
+        <div class="proof-chip"><div class="proof-dot" style="background:var(--neon)"></div>${role.proof_type}</div>
+        <div class="badge badge-v">Verified</div>
+        <div class="toggle on"></div>
+      </div>
+    `).join('');
+    roleCount.textContent = `${data.roles.length} roles`;
+    scanStatus.innerHTML = `<div class="scan-dot"></div> Last scanned just now · ${data.roles.length} active roles`;
+  } catch {
+    roleList.innerHTML = '<div>Failed to load roles.</div>';
+    roleCount.textContent = '0 roles';
+    scanStatus.innerHTML = '<div class="scan-dot"></div> Error loading roles';
+  }
+}
+
+async function loadProfile(user) {
+  try {
+    const res = await fetch(`${API_BASE}/profile/${user.slug}`);
+    if (!res.ok) throw new Error('No profile');
+    const data = await res.json();
+    document.getElementById('displayName').value = data.display_name || '';
+    document.getElementById('slug').value = data.slug || '';
+    document.getElementById('bioText').value = data.bio || '';
+    document.getElementById('twitterInput').value = data.social_links?.twitter || '';
+    document.getElementById('githubInput').value = data.social_links?.github || '';
+    document.getElementById('youtubeInput').value = data.social_links?.youtube || '';
+    document.getElementById('websiteInput').value = data.social_links?.website || '';
+    updatePreview();
+  } catch {
+    // leave blank
+  }
+}
+
+async function saveProfile() {
+  const displayName = document.getElementById('displayName').value;
+  const slug = document.getElementById('slug').value;
+  const bio = document.getElementById('bioText').value;
+  const social_links = {
+    twitter: document.getElementById('twitterInput').value,
+    github: document.getElementById('githubInput').value,
+    youtube: document.getElementById('youtubeInput').value,
+    website: document.getElementById('websiteInput').value
+  };
+  try {
+    const res = await fetch(`${API_BASE}/profile`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ display_name: displayName, slug, bio, social_links })
+    });
+    if (!res.ok) throw new Error('Failed to save');
+    showToast('✅','Profile saved successfully!');
+    checkSession();
+  } catch {
+    showToast('❌','Failed to save profile!');
+  }
+}
+
+function updatePreview() {
+  const preview = document.getElementById('livePreview');
+  if (!preview) return;
+  preview.innerHTML = `
+    <div class="lp-avatar">${document.getElementById('displayName').value[0] || '?'}</div>
+    <div class="lp-name">${document.getElementById('displayName').value || ''}</div>
+    <div class="lp-bio">${document.getElementById('bioText').value || ''}</div>
+    <div class="lp-roles">(roles update on save)</div>
+  `;
+}
+
+function logout() {
+  fetch(`${API_BASE}/auth/discord/logout`, { credentials: 'include' })
+    .then(() => window.location.reload());
+}
+
+window.onload = checkSession;
+</script>
 </html>
