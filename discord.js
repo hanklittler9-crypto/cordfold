@@ -240,7 +240,7 @@ router.get('/callback', async (req, res) => {
     }
     // Redirect to new dashboard domain
     console.log('[auth] Step 8: Redirecting to dashboard');
-    res.redirect('https://dashboard.cordfol.org/dashboard.html');
+    res.redirect('https://dashboard.cordfol.org/');
 
   } catch (err) {
     console.error('[auth] OAuth callback error:', err);
