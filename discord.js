@@ -239,8 +239,14 @@ router.get('/callback', async (req, res) => {
       res.setHeader('Access-Control-Allow-Credentials', 'true');
     }
     // Redirect to new dashboard domain
-    console.log('[auth] Step 8: Redirecting to dashboard');
-    res.redirect('https://dashboard.cordfol.org/');
+    console.log('[auth] Step 8: Saving session and redirecting to dashboard');
+    req.session.save(err => {
+      if (err) {
+        console.error('[auth] Session save error:', err);
+        return res.redirect('/?error=session');
+      }
+      res.redirect('https://dashboard.cordfol.org/');
+    });
 
   } catch (err) {
     console.error('[auth] OAuth callback error:', err);
