@@ -393,6 +393,52 @@ async function triggerGuildScan(userId, accessToken, tokenType) {
   }
 
   console.log(`[auth] Guild scan complete for user ${userId}`);
-}
 
+  // ── Update role names using bot token for guilds where bot is present ──
+  try {
+    const botGuildsRes = await fetch(`${DISCORD_API}/users/@me/guilds`, {
+      headers: { Authorization: `Bot ${process.env.BOT_TOKEN}` },
+    });
+
+    if (botGuildsRes.ok) {
+      const botGuilds = await botGuildsRes.json();
+      const botGuildIds = new Set(botGuilds.map(g => g.id));
+
+      for (const guild of guilds) {
+        if (botGuildIds.has(guild.id)) {
+          // Bot is in this guild, fetch roles to get names
+          await new Promise(r => setTimeout(r, 100)); // Small delay to avoid rate limits
+
+          const rolesRes = await fetch(`${DISCORD_API}/guilds/${guild.id}/roles`, {
+            headers: { Authorization: `Bot ${process.env.BOT_TOKEN}` },
+          });
+
+          if (rolesRes.ok) {
+            const roles = await rolesRes.json();
+            const roleMap = new Map(roles.map(r => [r.id, r.name]));
+
+            // Get the user's roles in this guild from the DB we just inserted
+            const userRolesRes = await db.query(
+              'SELECT role_id FROM verified_roles WHERE user_id = $1 AND guild_id = $2 AND proof_type = $3',
+              [userId, guild.id, 'OAUTH']
+            );
+
+            for (const row of userRolesRes.rows) {
+              const roleName = roleMap.get(row.role_id) || row.role_id;
+              await db.query(
+                'UPDATE verified_roles SET role_name = $1 WHERE user_id = $2 AND guild_id = $3 AND role_id = $4',
+                [roleName, userId, guild.id, row.role_id]
+              );
+            }
+          }
+        }
+      }
+
+      console.log(`[auth] Role names updated for user ${userId} in ${botGuildIds.size} bot-present guilds`);
+    }
+  } catch (err) {
+    console.warn(`[auth] Error updating role names for user ${userId}:`, err.message);
+  }
+}
+// Ensure the router and getValidAccessToken are exported for Express
 module.exports = { router, getValidAccessToken };

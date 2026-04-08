@@ -737,7 +737,7 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
           <input class="field-input monospace" placeholder="e.g. 1234567890123456789"/>
         </div>
         <div class="btn-row">
-          <button class="btn btn-primary" onclick="showToast('🤖','Redirecting to Discord OAuth...')">Add Bot to Server</button>
+          <button class="btn btn-primary" onclick="addBotToServer()">Add Bot to Server</button>
           <button class="btn btn-ghost">Copy Invite Link</button>
         </div>
       </div>
@@ -960,15 +960,8 @@ function animateCounter(id, target) {
   requestAnimationFrame(tick);
 }
 
-// ── TOAST ──
-let toastTimer;
-function showToast(icon, msg) {
-  const t = document.getElementById('toast');
-  document.getElementById('toast-icon').textContent = icon;
-  document.getElementById('toast-msg').textContent = msg;
-  t.classList.add('show');
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
+function addBotToServer() {
+  window.location.href = 'https://discord.com/api/oauth2/authorize?client_id=1491214572231721071&permissions=268435456&scope=bot';
 }
 </script>
 </body>
@@ -977,7 +970,7 @@ const API_BASE = 'https://cordfol-backend.onrender.com/api';
 
 async function checkSession() {
   try {
-    const res = await fetch(`${API_BASE}/auth/discord/session`, { credentials: 'include' });
+    const res = await fetch(`${API_BASE}/auth/me`, { credentials: 'include' });
     if (!res.ok) throw new Error('Not logged in');
     const user = await res.json();
     showUser(user);
