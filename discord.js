@@ -95,7 +95,9 @@ router.get('/', (req, res) => {
 //   5. Kick off an async guild scan (non-blocking)
 //   6. Set a session cookie and redirect to dashboard
 router.get('/callback', async (req, res) => {
+  console.log('[auth] /api/auth/discord/callback HIT', req.query);
   const { code, state, error } = req.query;
+
 
   // User denied access
   if (error) {
@@ -103,14 +105,16 @@ router.get('/callback', async (req, res) => {
     return res.redirect('/?error=denied');
   }
 
+
   // CSRF check
   if (!state || state !== req.session.oauthState) {
-    console.warn('[auth] CSRF state mismatch');
+    console.warn('[auth] CSRF state mismatch', { state, session: req.session.oauthState });
     return res.redirect('/?error=csrf');
   }
   delete req.session.oauthState;
 
   try {
+    console.log('[auth] Step 1: Exchange code for tokens');
     // ── Step 1: Exchange code for tokens ──────────────────────────────────────
     const tokenRes = await fetch(`${DISCORD_API}/oauth2/token`, {
       method: 'POST',
@@ -124,19 +128,23 @@ router.get('/callback', async (req, res) => {
       }),
     });
 
+
     if (!tokenRes.ok) {
       const err = await tokenRes.json();
       console.error('[auth] Token exchange failed:', err);
       return res.redirect('/?error=token_exchange');
     }
 
+
     const { access_token, refresh_token, expires_in, token_type } = await tokenRes.json();
     const tokenExpiresAt = new Date(Date.now() + expires_in * 1000);
+    console.log('[auth] Step 2: Fetch user identity');
 
     // ── Step 2: Fetch user identity ───────────────────────────────────────────
     const meRes = await fetch(`${DISCORD_API}/users/@me`, {
       headers: { Authorization: `${token_type} ${access_token}` },
     });
+
 
     if (!meRes.ok) {
       console.error('[auth] Failed to fetch user identity');
@@ -144,6 +152,7 @@ router.get('/callback', async (req, res) => {
     }
 
     const discordUser = await meRes.json();
+    console.log('[auth] Discord user:', discordUser);
     const {
       id: discordId,
       username,
@@ -158,18 +167,21 @@ router.get('/callback', async (req, res) => {
     let slug = baseSlug;
     let attempt = 0;
 
+
     while (true) {
       const conflict = await db.query('SELECT id FROM users WHERE slug = $1', [slug]);
       if (conflict.rowCount === 0) break;
       attempt++;
       slug = `${baseSlug}${attempt}`;
     }
+    console.log('[auth] Step 3: Slug generated:', slug);
 
     // ── Step 4: Encrypt tokens before storing ─────────────────────────────────
     const encryptedAccess  = encrypt(access_token);
     const encryptedRefresh = encrypt(refresh_token);
 
     // ── Step 5: Upsert user ───────────────────────────────────────────────────
+    console.log('[auth] Step 4: Upsert user');
     const upsertResult = await db.query(`
       INSERT INTO users
         (id, discord_id, discord_username, discriminator, avatar_hash, email,
@@ -197,14 +209,19 @@ router.get('/callback', async (req, res) => {
     ]);
 
     const user = upsertResult.rows[0];
+    console.log('[auth] Step 5: User upserted:', user);
 
     // ── Step 6: Set session ───────────────────────────────────────────────────
+
     req.session.userId    = user.id;
     req.session.discordId = discordId;
     req.session.plan      = user.plan;
+    console.log('[auth] Step 6: Session set:', req.session);
 
     // ── Step 7: Trigger async guild scan (non-blocking) ───────────────────────
     // We don't await this — user is redirected immediately, scan runs in background
+
+    console.log('[auth] Step 7: Triggering guild scan');
     triggerGuildScan(user.id, access_token, token_type).catch(err =>
       console.error('[auth] Background guild scan failed:', err)
     );
@@ -222,6 +239,7 @@ router.get('/callback', async (req, res) => {
       res.setHeader('Access-Control-Allow-Credentials', 'true');
     }
     // Redirect to new dashboard domain
+    console.log('[auth] Step 8: Redirecting to dashboard');
     res.redirect('https://dashboard.cordfol.org/dashboard.html');
 
   } catch (err) {
