@@ -85,8 +85,14 @@ client.on('interactionCreate', async (interaction) => {
 
   // ── /verify ────────────────────────────────────────────────────────────────
   if (commandName === 'verify') {
-    await interaction.deferReply({ ephemeral: true });
-
+    try {
+      await interaction.deferReply({ ephemeral: true });
+    } catch (err) {
+      // Ignore if already deferred or replied
+      if (interaction.deferred || interaction.replied) return;
+      console.error('[bot] Failed to defer reply:', err);
+      return;
+    }
     try {
       // 1. Check if this Discord user has a Cordfol account
       const userRow = await db.query(
@@ -95,6 +101,7 @@ client.on('interactionCreate', async (interaction) => {
       );
 
       if (userRow.rowCount === 0) {
+        if (!interaction.replied && !interaction.deferred) return;
         return interaction.editReply({
           embeds: [
             new EmbedBuilder()
@@ -114,6 +121,7 @@ client.on('interactionCreate', async (interaction) => {
       //    This is the "bot proof" — higher trust than OAuth alone
       const member = await guild.members.fetch(user.id);
       if (!member) {
+        if (!interaction.replied && !interaction.deferred) return;
         return interaction.editReply({ content: '❌ Could not find you in this server.' });
       }
 
@@ -123,6 +131,7 @@ client.on('interactionCreate', async (interaction) => {
         .map(r => ({ id: r.id, name: r.name, color: r.color }));
 
       if (roles.length === 0) {
+        if (!interaction.replied && !interaction.deferred) return;
         return interaction.editReply({ content: '⚠️ You don\'t have any roles in this server to verify.' });
       }
 
@@ -157,6 +166,7 @@ client.on('interactionCreate', async (interaction) => {
       const roleList = roles.slice(0, 5).map(r => `• **${r.name}**`).join('\n');
       const extra = roles.length > 5 ? `\n_...and ${roles.length - 5} more_` : '';
 
+      if (!interaction.replied && !interaction.deferred) return;
       return interaction.editReply({
         embeds: [
           new EmbedBuilder()
@@ -172,6 +182,7 @@ client.on('interactionCreate', async (interaction) => {
     } catch (err) {
       console.error('[bot] /verify error:', err.message);
       console.error('[bot] Full error:', err);
+      if (!interaction.replied && !interaction.deferred) return;
       return interaction.editReply({ content: `❌ Error: ${err.message}` });
     }
   }
