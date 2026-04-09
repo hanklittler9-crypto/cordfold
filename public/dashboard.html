@@ -24,367 +24,157 @@
 }
 html,body{height:100%;overflow:hidden;}
 body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);display:flex;flex-direction:column;}
-
-/* ── TOP BAR ── */
-.topbar{
-  height:52px;min-height:52px;
-  border-bottom:1px solid var(--border);
-  display:flex;align-items:center;justify-content:space-between;
-  padding:0 20px;background:var(--surface);
-  position:relative;z-index:50;flex-shrink:0;
-}
-.topbar-logo{
-  font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;
-  color:var(--text);text-decoration:none;
-}
+.topbar{height:52px;min-height:52px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 20px;background:var(--surface);position:relative;z-index:50;flex-shrink:0;}
+.topbar-logo{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;color:var(--text);text-decoration:none;}
 .topbar-logo span{color:var(--discord);}
 .topbar-right{display:flex;align-items:center;gap:12px;}
-.plan-badge{
-  font-family:'Space Mono',monospace;font-size:9px;letter-spacing:1px;
-  padding:3px 9px;border-radius:4px;
-  background:rgba(255,255,255,0.05);color:var(--muted2);border:1px solid var(--border);
-}
+.plan-badge{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:1px;padding:3px 9px;border-radius:4px;background:rgba(255,255,255,0.05);color:var(--muted2);border:1px solid var(--border);}
 .plan-badge.pro{background:rgba(255,184,0,0.1);color:var(--amber);border-color:rgba(255,184,0,0.2);}
-
-/* user menu trigger */
-.user-trigger{
-  display:flex;align-items:center;gap:8px;
-  padding:5px 10px 5px 5px;border-radius:8px;
-  cursor:pointer;border:1px solid transparent;
-  transition:background 0.15s,border-color 0.15s;position:relative;
-}
+.user-trigger{display:flex;align-items:center;gap:8px;padding:5px 10px 5px 5px;border-radius:8px;cursor:pointer;border:1px solid transparent;transition:background 0.15s,border-color 0.15s;position:relative;}
 .user-trigger:hover{background:var(--surface2);border-color:var(--border);}
-.user-avatar{
-  width:30px;height:30px;border-radius:50%;
-  background:linear-gradient(135deg,var(--discord),#7C3AED);
-  display:flex;align-items:center;justify-content:center;
-  font-size:13px;font-weight:500;color:white;flex-shrink:0;
-}
+.user-avatar{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--discord),#7C3AED);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:500;color:white;flex-shrink:0;}
 .user-name{font-size:13px;font-weight:500;}
 .user-caret{font-size:10px;color:var(--muted2);transition:transform 0.2s;}
 .user-trigger.open .user-caret{transform:rotate(180deg);}
-
-/* dropdown menu */
-.user-menu{
-  position:absolute;top:calc(100% + 8px);right:0;
-  width:200px;background:var(--surface);
-  border:1px solid var(--border);border-radius:10px;
-  overflow:hidden;z-index:200;
-  opacity:0;transform:translateY(-6px);pointer-events:none;
-  transition:opacity 0.15s,transform 0.15s;
-}
+.user-menu{position:absolute;top:calc(100% + 8px);right:0;width:200px;background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;z-index:200;opacity:0;transform:translateY(-6px);pointer-events:none;transition:opacity 0.15s,transform 0.15s;}
 .user-menu.open{opacity:1;transform:translateY(0);pointer-events:all;}
-.menu-header{
-  padding:14px 14px 10px;
-  border-bottom:1px solid var(--border);
-}
+.menu-header{padding:14px 14px 10px;border-bottom:1px solid var(--border);}
 .menu-discord-name{font-size:13px;font-weight:500;}
 .menu-discord-id{font-family:'Space Mono',monospace;font-size:10px;color:var(--muted2);margin-top:2px;}
-.menu-item{
-  display:flex;align-items:center;gap:10px;
-  padding:10px 14px;font-size:13px;color:var(--text);
-  cursor:pointer;transition:background 0.1s;text-decoration:none;
-}
+.menu-item{display:flex;align-items:center;gap:10px;padding:10px 14px;font-size:13px;color:var(--text);cursor:pointer;transition:background 0.1s;text-decoration:none;}
 .menu-item:hover{background:var(--surface2);}
 .menu-item.danger{color:#FF6B6B;}
 .menu-item.danger:hover{background:rgba(255,51,102,0.08);}
 .menu-ico{font-size:14px;width:18px;text-align:center;}
 .menu-divider{height:1px;background:var(--border);margin:4px 0;}
-
-/* ── LAYOUT ── */
 .layout{display:flex;flex:1;overflow:hidden;}
-
-/* ── SIDEBAR ── */
-.sidebar{
-  width:200px;min-width:200px;
-  background:var(--surface);border-right:1px solid var(--border);
-  display:flex;flex-direction:column;padding:16px 0;overflow-y:auto;
-  flex-shrink:0;
-}
-.sidebar-section-label{
-  font-family:'Space Mono',monospace;font-size:9px;letter-spacing:2px;
-  color:var(--muted);text-transform:uppercase;padding:8px 16px 4px;
-}
-.nav-item{
-  display:flex;align-items:center;gap:9px;
-  padding:9px 14px;font-size:13px;color:var(--muted2);
-  cursor:pointer;border-radius:0;border-right:2px solid transparent;
-  transition:all 0.15s;user-select:none;
-}
+.sidebar{width:200px;min-width:200px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:16px 0;overflow-y:auto;flex-shrink:0;}
+.sidebar-section-label{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;padding:8px 16px 4px;}
+.nav-item{display:flex;align-items:center;gap:9px;padding:9px 14px;font-size:13px;color:var(--muted2);cursor:pointer;border-radius:0;border-right:2px solid transparent;transition:all 0.15s;user-select:none;}
 .nav-item:hover{background:rgba(255,255,255,0.03);color:var(--text);}
-.nav-item.active{
-  background:rgba(88,101,242,0.08);
-  color:var(--text);
-  border-right-color:var(--discord);font-weight:500;
-}
+.nav-item.active{background:rgba(88,101,242,0.08);color:var(--text);border-right-color:var(--discord);font-weight:500;}
 .nav-icon{font-size:14px;width:18px;text-align:center;}
 .nav-dot{width:6px;height:6px;border-radius:50%;margin-left:auto;flex-shrink:0;}
 .dot-green{background:var(--neon);}
 .dot-amber{background:var(--amber);}
 .dot-blue{background:var(--discord);}
-
 .sidebar-spacer{flex:1;}
-.sidebar-bot-cta{
-  margin:12px;padding:12px;
-  background:rgba(88,101,242,0.08);border:1px solid rgba(88,101,242,0.2);
-  border-radius:8px;
-}
+.sidebar-bot-cta{margin:12px;padding:12px;background:rgba(88,101,242,0.08);border:1px solid rgba(88,101,242,0.2);border-radius:8px;}
 .bot-cta-title{font-size:12px;font-weight:500;margin-bottom:4px;}
 .bot-cta-desc{font-size:11px;color:var(--muted2);line-height:1.5;margin-bottom:10px;}
-.bot-cta-btn{
-  display:block;width:100%;text-align:center;
-  padding:7px;background:var(--discord);color:white;
-  font-size:11px;font-family:'Space Mono',monospace;letter-spacing:1px;
-  border:none;border-radius:6px;cursor:pointer;text-decoration:none;
-  transition:background 0.15s;
-}
+.bot-cta-btn{display:block;width:100%;text-align:center;padding:7px;background:var(--discord);color:white;font-size:11px;font-family:'Space Mono',monospace;letter-spacing:1px;border:none;border-radius:6px;cursor:pointer;text-decoration:none;transition:background 0.15s;}
 .bot-cta-btn:hover{background:var(--discord-dim);}
-
-/* ── MAIN ── */
 .main{flex:1;overflow-y:auto;padding:28px 32px;}
 .main::-webkit-scrollbar{width:4px;}
 .main::-webkit-scrollbar-track{background:transparent;}
 .main::-webkit-scrollbar-thumb{background:var(--surface2);border-radius:2px;}
-
 .tab{display:none;}
 .tab.active{display:block;}
-
 .page-title{font-size:20px;font-weight:500;margin-bottom:4px;}
 .page-sub{font-size:13px;color:var(--muted2);margin-bottom:24px;line-height:1.5;}
-
-/* cards */
-.card{
-  background:var(--surface);border:1px solid var(--border);
-  border-radius:12px;padding:20px;margin-bottom:16px;
-}
-.card-title{
-  font-size:13px;font-weight:500;margin-bottom:16px;
-  display:flex;align-items:center;justify-content:space-between;
-  color:var(--text);
-}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px;}
+.card-title{font-size:13px;font-weight:500;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;color:var(--text);}
 .card-subtitle{font-size:11px;color:var(--muted2);}
-
-/* metrics */
 .metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:18px;}
 .metric{background:var(--surface2);border-radius:8px;padding:14px 16px;}
 .metric-label{font-size:10px;color:var(--muted2);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;}
 .metric-val{font-size:24px;font-weight:500;}
 .metric-delta{font-size:11px;color:var(--neon);margin-top:3px;}
 .metric-delta.neg{color:var(--hot);}
-
-/* role rows */
 .role-list{display:flex;flex-direction:column;gap:0;}
-.role-row{
-  display:flex;align-items:center;gap:12px;
-  padding:12px 0;border-bottom:1px solid var(--border);
-  transition:background 0.1s;
-}
+.role-row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);transition:background 0.1s;}
 .role-row:first-child{padding-top:0;}
 .role-row:last-child{border-bottom:none;padding-bottom:0;}
-.server-icon{
-  width:32px;height:32px;border-radius:8px;
-  display:flex;align-items:center;justify-content:center;
-  font-size:11px;font-weight:500;flex-shrink:0;
-}
+.server-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;flex-shrink:0;}
 .role-info{flex:1;min-width:0;}
 .role-name{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .role-meta{font-size:11px;color:var(--muted2);margin-top:1px;}
-.proof-chip{
-  display:inline-flex;align-items:center;gap:4px;
-  font-family:'Space Mono',monospace;font-size:9px;letter-spacing:0.5px;
-  padding:3px 8px;border-radius:10px;
-  background:rgba(88,101,242,0.1);color:#8b9fff;
-  border:1px solid rgba(88,101,242,0.2);flex-shrink:0;
-}
+.proof-chip{display:inline-flex;align-items:center;gap:4px;font-family:'Space Mono',monospace;font-size:9px;letter-spacing:0.5px;padding:3px 8px;border-radius:10px;background:rgba(88,101,242,0.1);color:#8b9fff;border:1px solid rgba(88,101,242,0.2);flex-shrink:0;}
 .proof-dot{width:5px;height:5px;border-radius:50%;}
-.badge{
-  font-size:10px;padding:3px 8px;border-radius:8px;
-  font-weight:500;flex-shrink:0;
-  font-family:'Space Mono',monospace;letter-spacing:0.5px;
-}
+.badge{font-size:10px;padding:3px 8px;border-radius:8px;font-weight:500;flex-shrink:0;font-family:'Space Mono',monospace;letter-spacing:0.5px;}
 .badge-v{background:rgba(0,255,178,0.1);color:var(--neon);border:1px solid rgba(0,255,178,0.2);}
 .badge-p{background:rgba(255,255,255,0.05);color:var(--muted2);}
-
-/* toggle */
-.toggle{
-  width:34px;height:20px;border-radius:10px;
-  background:var(--muted);cursor:pointer;position:relative;
-  flex-shrink:0;transition:background 0.2s;
-}
+.toggle{width:34px;height:20px;border-radius:10px;background:var(--muted);cursor:pointer;position:relative;flex-shrink:0;transition:background 0.2s;}
 .toggle.on{background:var(--discord);}
-.toggle::after{
-  content:'';position:absolute;
-  width:14px;height:14px;border-radius:50%;
-  background:white;top:3px;left:3px;transition:left 0.2s;
-}
+.toggle::after{content:'';position:absolute;width:14px;height:14px;border-radius:50%;background:white;top:3px;left:3px;transition:left 0.2s;}
 .toggle.on::after{left:17px;}
-
-/* form */
 .field{display:flex;flex-direction:column;gap:5px;margin-bottom:14px;}
 .field-label{font-size:11px;font-weight:500;color:var(--muted2);text-transform:uppercase;letter-spacing:0.5px;}
-.field-input{
-  height:36px;background:var(--surface2);border:1px solid var(--border);
-  border-radius:8px;padding:0 12px;font-size:13px;
-  color:var(--text);font-family:'DM Sans',sans-serif;
-  transition:border-color 0.15s;outline:none;
-}
+.field-input{height:36px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:0 12px;font-size:13px;color:var(--text);font-family:'DM Sans',sans-serif;transition:border-color 0.15s;outline:none;}
 .field-input:focus{border-color:rgba(88,101,242,0.5);}
 .field-input.monospace{font-family:'Space Mono',monospace;font-size:12px;}
 textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
 .field-prefix-wrap{display:flex;}
-.field-pre{
-  height:36px;display:flex;align-items:center;padding:0 10px;
-  background:var(--surface2);border:1px solid var(--border);border-right:none;
-  border-radius:8px 0 0 8px;font-family:'Space Mono',monospace;font-size:11px;color:var(--muted2);
-  flex-shrink:0;
-}
+.field-pre{height:36px;display:flex;align-items:center;padding:0 10px;background:var(--surface2);border:1px solid var(--border);border-right:none;border-radius:8px 0 0 8px;font-family:'Space Mono',monospace;font-size:11px;color:var(--muted2);flex-shrink:0;}
 .field-prefix-wrap .field-input{border-radius:0 8px 8px 0;}
 .field-hint{font-size:11px;color:var(--neon);margin-top:2px;}
 .field-hint.err{color:var(--hot);}
 .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
-
-/* buttons */
-.btn{
-  height:36px;padding:0 18px;border-radius:8px;cursor:pointer;
-  font-family:'Space Mono',monospace;font-size:11px;letter-spacing:1px;
-  border:none;transition:all 0.15s;display:inline-flex;align-items:center;gap:7px;
-}
+.btn{height:36px;padding:0 18px;border-radius:8px;cursor:pointer;font-family:'Space Mono',monospace;font-size:11px;letter-spacing:1px;border:none;transition:all 0.15s;display:inline-flex;align-items:center;gap:7px;}
 .btn-primary{background:var(--discord);color:white;}
 .btn-primary:hover{background:var(--discord-dim);transform:translateY(-1px);}
 .btn-ghost{background:transparent;color:var(--muted2);border:1px solid var(--border);}
 .btn-ghost:hover{border-color:rgba(255,255,255,0.2);color:var(--text);}
 .btn-danger{background:rgba(255,51,102,0.1);color:var(--hot);border:1px solid rgba(255,51,102,0.2);}
 .btn-danger:hover{background:rgba(255,51,102,0.2);}
-
 .btn-row{display:flex;gap:10px;margin-top:4px;}
 .btn-row.right{justify-content:flex-end;}
-
-/* scan */
 .scan-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
 .scan-status{font-family:'Space Mono',monospace;font-size:10px;color:var(--muted2);display:flex;align-items:center;gap:6px;}
 .scan-dot{width:6px;height:6px;border-radius:50%;background:var(--neon);animation:pulse 2s infinite;}
 @keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.3;}}
-
-/* theme grid */
 .theme-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
-.theme-card{
-  border:1.5px solid var(--border);border-radius:10px;
-  padding:14px;cursor:pointer;transition:all 0.15s;
-}
+.theme-card{border:1.5px solid var(--border);border-radius:10px;padding:14px;cursor:pointer;transition:all 0.15s;}
 .theme-card:hover{border-color:rgba(255,255,255,0.15);}
 .theme-card.selected{border-color:var(--discord);background:rgba(88,101,242,0.05);}
 .theme-card.locked{opacity:0.5;cursor:not-allowed;}
-.theme-preview{
-  height:60px;border-radius:7px;margin-bottom:10px;
-  display:flex;align-items:flex-end;padding:7px;overflow:hidden;
-}
+.theme-preview{height:60px;border-radius:7px;margin-bottom:10px;display:flex;align-items:flex-end;padding:7px;overflow:hidden;}
 .theme-name{font-size:12px;font-weight:500;margin-bottom:2px;}
-.theme-tag{
-  font-size:9px;font-family:'Space Mono',monospace;letter-spacing:0.5px;
-  padding:2px 6px;border-radius:4px;display:inline-block;
-}
+.theme-tag{font-size:9px;font-family:'Space Mono',monospace;letter-spacing:0.5px;padding:2px 6px;border-radius:4px;display:inline-block;}
 .tag-free{background:rgba(0,255,178,0.1);color:var(--neon);}
 .tag-pro{background:rgba(255,184,0,0.1);color:var(--amber);}
-
-/* pro upgrade banner */
-.pro-banner{
-  background:linear-gradient(135deg,rgba(88,101,242,0.15),rgba(124,58,237,0.15));
-  border:1px solid rgba(88,101,242,0.3);border-radius:12px;
-  padding:20px;margin-bottom:18px;
-  display:flex;align-items:center;justify-content:space-between;gap:16px;
-}
+.pro-banner{background:linear-gradient(135deg,rgba(88,101,242,0.15),rgba(124,58,237,0.15));border:1px solid rgba(88,101,242,0.3);border-radius:12px;padding:20px;margin-bottom:18px;display:flex;align-items:center;justify-content:space-between;gap:16px;}
 .pro-banner-text .pro-title{font-size:15px;font-weight:500;margin-bottom:4px;}
 .pro-banner-text .pro-desc{font-size:12px;color:var(--muted2);}
-.pro-banner-btn{
-  padding:9px 20px;background:var(--amber);color:#1a0800;
-  font-family:'Space Mono',monospace;font-size:11px;letter-spacing:1px;
-  border:none;border-radius:7px;cursor:pointer;white-space:nowrap;
-  transition:all 0.15s;flex-shrink:0;
-}
+.pro-banner-btn{padding:9px 20px;background:var(--amber);color:#1a0800;font-family:'Space Mono',monospace;font-size:11px;letter-spacing:1px;border:none;border-radius:7px;cursor:pointer;white-space:nowrap;transition:all 0.15s;flex-shrink:0;}
 .pro-banner-btn:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(255,184,0,0.25);}
-
-/* analytics */
 .chart-area{height:100px;display:flex;align-items:flex-end;gap:6px;margin-bottom:6px;}
-.bar{
-  flex:1;border-radius:3px 3px 0 0;
-  background:var(--discord);opacity:0.6;transition:opacity 0.15s;cursor:default;min-height:4px;
-}
+.bar{flex:1;border-radius:3px 3px 0 0;background:var(--discord);opacity:0.6;transition:opacity 0.15s;cursor:default;min-height:4px;}
 .bar:hover{opacity:1;}
 .bar-days{display:flex;gap:6px;}
 .bar-day{flex:1;font-size:9px;color:var(--muted);text-align:center;font-family:'Space Mono',monospace;}
-
 .ref-list{display:flex;flex-direction:column;gap:10px;margin-top:4px;}
 .ref-row{display:flex;align-items:center;gap:10px;}
 .ref-label{font-size:12px;color:var(--muted2);width:100px;flex-shrink:0;}
 .ref-bar-wrap{flex:1;height:5px;border-radius:3px;background:var(--surface2);}
 .ref-bar-fill{height:100%;border-radius:3px;background:var(--discord);}
 .ref-pct{font-size:11px;color:var(--text);width:32px;text-align:right;font-family:'Space Mono',monospace;}
-
-/* live preview */
-.live-preview{
-  background:#0d0d0d;border-radius:10px;padding:20px;
-  display:flex;flex-direction:column;align-items:center;gap:10px;
-  border:1px solid rgba(255,255,255,0.05);
-}
-.lp-avatar{
-  width:56px;height:56px;border-radius:50%;
-  background:linear-gradient(135deg,var(--discord),#7C3AED);
-  display:flex;align-items:center;justify-content:center;
-  font-size:20px;font-weight:500;color:white;
-}
+.live-preview{background:#0d0d0d;border-radius:10px;padding:20px;display:flex;flex-direction:column;align-items:center;gap:10px;border:1px solid rgba(255,255,255,0.05);}
+.lp-avatar{width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,var(--discord),#7C3AED);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:500;color:white;}
 .lp-name{font-size:15px;font-weight:500;color:#f1f5f9;}
 .lp-bio{font-size:11px;color:#64748b;text-align:center;line-height:1.5;}
 .lp-roles{display:flex;flex-wrap:wrap;gap:5px;justify-content:center;margin-top:4px;}
-.lp-role{
-  font-size:10px;padding:3px 9px;border-radius:10px;
-  border:1px solid #1e293b;color:#475569;
-  display:flex;align-items:center;gap:4px;
-}
+.lp-role{font-size:10px;padding:3px 9px;border-radius:10px;border:1px solid #1e293b;color:#475569;display:flex;align-items:center;gap:4px;}
 .lp-dot{width:5px;height:5px;border-radius:50%;background:var(--neon);}
-
-/* toast */
-.toast{
-  position:fixed;bottom:24px;right:24px;
-  background:var(--surface);border:1px solid var(--border);border-radius:10px;
-  padding:12px 18px;font-size:13px;z-index:999;
-  display:flex;align-items:center;gap:10px;
-  transform:translateY(80px);opacity:0;transition:all 0.25s;
-  box-shadow:0 8px 32px rgba(0,0,0,0.5);
-}
+.toast{position:fixed;bottom:24px;right:24px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 18px;font-size:13px;z-index:999;display:flex;align-items:center;gap:10px;transform:translateY(80px);opacity:0;transition:all 0.25s;box-shadow:0 8px 32px rgba(0,0,0,0.5);}
 .toast.show{transform:translateY(0);opacity:1;}
 .toast-icon{font-size:16px;}
-
-/* sign-out confirm */
-.modal-overlay{
-  position:fixed;inset:0;background:rgba(0,0,0,0.7);
-  z-index:500;display:flex;align-items:center;justify-content:center;
-  opacity:0;pointer-events:none;transition:opacity 0.2s;
-}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:500;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.2s;}
 .modal-overlay.open{opacity:1;pointer-events:all;}
-.modal{
-  background:var(--surface);border:1px solid var(--border);
-  border-radius:14px;padding:28px;width:360px;
-  transform:scale(0.95);transition:transform 0.2s;
-}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:28px;width:360px;transform:scale(0.95);transition:transform 0.2s;}
 .modal-overlay.open .modal{transform:scale(1);}
 .modal-title{font-size:16px;font-weight:500;margin-bottom:8px;}
 .modal-desc{font-size:13px;color:var(--muted2);line-height:1.6;margin-bottom:24px;}
 .modal-actions{display:flex;gap:10px;justify-content:flex-end;}
-
-/* notification dot on verify tab */
-.notif-dot{
-  width:7px;height:7px;border-radius:50%;
-  background:var(--hot);margin-left:auto;flex-shrink:0;
-}
+.notif-dot{width:7px;height:7px;border-radius:50%;background:var(--hot);margin-left:auto;flex-shrink:0;}
 </style>
 </head>
 <body>
 
-<!-- TOPBAR -->
 <div class="topbar">
   <a href="index.html" class="topbar-logo">CORD<span>FOL</span>.IO</a>
   <div class="topbar-right" id="topbarRight">
-    <button id="loginBtn" class="btn btn-primary" onclick="window.location.href='https://discord.com/oauth2/authorize?client_id=1491214572231721071&response_type=code&redirect_uri=https%3A%2F%2Fdashboard.cordfol.org&scope=identify+guilds.members.read+role_connections.write+guilds'">Login with Discord</button>
+    <button id="loginBtn" class="btn btn-primary" onclick="window.location.href='https://discord.com/oauth2/authorize?client_id=1491214572231721071&response_type=code&redirect_uri=https%3A%2F%2Fdashboard.cordfol.org&scope=identify+role_connections.write+guilds'">Login with Discord</button>
     <div id="userInfo" style="display:none">
       <div class="plan-badge" id="planBadge">FREE PLAN</div>
       <div class="user-trigger" id="userTrigger" onclick="toggleUserMenu()">
@@ -396,61 +186,30 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
             <div class="menu-discord-name" id="discordName">...</div>
             <div class="menu-discord-id" id="discordId">ID: ...</div>
           </div>
-          <a class="menu-item" href="#" onclick="switchTab('profile');closeMenu()">
-            <span class="menu-ico">👤</span> My Profile
-          </a>
-          <a class="menu-item" href="#" onclick="switchTab('theme');closeMenu()">
-            <span class="menu-ico">🎨</span> Theme Settings
-          </a>
-          <a class="menu-item" href="index.html" target="_blank">
-            <span class="menu-ico">🌐</span> View Public Page
-          </a>
+          <a class="menu-item" href="#" onclick="switchTab('profile');closeMenu()"><span class="menu-ico">👤</span> My Profile</a>
+          <a class="menu-item" href="#" onclick="switchTab('theme');closeMenu()"><span class="menu-ico">🎨</span> Theme Settings</a>
+          <a class="menu-item" href="index.html" target="_blank"><span class="menu-ico">🌐</span> View Public Page</a>
           <div class="menu-divider"></div>
-          <a class="menu-item" href="#" onclick="openUpgrade()">
-            <span class="menu-ico">⭐</span> Upgrade to Pro
-          </a>
+          <a class="menu-item" href="#" onclick="openUpgrade()"><span class="menu-ico">⭐</span> Upgrade to Pro</a>
           <div class="menu-divider"></div>
-          <div class="menu-item danger" onclick="logout()">
-            <span class="menu-ico">🚪</span> Sign Out
-          </div>
+          <div class="menu-item danger" onclick="logout()"><span class="menu-ico">🚪</span> Sign Out</div>
         </div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- LAYOUT -->
 <div class="layout">
-
-  <!-- SIDEBAR -->
   <div class="sidebar">
     <div class="sidebar-section-label">Main</div>
-    <div class="nav-item active" data-tab="verify" onclick="switchTab('verify')">
-      <span class="nav-icon">🛡️</span> Verify Roles
-      <div class="nav-dot dot-green"></div>
-    </div>
-    <div class="nav-item" data-tab="profile" onclick="switchTab('profile')">
-      <span class="nav-icon">👤</span> Profile
-    </div>
-    <div class="nav-item" data-tab="theme" onclick="switchTab('theme')">
-      <span class="nav-icon">🎨</span> Theme
-      <div class="nav-dot dot-amber"></div>
-    </div>
-    <div class="nav-item" data-tab="analytics" onclick="switchTab('analytics')">
-      <span class="nav-icon">📊</span> Analytics
-    </div>
-
+    <div class="nav-item active" data-tab="verify" onclick="switchTab('verify')"><span class="nav-icon">🛡️</span> Verify Roles<div class="nav-dot dot-green"></div></div>
+    <div class="nav-item" data-tab="profile" onclick="switchTab('profile')"><span class="nav-icon">👤</span> Profile</div>
+    <div class="nav-item" data-tab="theme" onclick="switchTab('theme')"><span class="nav-icon">🎨</span> Theme<div class="nav-dot dot-amber"></div></div>
+    <div class="nav-item" data-tab="analytics" onclick="switchTab('analytics')"><span class="nav-icon">📊</span> Analytics</div>
     <div class="sidebar-section-label" style="margin-top:8px;">Server Bot</div>
-    <div class="nav-item" data-tab="bot" onclick="switchTab('bot')">
-      <span class="nav-icon">🤖</span> Bot Setup
-      <div class="notif-dot"></div>
-    </div>
-    <div class="nav-item" data-tab="servers" onclick="switchTab('servers')">
-      <span class="nav-icon">🏠</span> My Servers
-    </div>
-
+    <div class="nav-item" data-tab="bot" onclick="switchTab('bot')"><span class="nav-icon">🤖</span> Bot Setup<div class="notif-dot"></div></div>
+    <div class="nav-item" data-tab="servers" onclick="switchTab('servers')"><span class="nav-icon">🏠</span> My Servers</div>
     <div class="sidebar-spacer"></div>
-
     <div class="sidebar-bot-cta">
       <div class="bot-cta-title">Add bot to server</div>
       <div class="bot-cta-desc">Enable role verification for your members.</div>
@@ -458,38 +217,27 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
     </div>
   </div>
 
-  <!-- MAIN CONTENT -->
   <div class="main">
 
-    <!-- ── VERIFY TAB ── -->
     <div class="tab active" id="tab-verify">
       <div class="page-title">Verified Role History</div>
       <div class="page-sub">These roles are confirmed via Discord's API. Toggle visibility on your public profile. Roles re-verify every 24h automatically.</div>
       <div class="scan-header">
-        <div class="scan-status" id="scanStatus">
-          <div class="scan-dot"></div>
-          Loading...
-        </div>
+        <div class="scan-status" id="scanStatus"><div class="scan-dot"></div> Loading...</div>
         <button class="btn btn-ghost" onclick="triggerScan(this)">🔄 Re-scan Guilds</button>
       </div>
       <div class="card">
-        <div class="card-title">
-          Active verified roles
-          <span class="card-subtitle" id="roleCount">Loading...</span>
-        </div>
-        <div class="role-list" id="roleList">
-          <!-- Roles will be loaded here -->
-        </div>
+        <div class="card-title">Active verified roles<span class="card-subtitle" id="roleCount">Loading...</span></div>
+        <div class="role-list" id="roleList"></div>
       </div>
       <div class="card" style="padding:14px 20px">
         <div style="font-size:12px;color:var(--muted2);line-height:1.7">
           <strong style="color:var(--text)">How verification works:</strong>
-          Roles are verified using your Discord OAuth token (<code style="background:var(--surface2);padding:1px 5px;border-radius:3px;font-size:11px">guilds.members.read</code>). Servers with our bot installed get additional bot-level proof. You cannot add roles manually — this is what makes your profile trustworthy.
+          Roles are verified using your Discord OAuth token. Servers with our bot installed get additional bot-level proof. You cannot add roles manually — this is what makes your profile trustworthy.
         </div>
       </div>
     </div>
 
-    <!-- ── PROFILE TAB ── -->
     <div class="tab" id="tab-profile">
       <div class="page-title">Profile Builder</div>
       <div class="page-sub" id="profileUrl">Customize your public page at cordfol.io/...</div>
@@ -497,42 +245,21 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
         <div>
           <div class="card">
             <div class="card-title">Identity</div>
-            <div class="field">
-              <div class="field-label">Display Name</div>
-              <input class="field-input" id="displayName" value="" oninput="updatePreview()"/>
-            </div>
+            <div class="field"><div class="field-label">Display Name</div><input class="field-input" id="displayName" value="" oninput="updatePreview()"/></div>
             <div class="field">
               <div class="field-label">Your URL</div>
-              <div class="field-prefix-wrap">
-                <div class="field-pre">cordfol.io/</div>
-                <input class="field-input monospace" id="slug" value="" oninput="checkSlug(this)"/>
-              </div>
+              <div class="field-prefix-wrap"><div class="field-pre">cordfol.io/</div><input class="field-input monospace" id="slug" value="" oninput="checkSlug(this)"/></div>
               <div class="field-hint" id="slug-hint">Checking...</div>
             </div>
-            <div class="field" style="margin-bottom:0">
-              <div class="field-label">Bio</div>
-              <textarea class="field-input" id="bioText" oninput="updatePreview()"></textarea>
-            </div>
+            <div class="field" style="margin-bottom:0"><div class="field-label">Bio</div><textarea class="field-input" id="bioText" oninput="updatePreview()"></textarea></div>
           </div>
           <div class="card">
             <div class="card-title">Social Links</div>
             <div class="grid-2">
-              <div class="field">
-                <div class="field-label">Twitter / X</div>
-                <input class="field-input" id="twitterInput"/>
-              </div>
-              <div class="field">
-                <div class="field-label">GitHub</div>
-                <input class="field-input" id="githubInput"/>
-              </div>
-              <div class="field">
-                <div class="field-label">YouTube</div>
-                <input class="field-input" id="youtubeInput"/>
-              </div>
-              <div class="field">
-                <div class="field-label">Website</div>
-                <input class="field-input" id="websiteInput"/>
-              </div>
+              <div class="field"><div class="field-label">Twitter / X</div><input class="field-input" id="twitterInput"/></div>
+              <div class="field"><div class="field-label">GitHub</div><input class="field-input" id="githubInput"/></div>
+              <div class="field"><div class="field-label">YouTube</div><input class="field-input" id="youtubeInput"/></div>
+              <div class="field"><div class="field-label">Website</div><input class="field-input" id="websiteInput"/></div>
             </div>
           </div>
           <div class="btn-row right">
@@ -545,24 +272,18 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
             <div class="card-title" style="font-size:11px;font-family:'Space Mono',monospace;letter-spacing:1px;color:var(--muted2)">LIVE PREVIEW</div>
             <div class="live-preview" id="livePreview">
               <div class="lp-avatar" id="lp-initials">A</div>
-              <div class="lp-name" id="lp-name">Astro</div>
-              <div class="lp-bio" id="lp-bio">Discord mod, bot dev, esports coach.</div>
-              <div class="lp-roles">
-                <div class="lp-role"><div class="lp-dot"></div>Head Mod</div>
-                <div class="lp-role"><div class="lp-dot"></div>Dev</div>
-                <div class="lp-role"><div class="lp-dot"></div>Admin</div>
-              </div>
+              <div class="lp-name" id="lp-name">User</div>
+              <div class="lp-bio" id="lp-bio">Your bio here.</div>
+              <div class="lp-roles"><div class="lp-role"><div class="lp-dot"></div>Head Mod</div><div class="lp-role"><div class="lp-dot"></div>Dev</div></div>
             </div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- ── THEME TAB ── -->
     <div class="tab" id="tab-theme">
       <div class="page-title">Theme & Appearance</div>
       <div class="page-sub">Choose how your public profile looks. Pro unlocks animated glassmorphism themes and custom music.</div>
-
       <div class="pro-banner">
         <div class="pro-banner-text">
           <div class="pro-title">⭐ Upgrade to Pro — $4.99/mo</div>
@@ -570,235 +291,105 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
         </div>
         <button class="pro-banner-btn" onclick="openUpgrade()">Upgrade Now</button>
       </div>
-
       <div class="card">
         <div class="card-title">Choose a theme</div>
         <div class="theme-grid">
-          <div class="theme-card selected" onclick="selectTheme(this,'Void')">
-            <div class="theme-preview" style="background:#0d0d0d">
-              <div style="width:100%;height:10px;border-radius:5px;background:#5865F2;opacity:0.9"></div>
-            </div>
-            <div class="theme-name">Void</div>
-            <span class="theme-tag tag-free">FREE</span>
-          </div>
-          <div class="theme-card" onclick="selectTheme(this,'Abyss')">
-            <div class="theme-preview" style="background:#0f172a">
-              <div style="width:100%;height:10px;border-radius:5px;background:#38bdf8;opacity:0.9"></div>
-            </div>
-            <div class="theme-name">Abyss</div>
-            <span class="theme-tag tag-free">FREE</span>
-          </div>
-          <div class="theme-card" onclick="selectTheme(this,'Nebula')">
-            <div class="theme-preview" style="background:#1a0a2e">
-              <div style="width:100%;height:10px;border-radius:5px;background:#a855f7;opacity:0.9"></div>
-            </div>
-            <div class="theme-name">Nebula</div>
-            <span class="theme-tag tag-free">FREE</span>
-          </div>
-          <div class="theme-card locked" onclick="showToast('🔒','Upgrade to Pro to unlock glass themes!')">
-            <div class="theme-preview" style="background:linear-gradient(135deg,#0d0d0d,#1a1a2e)">
-              <div style="width:55%;height:32px;border-radius:7px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12)"></div>
-            </div>
-            <div class="theme-name">Glass</div>
-            <span class="theme-tag tag-pro">PRO · Animated</span>
-          </div>
-          <div class="theme-card locked" onclick="showToast('🔒','Upgrade to Pro to unlock glass themes!')">
-            <div class="theme-preview" style="background:linear-gradient(135deg,#050510,#0a0520)">
-              <div style="width:55%;height:32px;border-radius:7px;background:rgba(88,101,242,0.12);border:1px solid rgba(88,101,242,0.25)"></div>
-            </div>
-            <div class="theme-name">Prismatic</div>
-            <span class="theme-tag tag-pro">PRO · Music</span>
-          </div>
-          <div class="theme-card locked" onclick="showToast('🔒','Upgrade to Pro to unlock glass themes!')">
-            <div class="theme-preview" style="background:#0a0a0a">
-              <div style="width:55%;height:32px;border-radius:7px;background:rgba(255,184,0,0.1);border:1px solid rgba(255,184,0,0.25)"></div>
-            </div>
-            <div class="theme-name">Ember</div>
-            <span class="theme-tag tag-pro">PRO · Music</span>
-          </div>
+          <div class="theme-card selected" onclick="selectTheme(this,'Void')"><div class="theme-preview" style="background:#0d0d0d"><div style="width:100%;height:10px;border-radius:5px;background:#5865F2;opacity:0.9"></div></div><div class="theme-name">Void</div><span class="theme-tag tag-free">FREE</span></div>
+          <div class="theme-card" onclick="selectTheme(this,'Abyss')"><div class="theme-preview" style="background:#0f172a"><div style="width:100%;height:10px;border-radius:5px;background:#38bdf8;opacity:0.9"></div></div><div class="theme-name">Abyss</div><span class="theme-tag tag-free">FREE</span></div>
+          <div class="theme-card" onclick="selectTheme(this,'Nebula')"><div class="theme-preview" style="background:#1a0a2e"><div style="width:100%;height:10px;border-radius:5px;background:#a855f7;opacity:0.9"></div></div><div class="theme-name">Nebula</div><span class="theme-tag tag-free">FREE</span></div>
+          <div class="theme-card locked" onclick="showToast('🔒','Upgrade to Pro to unlock glass themes!')"><div class="theme-preview" style="background:linear-gradient(135deg,#0d0d0d,#1a1a2e)"><div style="width:55%;height:32px;border-radius:7px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12)"></div></div><div class="theme-name">Glass</div><span class="theme-tag tag-pro">PRO · Animated</span></div>
+          <div class="theme-card locked" onclick="showToast('🔒','Upgrade to Pro to unlock glass themes!')"><div class="theme-preview" style="background:linear-gradient(135deg,#050510,#0a0520)"><div style="width:55%;height:32px;border-radius:7px;background:rgba(88,101,242,0.12);border:1px solid rgba(88,101,242,0.25)"></div></div><div class="theme-name">Prismatic</div><span class="theme-tag tag-pro">PRO · Music</span></div>
+          <div class="theme-card locked" onclick="showToast('🔒','Upgrade to Pro to unlock glass themes!')"><div class="theme-preview" style="background:#0a0a0a"><div style="width:55%;height:32px;border-radius:7px;background:rgba(255,184,0,0.1);border:1px solid rgba(255,184,0,0.25)"></div></div><div class="theme-name">Ember</div><span class="theme-tag tag-pro">PRO · Music</span></div>
         </div>
       </div>
-
       <div class="card">
         <div class="card-title">Accent Color <span class="card-subtitle">Free customization</span></div>
         <div class="grid-2">
-          <div class="field">
-            <div class="field-label">Primary Accent</div>
-            <input type="color" value="#5865F2" style="width:100%;height:36px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);cursor:pointer;padding:2px;"/>
-          </div>
-          <div class="field">
-            <div class="field-label">Card Background</div>
-            <input type="color" value="#111111" style="width:100%;height:36px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);cursor:pointer;padding:2px;"/>
-          </div>
+          <div class="field"><div class="field-label">Primary Accent</div><input type="color" value="#5865F2" style="width:100%;height:36px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);cursor:pointer;padding:2px;"/></div>
+          <div class="field"><div class="field-label">Card Background</div><input type="color" value="#111111" style="width:100%;height:36px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);cursor:pointer;padding:2px;"/></div>
         </div>
-        <div class="btn-row right" style="margin-top:0">
-          <button class="btn btn-primary" onclick="showToast('🎨','Theme saved!')">Save Theme</button>
-        </div>
+        <div class="btn-row right" style="margin-top:0"><button class="btn btn-primary" onclick="showToast('🎨','Theme saved!')">Save Theme</button></div>
       </div>
     </div>
 
-    <!-- ── ANALYTICS TAB ── -->
     <div class="tab" id="tab-analytics">
       <div class="page-title">Profile Analytics</div>
       <div class="page-sub">How your public profile is performing. Data updates every hour.</div>
-
       <div class="metrics">
-        <div class="metric">
-          <div class="metric-label">Profile Views</div>
-          <div class="metric-val" id="cnt-views">0</div>
-          <div class="metric-delta">+18% this week</div>
-        </div>
-        <div class="metric">
-          <div class="metric-label">Role Clicks</div>
-          <div class="metric-val" id="cnt-roles">0</div>
-          <div class="metric-delta">+6% this week</div>
-        </div>
-        <div class="metric">
-          <div class="metric-label">Link Clicks</div>
-          <div class="metric-val" id="cnt-links">0</div>
-          <div class="metric-delta neg">-2% this week</div>
-        </div>
+        <div class="metric"><div class="metric-label">Profile Views</div><div class="metric-val" id="cnt-views">0</div><div class="metric-delta">+18% this week</div></div>
+        <div class="metric"><div class="metric-label">Role Clicks</div><div class="metric-val" id="cnt-roles">0</div><div class="metric-delta">+6% this week</div></div>
+        <div class="metric"><div class="metric-label">Link Clicks</div><div class="metric-val" id="cnt-links">0</div><div class="metric-delta neg">-2% this week</div></div>
       </div>
-
       <div class="card">
         <div class="card-title">Views — last 7 days</div>
         <div class="chart-area" id="chart"></div>
         <div class="bar-days" id="chartDays"></div>
       </div>
-
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
         <div class="card">
           <div class="card-title">Top referrers</div>
           <div class="ref-list">
-            <div class="ref-row">
-              <div class="ref-label">Discord DMs</div>
-              <div class="ref-bar-wrap"><div class="ref-bar-fill" style="width:68%"></div></div>
-              <div class="ref-pct">68%</div>
-            </div>
-            <div class="ref-row">
-              <div class="ref-label">Direct link</div>
-              <div class="ref-bar-wrap"><div class="ref-bar-fill" style="width:19%"></div></div>
-              <div class="ref-pct">19%</div>
-            </div>
-            <div class="ref-row">
-              <div class="ref-label">Twitter / X</div>
-              <div class="ref-bar-wrap"><div class="ref-bar-fill" style="width:13%"></div></div>
-              <div class="ref-pct">13%</div>
-            </div>
+            <div class="ref-row"><div class="ref-label">Discord DMs</div><div class="ref-bar-wrap"><div class="ref-bar-fill" style="width:68%"></div></div><div class="ref-pct">68%</div></div>
+            <div class="ref-row"><div class="ref-label">Direct link</div><div class="ref-bar-wrap"><div class="ref-bar-fill" style="width:19%"></div></div><div class="ref-pct">19%</div></div>
+            <div class="ref-row"><div class="ref-label">Twitter / X</div><div class="ref-bar-wrap"><div class="ref-bar-fill" style="width:13%"></div></div><div class="ref-pct">13%</div></div>
           </div>
         </div>
         <div class="card">
           <div class="card-title">Most clicked roles</div>
           <div class="ref-list">
-            <div class="ref-row">
-              <div class="ref-label">Head Mod</div>
-              <div class="ref-bar-wrap"><div class="ref-bar-fill" style="width:72%"></div></div>
-              <div class="ref-pct">72%</div>
-            </div>
-            <div class="ref-row">
-              <div class="ref-label">Developer</div>
-              <div class="ref-bar-wrap"><div class="ref-bar-fill" style="width:52%"></div></div>
-              <div class="ref-pct">52%</div>
-            </div>
-            <div class="ref-row">
-              <div class="ref-label">Admin</div>
-              <div class="ref-bar-wrap"><div class="ref-bar-fill" style="width:28%"></div></div>
-              <div class="ref-pct">28%</div>
-            </div>
+            <div class="ref-row"><div class="ref-label">Head Mod</div><div class="ref-bar-wrap"><div class="ref-bar-fill" style="width:72%"></div></div><div class="ref-pct">72%</div></div>
+            <div class="ref-row"><div class="ref-label">Developer</div><div class="ref-bar-wrap"><div class="ref-bar-fill" style="width:52%"></div></div><div class="ref-pct">52%</div></div>
+            <div class="ref-row"><div class="ref-label">Admin</div><div class="ref-bar-wrap"><div class="ref-bar-fill" style="width:28%"></div></div><div class="ref-pct">28%</div></div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- ── BOT SETUP TAB ── -->
     <div class="tab" id="tab-bot">
       <div class="page-title">Bot Setup</div>
       <div class="page-sub">The Cordfol bot enables enhanced server-side role verification. Add it to any server you manage.</div>
-
       <div class="card" style="border-color:rgba(255,184,0,0.2)">
         <div class="card-title">⚡ How the dual-bot architecture works</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
           <div style="padding:14px;background:rgba(88,101,242,0.06);border-radius:8px;border:1px solid rgba(88,101,242,0.15)">
             <div style="font-size:12px;font-weight:500;margin-bottom:6px;color:#8b9fff">👤 User OAuth Bot</div>
-            <div style="font-size:12px;color:var(--muted2);line-height:1.7">Used when <strong style="color:var(--text)">you log in</strong>. Reads your own guild membership and roles via <code style="background:var(--surface2);padding:1px 4px;border-radius:3px;font-size:10px">guilds.members.read</code>. Only sees data about you, nobody else.</div>
+            <div style="font-size:12px;color:var(--muted2);line-height:1.7">Used when <strong style="color:var(--text)">you log in</strong>. Reads your own guild membership and roles. Only sees data about you, nobody else.</div>
           </div>
           <div style="padding:14px;background:rgba(0,255,178,0.04);border-radius:8px;border:1px solid rgba(0,255,178,0.15)">
             <div style="font-size:12px;font-weight:500;margin-bottom:6px;color:var(--neon)">🤖 Server Bot</div>
-            <div style="font-size:12px;color:var(--muted2);line-height:1.7">Sits in your server with <code style="background:var(--surface2);padding:1px 4px;border-radius:3px;font-size:10px">READ_MEMBERS</code> permission. When a user logs into Cordfol, the bot confirms their role in that server — adding a second layer of proof.</div>
+            <div style="font-size:12px;color:var(--muted2);line-height:1.7">Sits in your server with <code style="background:var(--surface2);padding:1px 4px;border-radius:3px;font-size:10px">READ_MEMBERS</code> permission. When a user logs into Cordfol, the bot confirms their role — adding a second layer of proof.</div>
           </div>
         </div>
       </div>
-
       <div class="card">
         <div class="card-title">Add the bot to a server</div>
         <div style="font-size:13px;color:var(--muted2);margin-bottom:16px;line-height:1.7">You must have <strong style="color:var(--text)">Manage Server</strong> permission in the target Discord server. The bot only needs <strong style="color:var(--text)">View Members</strong> and <strong style="color:var(--text)">Read Message History</strong> — it will never post or moderate.</div>
-        <div class="field">
-          <div class="field-label">Server ID (optional — pre-fills the OAuth URL)</div>
-          <input class="field-input monospace" placeholder="e.g. 1234567890123456789"/>
-        </div>
+        <div class="field"><div class="field-label">Server ID (optional — pre-fills the OAuth URL)</div><input class="field-input monospace" placeholder="e.g. 1234567890123456789"/></div>
         <div class="btn-row">
           <button class="btn btn-primary" onclick="addBotToServer()">Add Bot to Server</button>
           <button class="btn btn-ghost">Copy Invite Link</button>
         </div>
       </div>
-
       <div class="card">
         <div class="card-title">Servers with bot installed <span class="card-subtitle">2 servers</span></div>
         <div class="role-list">
-          <div class="role-row">
-            <div class="server-icon" style="background:rgba(88,101,242,0.15);color:#8b9fff">SC</div>
-            <div class="role-info">
-              <div class="role-name">SkyCraft Network</div>
-              <div class="role-meta">Bot active · 51,200 members · Added Jan 2025</div>
-            </div>
-            <div class="badge badge-v">Active</div>
-            <button class="btn btn-danger" style="height:28px;font-size:10px;padding:0 12px" onclick="showToast('⚠️','Bot removed from server')">Remove</button>
-          </div>
-          <div class="role-row">
-            <div class="server-icon" style="background:rgba(6,182,212,0.1);color:#22d3ee">PX</div>
-            <div class="role-info">
-              <div class="role-name">PixelForge Studios</div>
-              <div class="role-meta">Bot active · 3,400 members · Added Feb 2025</div>
-            </div>
-            <div class="badge badge-v">Active</div>
-            <button class="btn btn-danger" style="height:28px;font-size:10px;padding:0 12px" onclick="showToast('⚠️','Bot removed from server')">Remove</button>
-          </div>
+          <div class="role-row"><div class="server-icon" style="background:rgba(88,101,242,0.15);color:#8b9fff">SC</div><div class="role-info"><div class="role-name">SkyCraft Network</div><div class="role-meta">Bot active · 51,200 members · Added Jan 2025</div></div><div class="badge badge-v">Active</div><button class="btn btn-danger" style="height:28px;font-size:10px;padding:0 12px" onclick="showToast('⚠️','Bot removed from server')">Remove</button></div>
+          <div class="role-row"><div class="server-icon" style="background:rgba(6,182,212,0.1);color:#22d3ee">PX</div><div class="role-info"><div class="role-name">PixelForge Studios</div><div class="role-meta">Bot active · 3,400 members · Added Feb 2025</div></div><div class="badge badge-v">Active</div><button class="btn btn-danger" style="height:28px;font-size:10px;padding:0 12px" onclick="showToast('⚠️','Bot removed from server')">Remove</button></div>
         </div>
       </div>
     </div>
 
-    <!-- ── SERVERS TAB ── -->
     <div class="tab" id="tab-servers">
       <div class="page-title">My Discord Servers</div>
       <div class="page-sub">All servers from your last guild scan. Servers with the bot installed get enhanced verification.</div>
       <div class="card">
         <div class="card-title">Scanned servers <span class="card-subtitle">12 found</span></div>
         <div class="role-list">
-          <div class="role-row">
-            <div class="server-icon" style="background:rgba(88,101,242,0.15);color:#8b9fff">MD</div>
-            <div class="role-info"><div class="role-name">MidnightDev Community</div><div class="role-meta">24,800 members · You are: Head Moderator</div></div>
-            <div class="badge badge-v">Bot ✓</div>
-          </div>
-          <div class="role-row">
-            <div class="server-icon" style="background:rgba(124,58,237,0.15);color:#a78bfa">SC</div>
-            <div class="role-info"><div class="role-name">SkyCraft Network</div><div class="role-meta">51,200 members · You are: Developer</div></div>
-            <div class="badge badge-v">Bot ✓</div>
-          </div>
-          <div class="role-row">
-            <div class="server-icon" style="background:rgba(255,184,0,0.1);color:var(--amber)">YT</div>
-            <div class="role-info"><div class="role-name">YuuTubers HQ</div><div class="role-meta">8,900 members · You are: Staff, Content Team</div></div>
-            <div class="badge badge-p">OAuth only</div>
-          </div>
-          <div class="role-row">
-            <div class="server-icon" style="background:rgba(255,51,102,0.1);color:var(--hot)">RL</div>
-            <div class="role-info"><div class="role-name">RocketLeague Pro Hub</div><div class="role-meta">140,000 members · You are: Competitive Coach</div></div>
-            <div class="badge badge-p">OAuth only</div>
-          </div>
-          <div class="role-row">
-            <div class="server-icon" style="background:rgba(6,182,212,0.1);color:#22d3ee">PX</div>
-            <div class="role-info"><div class="role-name">PixelForge Studios</div><div class="role-meta">3,400 members · You are: Admin</div></div>
-            <div class="badge badge-v">Bot ✓</div>
-          </div>
+          <div class="role-row"><div class="server-icon" style="background:rgba(88,101,242,0.15);color:#8b9fff">MD</div><div class="role-info"><div class="role-name">MidnightDev Community</div><div class="role-meta">24,800 members · You are: Head Moderator</div></div><div class="badge badge-v">Bot ✓</div></div>
+          <div class="role-row"><div class="server-icon" style="background:rgba(124,58,237,0.15);color:#a78bfa">SC</div><div class="role-info"><div class="role-name">SkyCraft Network</div><div class="role-meta">51,200 members · You are: Developer</div></div><div class="badge badge-v">Bot ✓</div></div>
+          <div class="role-row"><div class="server-icon" style="background:rgba(255,184,0,0.1);color:var(--amber)">YT</div><div class="role-info"><div class="role-name">YuuTubers HQ</div><div class="role-meta">8,900 members · You are: Staff, Content Team</div></div><div class="badge badge-p">OAuth only</div></div>
+          <div class="role-row"><div class="server-icon" style="background:rgba(255,51,102,0.1);color:var(--hot)">RL</div><div class="role-info"><div class="role-name">RocketLeague Pro Hub</div><div class="role-meta">140,000 members · You are: Competitive Coach</div></div><div class="badge badge-p">OAuth only</div></div>
+          <div class="role-row"><div class="server-icon" style="background:rgba(6,182,212,0.1);color:#22d3ee">PX</div><div class="role-info"><div class="role-name">PixelForge Studios</div><div class="role-meta">3,400 members · You are: Admin</div></div><div class="badge badge-v">Bot ✓</div></div>
         </div>
       </div>
     </div>
@@ -806,14 +397,10 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
   </div>
 </div>
 
-<!-- SIGN OUT MODAL -->
 <div class="modal-overlay" id="signOutModal" onclick="closeSignOutModal(event)">
   <div class="modal">
     <div class="modal-title">Sign out of Cordfol.io?</div>
-    <div class="modal-desc">
-      Signing out will stop automatic role re-verification until you log back in. Your profile and verified roles will remain visible publicly — they just won't be updated until you return.<br/><br/>
-      <strong style="color:var(--text)">Your roles won't be deleted.</strong> They'll be marked as "unverified" after 24h if you stay signed out.
-    </div>
+    <div class="modal-desc">Signing out will stop automatic role re-verification until you log back in. Your profile and verified roles will remain visible publicly — they just won't be updated until you return.<br/><br/><strong style="color:var(--text)">Your roles won't be deleted.</strong> They'll be marked as "unverified" after 24h if you stay signed out.</div>
     <div class="modal-actions">
       <button class="btn btn-ghost" onclick="closeSignOutModal()">Cancel</button>
       <button class="btn btn-danger" onclick="signOut()">Yes, sign out</button>
@@ -821,14 +408,9 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
   </div>
 </div>
 
-<!-- TOAST -->
-<div class="toast" id="toast">
-  <span class="toast-icon" id="toast-icon">✅</span>
-  <span id="toast-msg">Saved!</span>
-</div>
+<div class="toast" id="toast"><span class="toast-icon" id="toast-icon">✅</span><span id="toast-msg">Saved!</span></div>
 
 <script>
-// ── TAB SWITCHING ──
 function switchTab(tab) {
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
@@ -836,8 +418,6 @@ function switchTab(tab) {
   document.querySelector('[data-tab="' + tab + '"]').classList.add('active');
   if(tab === 'analytics') initChart();
 }
-
-// ── USER MENU ──
 function toggleUserMenu() {
   const t = document.getElementById('userTrigger');
   const m = document.getElementById('userMenu');
@@ -848,123 +428,65 @@ function closeMenu() {
   document.getElementById('userTrigger').classList.remove('open');
   document.getElementById('userMenu').classList.remove('open');
 }
-document.addEventListener('click', e => {
-  if(!e.target.closest('#userTrigger')) closeMenu();
-});
-
-// ── SIGN OUT ──
-function openSignOutModal() {
-  closeMenu();
-  document.getElementById('signOutModal').classList.add('open');
-}
+document.addEventListener('click', e => { if(!e.target.closest('#userTrigger')) closeMenu(); });
 function closeSignOutModal(e) {
-  if(!e || e.target === document.getElementById('signOutModal')) {
-    document.getElementById('signOutModal').classList.remove('open');
-  }
+  if(!e || e.target === document.getElementById('signOutModal')) document.getElementById('signOutModal').classList.remove('open');
 }
 function signOut() {
-  // In production: clear session cookie, revoke token, redirect
   showToast('👋', 'Signed out. See you soon!');
   document.getElementById('signOutModal').classList.remove('open');
   setTimeout(() => { window.location.href = 'index.html'; }, 1800);
 }
-
-// ── UPGRADE ──
-function openUpgrade() {
-  closeMenu();
-  showToast('⭐', 'Stripe checkout coming soon!');
-}
-
-// ── SCAN ──
+function openUpgrade() { closeMenu(); showToast('⭐', 'Stripe checkout coming soon!'); }
 function triggerScan(btn) {
-  btn.textContent = '⏳ Scanning...';
-  btn.disabled = true;
-  setTimeout(() => {
-    btn.textContent = '✅ Done — 5 roles found';
-    btn.disabled = false;
-    setTimeout(() => { btn.textContent = '🔄 Re-scan Guilds'; }, 3000);
-  }, 2400);
+  btn.textContent = '⏳ Scanning...'; btn.disabled = true;
+  setTimeout(() => { btn.textContent = '✅ Done — 5 roles found'; btn.disabled = false; setTimeout(() => { btn.textContent = '🔄 Re-scan Guilds'; }, 3000); }, 2400);
 }
-
-// ── SLUG CHECK ──
 const taken = ['admin','discord','cordfol','pro','verify','api'];
 function checkSlug(el) {
   const hint = document.getElementById('slug-hint');
   const v = el.value.toLowerCase().replace(/[^a-z0-9\-]/g,'');
   el.value = v;
   if(!v) { hint.textContent = ''; return; }
-  if(taken.includes(v)) {
-    hint.textContent = '✗ ' + v + ' is taken';
-    hint.className = 'field-hint err';
-  } else {
-    hint.textContent = '✓ ' + v + ' is available';
-    hint.className = 'field-hint';
-  }
+  if(taken.includes(v)) { hint.textContent = '✗ ' + v + ' is taken'; hint.className = 'field-hint err'; }
+  else { hint.textContent = '✓ ' + v + ' is available'; hint.className = 'field-hint'; }
   updatePreview();
 }
-
-// ── LIVE PREVIEW ──
-function updatePreview() {
-  const name = document.getElementById('displayName').value || 'User';
-  const bio = document.getElementById('bioText').value || '';
-  document.getElementById('lp-name').textContent = name;
-  document.getElementById('lp-initials').textContent = name.charAt(0).toUpperCase();
-  document.getElementById('lp-bio').textContent = bio.slice(0, 60) + (bio.length > 60 ? '…' : '');
-}
-
-// ── THEME SELECT ──
 function selectTheme(el, name) {
   if(el.classList.contains('locked')) return;
   document.querySelectorAll('.theme-card').forEach(c => c.classList.remove('selected'));
   el.classList.add('selected');
   showToast('🎨', name + ' theme selected!');
 }
-
-// ── ANALYTICS CHART ──
 const chartData = [142, 98, 210, 187, 245, 312, 90];
 const chartDays = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 let chartInited = false;
 function initChart() {
-  if(chartInited) return;
-  chartInited = true;
+  if(chartInited) return; chartInited = true;
   const max = Math.max(...chartData);
   const container = document.getElementById('chart');
   const days = document.getElementById('chartDays');
-  container.innerHTML = '';
-  days.innerHTML = '';
+  container.innerHTML = ''; days.innerHTML = '';
   chartData.forEach((v, i) => {
-    const bar = document.createElement('div');
-    bar.className = 'bar';
-    bar.style.height = Math.round((v / max) * 100) + '%';
-    bar.title = chartDays[i] + ': ' + v + ' views';
-    container.appendChild(bar);
-    const d = document.createElement('div');
-    d.className = 'bar-day';
-    d.textContent = chartDays[i];
-    days.appendChild(d);
+    const bar = document.createElement('div'); bar.className = 'bar'; bar.style.height = Math.round((v / max) * 100) + '%'; bar.title = chartDays[i] + ': ' + v + ' views'; container.appendChild(bar);
+    const d = document.createElement('div'); d.className = 'bar-day'; d.textContent = chartDays[i]; days.appendChild(d);
   });
-  animateCounter('cnt-views', 1284);
-  animateCounter('cnt-roles', 347);
-  animateCounter('cnt-links', 92);
+  animateCounterEl('cnt-views', 1284); animateCounterEl('cnt-roles', 347); animateCounterEl('cnt-links', 92);
 }
-function animateCounter(id, target) {
+function animateCounterEl(id, target) {
   const el = document.getElementById(id);
-  const start = performance.now();
-  const dur = 1200;
-  function tick(now) {
-    const p = Math.min((now - start) / dur, 1);
-    const ease = 1 - Math.pow(1 - p, 3);
-    el.textContent = Math.floor(ease * target).toLocaleString();
-    if(p < 1) requestAnimationFrame(tick);
-  }
+  const start = performance.now(); const dur = 1200;
+  function tick(now) { const p = Math.min((now - start) / dur, 1); const ease = 1 - Math.pow(1 - p, 3); el.textContent = Math.floor(ease * target).toLocaleString(); if(p < 1) requestAnimationFrame(tick); }
   requestAnimationFrame(tick);
 }
-
-function addBotToServer() {
-  window.location.href = 'https://discord.com/api/oauth2/authorize?client_id=1491214572231721071&permissions=268435456&scope=bot';
+function addBotToServer() { window.location.href = 'https://discord.com/api/oauth2/authorize?client_id=1491214572231721071&permissions=268435456&scope=bot'; }
+let toastTimer;
+function showToast(icon, msg) {
+  const t = document.getElementById('toast'); document.getElementById('toast-icon').textContent = icon; document.getElementById('toast-msg').textContent = msg;
+  t.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
 }
 </script>
-</body>
+
 <script>
 const API_BASE = 'https://api.cordfol.org/api';
 
@@ -1042,9 +564,7 @@ async function loadProfile(user) {
     document.getElementById('youtubeInput').value = data.profile.socialLinks?.youtube || '';
     document.getElementById('websiteInput').value = data.profile.socialLinks?.website || '';
     updatePreview();
-  } catch {
-    // leave blank
-  }
+  } catch { /* leave blank */ }
 }
 
 async function saveProfile() {
@@ -1067,28 +587,30 @@ async function saveProfile() {
     if (!res.ok) throw new Error('Failed to save');
     showToast('✅','Profile saved successfully!');
     checkSession();
-  } catch {
-    showToast('❌','Failed to save profile!');
-  }
+  } catch { showToast('❌','Failed to save profile!'); }
 }
 
 function updatePreview() {
   const preview = document.getElementById('livePreview');
   if (!preview) return;
+  const name = document.getElementById('displayName').value || 'User';
+  const bio = document.getElementById('bioText').value || '';
+  const slugVal = document.getElementById('slug').value;
   preview.innerHTML = `
-    <div class="lp-avatar">${document.getElementById('displayName').value[0] || '?'}</div>
-    <div class="lp-name">${document.getElementById('displayName').value || ''}</div>
-    <div class="lp-bio">${document.getElementById('bioText').value || ''}</div>
+    <div class="lp-avatar">${name[0] || '?'}</div>
+    <div class="lp-name">${name}</div>
+    <div class="lp-bio">${bio.slice(0,60)}${bio.length > 60 ? '…' : ''}</div>
     <div class="lp-roles" id="lp-roles"></div>
   `;
-  // Load real roles into preview
-  fetch(`${API_BASE}/profile/${document.getElementById('slug').value}`)
-    .then(res => res.json())
-    .then(data => {
-      const roles = data.roles || [];
-      const rolesHtml = roles.map(role => `<div class="lp-role"><div class="lp-dot"></div>${role.roleName}</div>`).join('');
-      document.getElementById('lp-roles').innerHTML = rolesHtml;
-    });
+  if (slugVal) {
+    fetch(`${API_BASE}/profile/${slugVal}`)
+      .then(res => res.json())
+      .then(data => {
+        const roles = data.roles || [];
+        const el = document.getElementById('lp-roles');
+        if (el) el.innerHTML = roles.map(r => `<div class="lp-role"><div class="lp-dot"></div>${r.roleName}</div>`).join('');
+      }).catch(() => {});
+  }
 }
 
 function logout() {
@@ -1098,4 +620,5 @@ function logout() {
 
 window.onload = checkSession;
 </script>
+</body>
 </html>
