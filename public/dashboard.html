@@ -174,7 +174,7 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
 <div class="topbar">
   <a href="index.html" class="topbar-logo">CORD<span>FOL</span>.IO</a>
   <div class="topbar-right" id="topbarRight">
-    <button id="loginBtn" class="btn btn-primary" onclick="window.location.href='https://discord.com/oauth2/authorize?client_id=1491214572231721071&response_type=code&redirect_uri=https%3A%2F%2Fdashboard.cordfol.org&scope=identify+role_connections.write+guilds'">Login with Discord</button>
+    <button id="loginBtn" class="btn btn-primary" onclick="window.location.href='https://api.cordfol.org/api/auth/discord'">Login with Discord</button>
     <div id="userInfo" style="display:none">
       <div class="plan-badge" id="planBadge">FREE PLAN</div>
       <div class="user-trigger" id="userTrigger" onclick="toggleUserMenu()">
@@ -363,11 +363,11 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
       </div>
       <div class="card">
         <div class="card-title">Add the bot to a server</div>
-        <div style="font-size:13px;color:var(--muted2);margin-bottom:16px;line-height:1.7">You must have <strong style="color:var(--text)">Manage Server</strong> permission in the target Discord server. The bot only needs <strong style="color:var(--text)">View Members</strong> and <strong style="color:var(--text)">Read Message History</strong> — it will never post or moderate.</div>
-        <div class="field"><div class="field-label">Server ID (optional — pre-fills the OAuth URL)</div><input class="field-input monospace" placeholder="e.g. 1234567890123456789"/></div>
+        <div style="font-size:13px;color:var(--muted2);margin-bottom:16px;line-height:1.7">You must have <strong style="color:var(--text)">Manage Server</strong> permission in the target Discord server. The invite requests <strong style="color:var(--text)">bot</strong> and <strong style="color:var(--text)">applications.commands</strong> so slash commands and member verification work correctly, without admin or moderation permissions.</div>
+        <div class="field"><div class="field-label">Server ID (optional — pre-fills the OAuth URL)</div><input id="botGuildId" class="field-input monospace" placeholder="e.g. 1234567890123456789"/></div>
         <div class="btn-row">
           <button class="btn btn-primary" onclick="addBotToServer()">Add Bot to Server</button>
-          <button class="btn btn-ghost">Copy Invite Link</button>
+          <button class="btn btn-ghost" onclick="copyBotInviteLink()">Copy Invite Link</button>
         </div>
       </div>
       <div class="card">
@@ -411,6 +411,10 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
 <div class="toast" id="toast"><span class="toast-icon" id="toast-icon">✅</span><span id="toast-msg">Saved!</span></div>
 
 <script>
+const API_BASE = 'https://api.cordfol.org/api';
+const DISCORD_BOT_CLIENT_ID = '1491214572231721071';
+const DISCORD_BOT_PERMISSIONS = '0';
+
 function switchTab(tab) {
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
@@ -479,7 +483,43 @@ function animateCounterEl(id, target) {
   function tick(now) { const p = Math.min((now - start) / dur, 1); const ease = 1 - Math.pow(1 - p, 3); el.textContent = Math.floor(ease * target).toLocaleString(); if(p < 1) requestAnimationFrame(tick); }
   requestAnimationFrame(tick);
 }
-function addBotToServer() { window.location.href = 'https://discord.com/api/oauth2/authorize?client_id=1491214572231721071&permissions=268435456&scope=bot'; }
+
+function buildBotInviteLink() {
+  const url = new URL('https://discord.com/oauth2/authorize');
+  const guildId = document.getElementById('botGuildId')?.value.trim();
+
+  url.searchParams.set('client_id', DISCORD_BOT_CLIENT_ID);
+  url.searchParams.set('scope', 'bot applications.commands');
+  url.searchParams.set('permissions', DISCORD_BOT_PERMISSIONS);
+
+  if (guildId) {
+    if (!/^\d{17,20}$/.test(guildId)) {
+      throw new Error('Please enter a valid Discord server ID.');
+    }
+    url.searchParams.set('guild_id', guildId);
+    url.searchParams.set('disable_guild_select', 'true');
+  }
+
+  return url.toString();
+}
+
+function addBotToServer() {
+  try {
+    window.location.href = buildBotInviteLink();
+  } catch (err) {
+    showToast('❌', err.message);
+  }
+}
+
+async function copyBotInviteLink() {
+  try {
+    await navigator.clipboard.writeText(buildBotInviteLink());
+    showToast('🔗', 'Invite link copied!');
+  } catch (err) {
+    showToast('❌', err.message || 'Could not copy the invite link.');
+  }
+}
+
 let toastTimer;
 function showToast(icon, msg) {
   const t = document.getElementById('toast'); document.getElementById('toast-icon').textContent = icon; document.getElementById('toast-msg').textContent = msg;
@@ -488,13 +528,22 @@ function showToast(icon, msg) {
 </script>
 
 <script>
-const API_BASE = 'https://api.cordfol.org/api';
+function normalizeUser(rawUser) {
+  return {
+    discord_id: rawUser.discord_id || rawUser.discordId || '',
+    discord_username: rawUser.discord_username || rawUser.username || '',
+    display_name: rawUser.display_name || rawUser.displayName || rawUser.username || '',
+    slug: rawUser.slug || '',
+    plan: String(rawUser.plan || 'free').toLowerCase(),
+  };
+}
 
 async function checkSession() {
   try {
     const res = await fetch(`${API_BASE}/auth/me`, { credentials: 'include' });
     if (!res.ok) throw new Error('Not logged in');
-    const user = await res.json();
+    const data = await res.json();
+    const user = normalizeUser(data.user || data);
     showUser(user);
     loadProfile(user);
     loadRoles(user);
@@ -507,7 +556,8 @@ async function checkSession() {
 function showUser(user) {
   document.getElementById('loginBtn').style.display = 'none';
   document.getElementById('userInfo').style.display = '';
-  document.getElementById('userAvatar').textContent = user.display_name ? user.display_name[0] : '?';
+  const displayName = user.display_name || user.discord_username || 'User';
+  document.getElementById('userAvatar').textContent = displayName[0] || '?';
   document.getElementById('userName').textContent = user.display_name || user.discord_username;
   document.getElementById('discordName').textContent = user.discord_username;
   document.getElementById('discordId').textContent = 'ID: ' + user.discord_id;
@@ -614,7 +664,7 @@ function updatePreview() {
 }
 
 function logout() {
-  fetch(`${API_BASE}/auth/discord/logout`, { credentials: 'include' })
+  fetch(`${API_BASE}/auth/discord/logout`, { method: 'POST', credentials: 'include' })
     .then(() => window.location.reload());
 }
 
