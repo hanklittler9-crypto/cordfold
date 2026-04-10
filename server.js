@@ -87,7 +87,7 @@ app.get('/api/profile/:slug', async (req, res) => {
     // Get user
     const userResult = await db.query(`
       SELECT
-        u.discord_id, u.discord_username, u.display_name, u.bio,
+        u.id, u.discord_id, u.discord_username, u.display_name, u.bio,
         u.avatar_hash, u.avatar_url, u.banner_url, u.social_links, u.plan,
         t.background_color, t.accent_color, t.text_color, t.card_color,
         t.glass_enabled, t.glass_blur, t.glass_opacity, t.animated_bg,
@@ -118,7 +118,7 @@ app.get('/api/profile/:slug', async (req, res) => {
 
     // Log analytics event (fire and forget)
     const visitorId = req.session?.userId || null;
-    if (!visitorId || visitorId !== user.discord_id) {
+    if (!visitorId || visitorId !== user.id) {
       db.query(`
         INSERT INTO analytics_events (id, user_id, type, metadata, created_at)
         SELECT gen_random_uuid(), u.id, 'profile_view',

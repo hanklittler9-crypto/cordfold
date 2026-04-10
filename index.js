@@ -18,6 +18,31 @@ const {
   DASHBOARD_URL,      // e.g. https://cordfol.io/dashboard
 } = process.env;
 
+const DASHBOARD_LOGIN_URL = DASHBOARD_URL || 'https://dashboard.cordfol.org/dashboard';
+const PUBLIC_BASE_URL = (() => {
+  if (process.env.PUBLIC_BASE_URL) {
+    return process.env.PUBLIC_BASE_URL.replace(/\/$/, '');
+  }
+
+  try {
+    const dashboardUrl = new URL(DASHBOARD_LOGIN_URL);
+    return `${dashboardUrl.protocol}//${dashboardUrl.host.replace(/^dashboard\./, '')}`;
+  } catch {
+    return 'https://cordfol.io';
+  }
+})();
+const PUBLIC_HOST = (() => {
+  try {
+    return new URL(PUBLIC_BASE_URL).host;
+  } catch {
+    return 'cordfol.io';
+  }
+})();
+
+function buildProfileUrl(slug) {
+  return `${PUBLIC_BASE_URL}/${slug}`;
+}
+
 // ── Database ──────────────────────────────────────────────────────────────────
 const db = new Pool({
   connectionString: DATABASE_URL,
@@ -100,9 +125,9 @@ client.on('interactionCreate', async (interaction) => {
               .setColor(0x5865F2)
               .setTitle('You don\'t have a Cordfol.io account yet')
               .setDescription(
-                `Log in with Discord at **[cordfol.io](${DASHBOARD_URL})** to create your verified profile.\n\nOnce you log in, your roles in **${guild.name}** will be verified automatically.`
+                `Log in with Discord at **[${PUBLIC_HOST}](${DASHBOARD_LOGIN_URL})** to create your verified profile.\n\nOnce you log in, your roles in **${guild.name}** will be verified automatically.`
               )
-              .setFooter({ text: 'cordfol.io — Discord Identity, Verified.' })
+              .setFooter({ text: `${PUBLIC_HOST} — Discord Identity, Verified.` })
           ]
         });
       }
@@ -162,9 +187,9 @@ client.on('interactionCreate', async (interaction) => {
             .setColor(0x00FFB2)
             .setTitle('✅ Roles verified with bot-level proof!')
             .setDescription(
-              `Your roles in **${guild.name}** have been added to your Cordfol.io profile:\n\n${roleList}${extra}\n\n🔗 [View your profile](${DASHBOARD_URL.replace('/dashboard', '')}/${cordfolUser.slug})`
+              `Your roles in **${guild.name}** have been added to your Cordfol.io profile:\n\n${roleList}${extra}\n\n🔗 [View your profile](${buildProfileUrl(cordfolUser.slug)})`
             )
-            .setFooter({ text: 'cordfol.io — These roles cannot be faked.' })
+            .setFooter({ text: `${PUBLIC_HOST} — These roles cannot be faked.` })
         ]
       });
 
@@ -186,7 +211,7 @@ client.on('interactionCreate', async (interaction) => {
 
       if (row.rowCount === 0) {
         return interaction.editReply({
-          content: `You don't have a Cordfol.io profile yet. Sign up at ${DASHBOARD_URL}`
+          content: `You don't have a Cordfol.io profile yet. Sign up at ${DASHBOARD_LOGIN_URL}`
         });
       }
 
@@ -196,8 +221,8 @@ client.on('interactionCreate', async (interaction) => {
           new EmbedBuilder()
             .setColor(0x5865F2)
             .setTitle(`${display_name}'s Cordfol.io Profile`)
-            .setURL(`${DASHBOARD_URL.replace('/dashboard', '')}/${slug}`)
-            .setDescription(`🔗 cordfol.io/${slug}`)
+            .setURL(buildProfileUrl(slug))
+            .setDescription(`🔗 ${PUBLIC_HOST}/${slug}`)
         ]
       });
     } catch (err) {
@@ -240,10 +265,10 @@ client.on('interactionCreate', async (interaction) => {
           new EmbedBuilder()
             .setColor(0x5865F2)
             .setTitle(`${display_name}'s Verified Profile`)
-            .setURL(`${DASHBOARD_URL.replace('/dashboard', '')}/${slug}`)
+            .setURL(buildProfileUrl(slug))
             .setDescription(bio || '')
             .addFields({ name: '🛡️ Verified Roles', value: roleList })
-            .setFooter({ text: `cordfol.io/${slug} · Verified by Discord API` })
+            .setFooter({ text: `${PUBLIC_HOST}/${slug} · Verified by Discord API` })
         ]
       });
 

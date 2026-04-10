@@ -15,6 +15,7 @@
   "dependencies": {
     "@prisma/client": "^7.6.0",
     "@prisma/config": "^7.7.0",
+    "@vercel/speed-insights": "^2.0.0",
     "connect-pg-simple": "^9.0.0",
     "cors": "^2.8.6",
     "discord.js": "^14.14.0",

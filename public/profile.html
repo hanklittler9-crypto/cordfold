@@ -4,7 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Cordfol.io Profile</title>
-  <link rel="stylesheet" href="/index.html" />
   <style>
     body {
       background: var(--bg, #0d0d0d);
@@ -96,6 +95,10 @@
       const p = data.profile;
       const t = data.theme;
       const roles = data.roles || [];
+      const socialLinks =
+        p.socialLinks && typeof p.socialLinks === 'object' && !Array.isArray(p.socialLinks)
+          ? p.socialLinks
+          : {};
       // Set theme
       document.body.style.setProperty('--bg', t.backgroundColor);
       document.body.style.setProperty('--surface', t.cardColor);
@@ -119,7 +122,7 @@
           ${roles.map(r => `<span class="role-badge" style="border-left-color:${r.roleColor || t.accentColor}">${r.roleName}</span>`).join('')}
         </div>
         <div class="profile-socials">
-          ${p.socialLinks ? Object.entries(p.socialLinks).map(([k,v]) => `<a href="${v}" target="_blank">${k[0].toUpperCase() + k.slice(1)}</a>`).join('') : ''}
+          ${Object.entries(socialLinks).map(([k, v]) => `<a href="${v}" target="_blank" rel="noopener noreferrer">${k[0].toUpperCase() + k.slice(1)}</a>`).join('')}
         </div>
       `;
     }
