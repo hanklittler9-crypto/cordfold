@@ -104,14 +104,27 @@ router.get('/callback', async (req, res) => {
     console.warn('[auth] User denied OAuth:', error);
     return res.redirect('/?error=denied');
   }
+    sameSite: 'none',
+    maxAge; 5 * 60 * 1000 // 5 minutes
+  });
 
+  const url = [
+    'https://discord.com/api/oauth2/authorize',
+    `?client_id=${DISCORD_CLIENT_ID}`,
+    `&redirect_uri=${encodeURIComponent(DISCORD_REDIRECT_URI)}`,
+    '&response_type=code',
+    `&scope=${SCOPES}`,
+    `&state=${state}`,
+    '&prompt=none',
+  ].join('');
 
-  // CSRF check
-  if (!state || state !== req.session.oauthState) {
-    console.warn('[auth] CSRF state mismatch', { state, session: req.session.oauthState });
-    return res.redirect('/?error=csrf');
-  }
-  delete req.session.oauthState;
+  res.redirect(url);
+const cookieState = req.cookies?.oauth_state;
+if (!state || state !== cookieState) {
+  console.warn('[auth] CSRF state mismatch');
+  return res.redirect('/?error=csrf');
+}
+res.clearCookie('oauth_state');
 
   try {
     console.log('[auth] Step 1: Exchange code for tokens');
@@ -252,8 +265,9 @@ router.get('/callback', async (req, res) => {
     console.error('[auth] OAuth callback error:', err);
     res.redirect('/?error=server');
   }
-});
+  });
 
+// ── Route: GET /api/profile ──────────────────────────────────────────────
 // ── Route: POST /api/auth/logout ──────────────────────────────────────────────
 // Clears the session. Roles remain in DB but stop auto-updating.
 // The background re-verifier will flip is_active = false after 24h.
