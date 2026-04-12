@@ -318,24 +318,7 @@ footer{padding:40px;border-top:1px solid rgba(255,255,255,0.06);display:flex;ali
 </footer>
 
 <script>
-const authOrigin = (() => {
-  const url = new URL(window.location.origin);
-
-  if (url.hostname === 'localhost' || url.hostname.startsWith('127.')) {
-    return url.origin;
-  }
-
-  if (url.hostname.startsWith('www.')) {
-    url.hostname = url.hostname.slice(4);
-  }
-
-  if (!url.hostname.startsWith('api.')) {
-    url.hostname = `api.${url.hostname}`;
-  }
-
-  return url.origin;
-})();
-const OAUTH_LOGIN_URL = `${authOrigin}/api/auth/discord`;
+const OAUTH_LOGIN_URL = 'https://api.cordfol.org/api/auth/discord';
 document.querySelectorAll('[data-oauth-link]').forEach(link => {
   link.href = OAUTH_LOGIN_URL;
 });
