@@ -105,7 +105,7 @@ router.get('/callback', async (req, res) => {
     return res.redirect('/?error=denied');
   }
     sameSite: 'none',
-    maxAge; 5 * 60 * 1000 // 5 minutes
+    maxAge: 5 * 60 * 1000 // 5 minutes
   });
 
   const url = [
@@ -119,7 +119,9 @@ router.get('/callback', async (req, res) => {
   ].join('');
 
   res.redirect(url);
-const cookieState = req.cookies?.oauth_state;
+});
+  // CSRF check
+ const cookieState = req.cookies?.oauth_state;
 if (!state || state !== cookieState) {
   console.warn('[auth] CSRF state mismatch');
   return res.redirect('/?error=csrf');
@@ -265,9 +267,8 @@ res.clearCookie('oauth_state');
     console.error('[auth] OAuth callback error:', err);
     res.redirect('/?error=server');
   }
-  });
+});
 
-// ── Route: GET /api/profile ──────────────────────────────────────────────
 // ── Route: POST /api/auth/logout ──────────────────────────────────────────────
 // Clears the session. Roles remain in DB but stop auto-updating.
 // The background re-verifier will flip is_active = false after 24h.
