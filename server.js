@@ -1,16 +1,5 @@
-const cors = require('cors');
 // ─────────────────────────────────────────────────────────────────────────────
-// Cordfol.io — Express Server Entry Point (server.js)
-//
-// Wires together:
-//   - Express app with session middleware
-//   - Auth routes (/api/auth/discord)
-//   - Verify routes (/api/verify)
-//   - Static file serving for dashboard and index
-//   - Public profile route (/api/profile/:slug)
-//
-// Start with: node server.js
-// Or in production: pm2 start server.js --name cordfol
+// Cordfol.io — Express Server Entry Point
 // ─────────────────────────────────────────────────────────────────────────────
 
 require('dotenv').config();
@@ -20,34 +9,39 @@ const session      = require('express-session');
 const connectPg    = require('connect-pg-simple');
 const { Pool }     = require('pg');
 const path         = require('path');
+const cors         = require('cors');
+const cookieParser = require('cookie-parser');
 
+// ✅ FIXED: match your exports (module.exports = router)
+const authRouter   = require('./discord');
+const verifyRouter = require('./scan');
 
-const { router: authRouter }   = require('./discord');
-const { router: verifyRouter } = require('./scan');
 const app  = express();
 const PORT = process.env.PORT || 3000;
 
-// ── CORS for cross-domain session sharing ───────────────────────────────────
-// Allow both dashboard.cordfol.org and legacy vercel for migration period
+// ── CORS ─────────────────────────────────────────────────────────────────────
 const FRONTEND_ORIGIN = [
   'https://dashboard.cordfol.org',
   'https://cordfold.vercel.app'
 ];
+
 app.use(cors({
   origin: FRONTEND_ORIGIN,
   credentials: true,
 }));
-const cookieParser = require('cookie-parser');
-app.use(cookieParser());
 
-// ── Database pool (shared) ────────────────────────────────────────────────────
+// ── Middleware ───────────────────────────────────────────────────────────────
+app.use(cookieParser());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// ── Database ─────────────────────────────────────────────────────────────────
 const db = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: { rejectUnauthorized: false },
 });
 
-// ── Session store (PostgreSQL) ────────────────────────────────────────────────
-// Stores sessions in the DB so they survive Render restarts.
+// ── Session Store ────────────────────────────────────────────────────────────
 const PgSession = connectPg(session);
 
 app.use(session({
@@ -56,37 +50,30 @@ app.use(session({
     tableName: 'user_sessions',
     createTableIfMissing: true,
   }),
-  secret:            process.env.SESSION_SECRET,
-  resave:            false,
+  secret: process.env.SESSION_SECRET,
+  resave: false,
   saveUninitialized: false,
   cookie: {
     httpOnly: true,
-    secure:   true,
+    secure: true,          // ⚠️ must be HTTPS in production
     sameSite: 'none',
-    maxAge:   7 * 24 * 60 * 60 * 1000, // 7 days
+    maxAge: 7 * 24 * 60 * 60 * 1000,
     domain: '.cordfol.org',
   },
 }));
 
-// ── Body parsing ──────────────────────────────────────────────────────────────
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
-// ── Static files ──────────────────────────────────────────────────────────────
-// Serve index.html and dashboard.html from the public folder
+// ── Static Files ─────────────────────────────────────────────────────────────
 app.use(express.static(path.join(__dirname, 'public')));
 
-// ── API Routes ────────────────────────────────────────────────────────────────
+// ── API Routes ───────────────────────────────────────────────────────────────
 app.use('/api/auth/discord', authRouter);
-app.use('/api/verify',       verifyRouter);
+app.use('/api/verify', verifyRouter);
 
-// ── Public Profile API ────────────────────────────────────────────────────────
-// GET /api/profile/:slug — returns JSON for public profile rendering
+// ── Public Profile API ───────────────────────────────────────────────────────
 app.get('/api/profile/:slug', async (req, res) => {
   const { slug } = req.params;
 
   try {
-    // Get user
     const userResult = await db.query(`
       SELECT
         u.id, u.discord_id, u.discord_username, u.display_name, u.bio,
@@ -105,7 +92,6 @@ app.get('/api/profile/:slug', async (req, res) => {
 
     const user = userResult.rows[0];
 
-    // Get verified roles (public only, active only)
     const rolesResult = await db.query(`
       SELECT
         guild_id, guild_name, guild_icon_hash,
@@ -118,7 +104,7 @@ app.get('/api/profile/:slug', async (req, res) => {
       ORDER BY display_order ASC, verified_at DESC
     `, [slug]);
 
-    // Log analytics event (fire and forget)
+    // analytics (non-blocking)
     const visitorId = req.session?.userId || null;
     if (!visitorId || visitorId !== user.id) {
       db.query(`
@@ -129,7 +115,7 @@ app.get('/api/profile/:slug', async (req, res) => {
       `, [
         JSON.stringify({ referrer: req.get('Referer') || null }),
         slug
-      ]).catch(() => {}); // silent fail
+      ]).catch(() => {});
     }
 
     res.json({
@@ -160,16 +146,16 @@ app.get('/api/profile/:slug', async (req, res) => {
         customCss:       user.custom_css       || null,
       },
       roles: rolesResult.rows.map(r => ({
-        guildId:       r.guild_id,
-        guildName:     r.guild_name,
+        guildId: r.guild_id,
+        guildName: r.guild_name,
         guildIconHash: r.guild_icon_hash,
-        roleId:        r.role_id,
-        roleName:      r.custom_label || r.role_name,
-        roleColor:     r.role_color
+        roleId: r.role_id,
+        roleName: r.custom_label || r.role_name,
+        roleColor: r.role_color
           ? `#${r.role_color.toString(16).padStart(6, '0')}`
           : null,
-        proofType:     r.proof_type,
-        verifiedAt:    r.verified_at,
+        proofType: r.proof_type,
+        verifiedAt: r.verified_at,
       })),
     });
 
@@ -179,18 +165,25 @@ app.get('/api/profile/:slug', async (req, res) => {
   }
 });
 
-// POST /api/profile — update user profile (auth required)
+// ── Update Profile ───────────────────────────────────────────────────────────
 app.post('/api/profile', async (req, res) => {
   try {
     const userId = req.session?.userId;
     if (!userId) return res.status(401).json({ error: 'Not authenticated' });
 
     const { display_name, slug, bio, social_links } = req.body;
-    if (!slug || !display_name) return res.status(400).json({ error: 'Missing required fields' });
+    if (!slug || !display_name) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
 
-    // Check for slug conflict
-    const conflict = await db.query('SELECT id FROM users WHERE slug = $1 AND id != $2', [slug, userId]);
-    if (conflict.rowCount > 0) return res.status(409).json({ error: 'Slug already taken' });
+    const conflict = await db.query(
+      'SELECT id FROM users WHERE slug = $1 AND id != $2',
+      [slug, userId]
+    );
+
+    if (conflict.rowCount > 0) {
+      return res.status(409).json({ error: 'Slug already taken' });
+    }
 
     await db.query(`
       UPDATE users SET
@@ -203,13 +196,14 @@ app.post('/api/profile', async (req, res) => {
     `, [display_name, slug, bio, social_links, userId]);
 
     res.json({ ok: true });
+
   } catch (err) {
     console.error('[server] /api/profile POST error:', err);
     res.status(500).json({ error: 'Server error' });
   }
 });
 
-// ── Dashboard route (auth-gated) ──────────────────────────────────────────────
+// ── Dashboard Route ──────────────────────────────────────────────────────────
 app.get('/dashboard', (req, res) => {
   if (!req.session?.userId) {
     return res.redirect('/');
@@ -217,18 +211,18 @@ app.get('/dashboard', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
 });
 
-// ── Public profile page ───────────────────────────────────────────────────────
-// Any other route that doesn't match API or static files = public profile
+// ── Public Profile Page ──────────────────────────────────────────────────────
 app.get('/:slug', (req, res) => {
   const reserved = ['api', 'dashboard', 'login', 'logout', 'static'];
-  if (reserved.includes(req.params.slug)) return res.status(404).send('Not found');
+  if (reserved.includes(req.params.slug)) {
+    return res.status(404).send('Not found');
+  }
   res.sendFile(path.join(__dirname, 'public', 'profile.html'));
 });
 
-// ── Start server ──────────────────────────────────────────────────────────────
+// ── Start Server ─────────────────────────────────────────────────────────────
 app.listen(PORT, () => {
-  console.log(`[server] Cordfol.io running on port ${PORT}`);
-  console.log(`[server] Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`[server] Running on port ${PORT}`);
 });
 
 module.exports = app;
