@@ -190,8 +190,7 @@ router.get('/callback', async (req, res) => {
 
   } catch (err) {
     console.error('[auth] OAuth callback error:', err);
-    res.redirect('/?error=server');
-  }
+    res.redirect('/?error=server'); 
   // ── Route: GET /api/auth/me ───────────────────────────────────────────────
 router.get('/me', async (req, res) => {
   if (!req.session?.userId) {
@@ -413,4 +412,4 @@ async function triggerGuildScan(userId, accessToken, tokenType) {
     console.warn(`[auth] Error updating role names for user ${userId}:`, err.message);
   }
 }
-module.exports = { router, getValidAccessToken }; })})
+module.exports = { router, getValidAccessToken}})}})
