@@ -73,7 +73,7 @@ router.get('/', (req, res) => {
 });
 
 // ── Route: GET /api/auth/discord/callback ─────────────────────────────────────
-router.get('/callback', async (req, res) => {
+router.get('/me', async (req, res) => {
   console.log('[auth] /api/auth/discord/callback HIT', req.query);
   const { code, state, error } = req.query;
 
