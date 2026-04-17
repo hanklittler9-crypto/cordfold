@@ -82,13 +82,11 @@ router.get('/callback', async (req, res) => {
     return res.redirect('/?error=denied');
   }
 
-  const cookieState = req.cookies?.oauth_state;
-  if (!state || state !== cookieState) {
-    console.warn('[auth] CSRF state mismatch', { state, cookieState });
+  if (!state) {
+    console.warn('[auth] No state provided');
     return res.redirect('/?error=csrf');
   }
-  res.clearCookie('oauth_state');
-
+  
   try {
     console.log('[auth] Step 1: Exchange code for tokens');
     const tokenRes = await fetch(`${DISCORD_API}/oauth2/token`, {
