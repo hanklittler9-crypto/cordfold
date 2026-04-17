@@ -73,7 +73,7 @@ router.get('/', (req, res) => {
 });
 
 // ── Route: GET /api/auth/discord/callback ─────────────────────────────────────
-router.get('/me', async (req, res) => {
+router.get('/callback', async (req, res) => {
   console.log('[auth] /api/auth/discord/callback HIT', req.query);
   const { code, state, error } = req.query;
 
@@ -192,7 +192,40 @@ router.get('/me', async (req, res) => {
     console.error('[auth] OAuth callback error:', err);
     res.redirect('/?error=server');
   }
-});
+  // ── Route: GET /api/auth/me ───────────────────────────────────────────────
+router.get('/me', async (req, res) => {
+  if (!req.session?.userId) {
+    return res.status(401).json({ authenticated: false });
+  }
+
+  try {
+    const row = await db.query(
+      'SELECT discord_id, discord_username, avatar_hash, slug, display_name, bio, plan FROM users WHERE id = $1',
+      [req.session.userId]
+    );
+
+    if (row.rowCount === 0) {
+      req.session.destroy(() => {});
+      return res.status(401).json({ authenticated: false });
+    }
+
+    const u = row.rows[0];
+    res.json({
+      authenticated: true,
+      user: {
+        discordId:   u.discord_id,
+        username:    u.discord_username,
+        avatarUrl:   u.avatar_hash
+          ? `https://cdn.discordapp.com/avatars/${u.discord_id}/${u.avatar_hash}.png`
+          : null,
+        slug:        u.slug,
+        displayName: u.display_name,
+        bio:         u.bio,
+        plan:        u.plan,
+      }
+    });
+  } catch (err) {
+};
 
 // ── Route: POST /api/auth/logout ──────────────────────────────────────────────
 router.post('/logout', (req, res) => {
@@ -380,5 +413,4 @@ async function triggerGuildScan(userId, accessToken, tokenType) {
     console.warn(`[auth] Error updating role names for user ${userId}:`, err.message);
   }
 }
-
-module.exports = { router, getValidAccessToken };
+module.exports = { router, getValidAccessToken }; })})
