@@ -37,6 +37,8 @@ app.use(cors({
   origin: FRONTEND_ORIGIN,
   credentials: true,
 }));
+const cookieParser = require('cookie-parser');
+app.use(cookieParser());
 
 // ── Database pool (shared) ────────────────────────────────────────────────────
 const db = new Pool({
@@ -62,7 +64,7 @@ app.use(session({
     secure:   true,
     sameSite: 'none',
     maxAge:   7 * 24 * 60 * 60 * 1000, // 7 days
-    // domain removed for cross-origin session compatibility
+    domain: '.cordfol.org',
   },
 }));
 
