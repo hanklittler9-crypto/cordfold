@@ -92,14 +92,16 @@ router.get('/callback', async (req, res) => {
       }),
     });
 
-   if (!tokenRes.ok) {
-  const errBody = await tokenRes.json();
-  console.error('[auth] Token exchange failed:', errBody);
+  if (!tokenRes.ok) {
+  const errText = await tokenRes.text();
+  console.error('[auth] Token exchange failed:', tokenRes.status, errText);
   return res.redirect('/?error=token_exchange');
 }
 
-    const { access_token, refresh_token, expires_in, token_type } = await tokenRes.json();
-    const tokenExpiresAt = new Date(Date.now() + expires_in * 1000);
+   const tokenText = await tokenRes.text();
+console.log('[auth] Token response:', tokenText);
+const { access_token, refresh_token, expires_in, token_type } = JSON.parse(tokenText);
+const tokenExpiresAt = new Date(Date.now() + expires_in * 1000);
 
     const meRes = await fetch(`${DISCORD_API}/users/@me`, {
       headers: { Authorization: `${token_type} ${access_token}` },
