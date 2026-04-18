@@ -26,7 +26,6 @@ const db = new Pool({
 
 const KEY = Buffer.from(ENCRYPTION_KEY, 'hex');
 
-// ── Crypto ───────────────────────────────────────────────────────────────────
 function encrypt(text) {
   const iv = crypto.randomBytes(12);
   const cipher = crypto.createCipheriv('aes-256-gcm', KEY, iv);
@@ -81,7 +80,6 @@ router.get('/callback', async (req, res) => {
   if (!state) return res.redirect('/?error=csrf');
 
   try {
-    // Exchange code
     const tokenRes = await fetch(`${DISCORD_API}/oauth2/token`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -99,7 +97,6 @@ router.get('/callback', async (req, res) => {
     const { access_token, refresh_token, expires_in, token_type } = await tokenRes.json();
     const tokenExpiresAt = new Date(Date.now() + expires_in * 1000);
 
-    // Fetch user
     const meRes = await fetch(`${DISCORD_API}/users/@me`, {
       headers: { Authorization: `${token_type} ${access_token}` },
     });
@@ -109,7 +106,6 @@ router.get('/callback', async (req, res) => {
     const userData = await meRes.json();
     const { id: discordId, username, discriminator, avatar, email } = userData;
 
-    // Slug
     let baseSlug = username.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 20) || 'user';
     let slug = baseSlug;
     let i = 0;
@@ -121,7 +117,6 @@ router.get('/callback', async (req, res) => {
       slug = `${baseSlug}${i}`;
     }
 
-    // Save user
     const result = await db.query(`
       INSERT INTO users
       (id, discord_id, discord_username, discriminator, avatar_hash, email,
@@ -154,11 +149,14 @@ router.get('/callback', async (req, res) => {
     req.session.discordId = discordId;
     req.session.plan = user.plan;
 
-    await new Promise((resolve, reject) =>
-      req.session.save(err => err ? reject(err) : resolve())
-    );
-
-    res.redirect('https://dashboard.cordfol.org/dashboard.html');
+    req.session.save(err => {
+      if (err) {
+        console.error('[auth] Session save error:', err);
+        return res.redirect('/?error=session');
+      }
+      console.log('[auth] Session saved, cookie:', res.getHeader('Set-Cookie'));
+      res.redirect('https://dashboard.cordfol.org/dashboard.html');
+    });
 
   } catch (err) {
     console.error('[auth] OAuth error:', err);
@@ -214,7 +212,6 @@ router.post('/logout', (req, res) => {
     if (err) {
       return res.status(500).json({ error: 'Failed to sign out' });
     }
-
     res.clearCookie('connect.sid');
     res.json({ ok: true });
   });
