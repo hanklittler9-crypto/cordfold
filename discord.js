@@ -92,7 +92,11 @@ router.get('/callback', async (req, res) => {
       }),
     });
 
-    if (!tokenRes.ok) return res.redirect('/?error=token_exchange');
+   if (!tokenRes.ok) {
+  const errBody = await tokenRes.json();
+  console.error('[auth] Token exchange failed:', errBody);
+  return res.redirect('/?error=token_exchange');
+}
 
     const { access_token, refresh_token, expires_in, token_type } = await tokenRes.json();
     const tokenExpiresAt = new Date(Date.now() + expires_in * 1000);
