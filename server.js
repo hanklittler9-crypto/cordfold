@@ -67,7 +67,39 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // ── API Routes ───────────────────────────────────────────────────────────────
 app.use('/api/auth/discord', authRouter);
-app.get('/api/auth/me', (req, res) => res.redirect(307, '/api/auth/discord/me'));
+app.get('/api/auth/me', async (req, res) => {
+  if (!req.session?.userId) {
+    return res.status(401).json({ authenticated: false });
+  }
+  try {
+    const row = await db.query(
+      'SELECT discord_id, discord_username, avatar_hash, slug, display_name, bio, plan FROM users WHERE id = $1',
+      [req.session.userId]
+    );
+    if (row.rowCount === 0) {
+      req.session.destroy(() => {});
+      return res.status(401).json({ authenticated: false });
+    }
+    const u = row.rows[0];
+    res.json({
+      authenticated: true,
+      user: {
+        discordId:   u.discord_id,
+        username:    u.discord_username,
+        avatarUrl:   u.avatar_hash
+          ? `https://cdn.discordapp.com/avatars/${u.discord_id}/${u.avatar_hash}.png`
+          : null,
+        slug:        u.slug,
+        displayName: u.display_name,
+        bio:         u.bio,
+        plan:        u.plan,
+      }
+    });
+  } catch (err) {
+    console.error('[server] /api/auth/me error:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
 app.use('/api/verify', verifyRouter);
 
 // ── Public Profile API ───────────────────────────────────────────────────────
