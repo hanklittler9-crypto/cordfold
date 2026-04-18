@@ -67,6 +67,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // ── API Routes ───────────────────────────────────────────────────────────────
 app.use('/api/auth/discord', authRouter);
+app.get('/api/auth/me', (req, res) => res.redirect(307, '/api/auth/discord/me'));
 app.use('/api/verify', verifyRouter);
 
 // ── Public Profile API ───────────────────────────────────────────────────────
