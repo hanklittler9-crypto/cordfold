@@ -14,7 +14,7 @@ const cookieParser = require('cookie-parser');
 
 // ✅ FIXED: match your exports (module.exports = router)
 const authRouter   = require('./discord');
-const verifyRouter = require('./scan');
+const { router: verifyRouter } = require('./scan');
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
