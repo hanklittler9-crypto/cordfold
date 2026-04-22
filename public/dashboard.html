@@ -592,11 +592,25 @@ function normalizeUser(rawUser) {
 
 async function checkSession() {
   try {
-    const res = await fetch(`${API_BASE}/auth/discord/me`, { credentials: 'include' });
+    const params = new URLSearchParams(window.location.search);
+    const sid = params.get('sid');
+    
+    let res;
+    if (sid) {
+      res = await fetch(`${API_BASE}/auth/token?sid=${sid}`, { credentials: 'include' });
+      window.history.replaceState({}, '', '/dashboard.html');
+    } else {
+      res = await fetch(`${API_BASE}/auth/discord/me`, { credentials: 'include' });
+    }
+    
     if (!res.ok) throw new Error('Not logged in');
     const data = await res.json();
     if (!data.authenticated) throw new Error('Not authenticated');
     const user = normalizeUser(data.user || data);
+    
+    // Store sid for future requests
+    if (sid) localStorage.setItem('cordfol_sid', sid);
+    
     showUser(user);
     loadProfile(user);
     loadRoles(user);

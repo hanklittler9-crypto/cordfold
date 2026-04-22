@@ -19,6 +19,44 @@ const { router: verifyRouter } = require('./scan');
 const app  = express();
 const PORT = process.env.PORT || 3000;
 
+app.get('/api/auth/token', async (req, res) => {
+  const { sid } = req.query;
+  if (!sid) return res.status(400).json({ error: 'No sid' });
+
+  try {
+    const result = await db.query(
+      'SELECT sess FROM user_sessions WHERE sid = $1',
+      [sid]
+    );
+    if (result.rowCount === 0) return res.status(401).json({ authenticated: false });
+    
+    const sess = result.rows[0].sess;
+    if (!sess.userId) return res.status(401).json({ authenticated: false });
+
+    const userResult = await db.query(
+      'SELECT discord_id, discord_username, avatar_hash, slug, display_name, bio, plan FROM users WHERE id = $1',
+      [sess.userId]
+    );
+    if (userResult.rowCount === 0) return res.status(401).json({ authenticated: false });
+
+    const u = userResult.rows[0];
+    res.json({
+      authenticated: true,
+      user: {
+        discordId: u.discord_id,
+        username: u.discord_username,
+        avatarUrl: u.avatar_hash ? `https://cdn.discordapp.com/avatars/${u.discord_id}/${u.avatar_hash}.png` : null,
+        slug: u.slug,
+        displayName: u.display_name,
+        bio: u.bio,
+        plan: u.plan,
+      }
+    });
+  } catch (err) {
+    console.error('[token] Error:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
 // ── CORS ─────────────────────────────────────────────────────────────────────
 const FRONTEND_ORIGIN = [
   'https://dashboard.cordfol.org',

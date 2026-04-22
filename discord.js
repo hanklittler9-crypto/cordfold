@@ -161,7 +161,7 @@ router.get('/callback', async (req, res) => {
       }
       const sid = req.sessionID;
       console.log('[auth] Session saved, sid:', sid);
-      res.redirect(`https://dashboard.cordfol.org/dashboard.html?sid=${encodeURIComponent(sid)}`);
+      res.redirect(`https://dashboard.cordfol.org/dashboard.html?sid=${req.sessionID}`);
     });
 
   } catch (err) {
