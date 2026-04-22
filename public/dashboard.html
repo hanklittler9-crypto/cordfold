@@ -363,18 +363,11 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
       </div>
       <div class="card">
         <div class="card-title">Add the bot to a server</div>
-        <div style="font-size:13px;color:var(--muted2);margin-bottom:16px;line-height:1.7">You must have <strong style="color:var(--text)">Manage Server</strong> permission in the target Discord server. The invite requests <strong style="color:var(--text)">bot</strong> and <strong style="color:var(--text)">applications.commands</strong> so slash commands and member verification work correctly, without admin or moderation permissions.</div>
-        <div class="field"><div class="field-label">Server ID (optional — pre-fills the OAuth URL)</div><input id="botGuildId" class="field-input monospace" placeholder="e.g. 1234567890123456789"/></div>
+        <div style="font-size:13px;color:var(--muted2);margin-bottom:16px;line-height:1.7">You must have <strong style="color:var(--text)">Manage Server</strong> permission in the target Discord server.</div>
+        <div class="field"><div class="field-label">Server ID (optional)</div><input id="botGuildId" class="field-input monospace" placeholder="e.g. 1234567890123456789"/></div>
         <div class="btn-row">
           <button class="btn btn-primary" onclick="addBotToServer()">Add Bot to Server</button>
           <button class="btn btn-ghost" onclick="copyBotInviteLink()">Copy Invite Link</button>
-        </div>
-      </div>
-      <div class="card">
-        <div class="card-title">Servers with bot installed <span class="card-subtitle">2 servers</span></div>
-        <div class="role-list">
-          <div class="role-row"><div class="server-icon" style="background:rgba(88,101,242,0.15);color:#8b9fff">SC</div><div class="role-info"><div class="role-name">SkyCraft Network</div><div class="role-meta">Bot active · 51,200 members · Added Jan 2025</div></div><div class="badge badge-v">Active</div><button class="btn btn-danger" style="height:28px;font-size:10px;padding:0 12px" onclick="showToast('⚠️','Bot removed from server')">Remove</button></div>
-          <div class="role-row"><div class="server-icon" style="background:rgba(6,182,212,0.1);color:#22d3ee">PX</div><div class="role-info"><div class="role-name">PixelForge Studios</div><div class="role-meta">Bot active · 3,400 members · Added Feb 2025</div></div><div class="badge badge-v">Active</div><button class="btn btn-danger" style="height:28px;font-size:10px;padding:0 12px" onclick="showToast('⚠️','Bot removed from server')">Remove</button></div>
         </div>
       </div>
     </div>
@@ -383,14 +376,8 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
       <div class="page-title">My Discord Servers</div>
       <div class="page-sub">All servers from your last guild scan. Servers with the bot installed get enhanced verification.</div>
       <div class="card">
-        <div class="card-title">Scanned servers <span class="card-subtitle">12 found</span></div>
-        <div class="role-list">
-          <div class="role-row"><div class="server-icon" style="background:rgba(88,101,242,0.15);color:#8b9fff">MD</div><div class="role-info"><div class="role-name">MidnightDev Community</div><div class="role-meta">24,800 members · You are: Head Moderator</div></div><div class="badge badge-v">Bot ✓</div></div>
-          <div class="role-row"><div class="server-icon" style="background:rgba(124,58,237,0.15);color:#a78bfa">SC</div><div class="role-info"><div class="role-name">SkyCraft Network</div><div class="role-meta">51,200 members · You are: Developer</div></div><div class="badge badge-v">Bot ✓</div></div>
-          <div class="role-row"><div class="server-icon" style="background:rgba(255,184,0,0.1);color:var(--amber)">YT</div><div class="role-info"><div class="role-name">YuuTubers HQ</div><div class="role-meta">8,900 members · You are: Staff, Content Team</div></div><div class="badge badge-p">OAuth only</div></div>
-          <div class="role-row"><div class="server-icon" style="background:rgba(255,51,102,0.1);color:var(--hot)">RL</div><div class="role-info"><div class="role-name">RocketLeague Pro Hub</div><div class="role-meta">140,000 members · You are: Competitive Coach</div></div><div class="badge badge-p">OAuth only</div></div>
-          <div class="role-row"><div class="server-icon" style="background:rgba(6,182,212,0.1);color:#22d3ee">PX</div><div class="role-info"><div class="role-name">PixelForge Studios</div><div class="role-meta">3,400 members · You are: Admin</div></div><div class="badge badge-v">Bot ✓</div></div>
-        </div>
+        <div class="card-title">Scanned servers</div>
+        <div class="role-list" id="serverList"><div style="color:var(--muted2);font-size:13px;">Loading servers...</div></div>
       </div>
     </div>
 
@@ -400,7 +387,7 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
 <div class="modal-overlay" id="signOutModal" onclick="closeSignOutModal(event)">
   <div class="modal">
     <div class="modal-title">Sign out of Cordfol.io?</div>
-    <div class="modal-desc">Signing out will stop automatic role re-verification until you log back in. Your profile and verified roles will remain visible publicly — they just won't be updated until you return.<br/><br/><strong style="color:var(--text)">Your roles won't be deleted.</strong> They'll be marked as "unverified" after 24h if you stay signed out.</div>
+    <div class="modal-desc">Signing out will stop automatic role re-verification until you log back in. Your profile and verified roles will remain visible publicly.<br/><br/><strong style="color:var(--text)">Your roles won't be deleted.</strong></div>
     <div class="modal-actions">
       <button class="btn btn-ghost" onclick="closeSignOutModal()">Cancel</button>
       <button class="btn btn-danger" onclick="logout()">Yes, sign out</button>
@@ -411,25 +398,20 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
 <div class="toast" id="toast"><span class="toast-icon" id="toast-icon">✅</span><span id="toast-msg">Saved!</span></div>
 
 <script>
-const apiOrigin = (() => {
-  const url = new URL(window.location.origin);
-
-  if (url.hostname === 'localhost' || url.hostname.startsWith('127.')) {
-    return url.origin;
+// ── Pick up session ID from URL if redirected from OAuth ──────────────────
+(function() {
+  const params = new URLSearchParams(window.location.search);
+  const sid = params.get('sid');
+  if (sid) {
+    document.cookie = `connect.sid=${encodeURIComponent('s:' + decodeURIComponent(sid))}; domain=.cordfol.org; path=/; secure; samesite=none; max-age=604800`;
+    window.history.replaceState({}, '', '/dashboard.html');
   }
-
-  if (url.hostname.startsWith('dashboard.')) {
-    url.hostname = url.hostname.replace(/^dashboard\./, 'api.');
-  }
-
-  return url.origin;
 })();
-const API_BASE = `${apiOrigin}/api`;
-const OAUTH_LOGIN_URL = `${API_BASE}/auth/discord`;
-const PUBLIC_BASE_URL = window.location.origin.includes('://dashboard.')
-  ? window.location.origin.replace('://dashboard.', '://')
-  : window.location.origin;
-const PUBLIC_HOST = new URL(PUBLIC_BASE_URL).host;
+
+const API_BASE = 'https://api.cordfol.org/api';
+const OAUTH_LOGIN_URL = 'https://api.cordfol.org/api/auth/discord';
+const PUBLIC_BASE_URL = 'https://cordfol.org';
+const PUBLIC_HOST = 'cordfol.org';
 const DISCORD_BOT_CLIENT_ID = '1491214572231721071';
 const DISCORD_BOT_PERMISSIONS = '0';
 
@@ -447,123 +429,136 @@ function switchTab(tab) {
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.getElementById('tab-' + tab).classList.add('active');
   document.querySelector('[data-tab="' + tab + '"]').classList.add('active');
-  if(tab === 'analytics') initChart();
+  if (tab === 'analytics') initChart();
 }
+
 function toggleUserMenu() {
   const t = document.getElementById('userTrigger');
   const m = document.getElementById('userMenu');
   t.classList.toggle('open');
   m.classList.toggle('open');
 }
+
 function closeMenu() {
   document.getElementById('userTrigger').classList.remove('open');
   document.getElementById('userMenu').classList.remove('open');
 }
-document.addEventListener('click', e => { if(!e.target.closest('#userTrigger')) closeMenu(); });
+
+document.addEventListener('click', e => { if (!e.target.closest('#userTrigger')) closeMenu(); });
+
 function closeSignOutModal(e) {
-  if(!e || e.target === document.getElementById('signOutModal')) document.getElementById('signOutModal').classList.remove('open');
+  if (!e || e.target === document.getElementById('signOutModal')) {
+    document.getElementById('signOutModal').classList.remove('open');
+  }
 }
+
 function openSignOutModal() {
   closeMenu();
   document.getElementById('signOutModal').classList.add('open');
 }
-function openUpgrade() { closeMenu(); showToast('⭐', 'Stripe checkout coming soon!'); }
+
+function openUpgrade() {
+  closeMenu();
+  showToast('⭐', 'Stripe checkout coming soon!');
+}
+
 async function triggerScan(btn) {
   const defaultLabel = btn.dataset.defaultLabel || btn.textContent;
   btn.dataset.defaultLabel = defaultLabel;
   btn.textContent = '⏳ Scanning...';
   btn.disabled = true;
-
   try {
-    const res = await fetch(`${API_BASE}/verify/scan`, {
-      method: 'POST',
-      credentials: 'include'
-    });
+    const res = await fetch(`${API_BASE}/verify/scan`, { method: 'POST', credentials: 'include' });
     const data = await res.json().catch(() => ({}));
-
     if (!res.ok) {
-      if (res.status === 429 && data.retryAfter) {
-        throw new Error(`Please wait ${data.retryAfter}s before scanning again.`);
-      }
+      if (res.status === 429 && data.retryAfter) throw new Error(`Please wait ${data.retryAfter}s before scanning again.`);
       throw new Error(data.error || 'Failed to start scan.');
     }
-
     btn.textContent = '✅ Scan started';
     showToast('🔄', 'Guild re-scan started.');
     loadRoles();
   } catch (err) {
-    btn.textContent = defaultLabel;
     showToast('❌', err.message || 'Failed to start scan.');
   } finally {
-    setTimeout(() => {
-      btn.textContent = defaultLabel;
-      btn.disabled = false;
-    }, 2500);
+    setTimeout(() => { btn.textContent = defaultLabel; btn.disabled = false; }, 2500);
   }
 }
-const taken = ['admin','discord','cordfol','pro','verify','api'];
+
+const taken = ['admin', 'discord', 'cordfol', 'pro', 'verify', 'api'];
 function checkSlug(el) {
   const hint = document.getElementById('slug-hint');
-  const v = el.value.toLowerCase().replace(/[^a-z0-9\-]/g,'');
+  const v = el.value.toLowerCase().replace(/[^a-z0-9\-]/g, '');
   el.value = v;
-  if(!v) { hint.textContent = ''; return; }
-  if(taken.includes(v)) { hint.textContent = '✗ ' + v + ' is taken'; hint.className = 'field-hint err'; }
+  if (!v) { hint.textContent = ''; return; }
+  if (taken.includes(v)) { hint.textContent = '✗ ' + v + ' is taken'; hint.className = 'field-hint err'; }
   else { hint.textContent = '✓ ' + v + ' is available'; hint.className = 'field-hint'; }
   updatePreview();
 }
+
 function selectTheme(el, name) {
-  if(el.classList.contains('locked')) return;
+  if (el.classList.contains('locked')) return;
   document.querySelectorAll('.theme-card').forEach(c => c.classList.remove('selected'));
   el.classList.add('selected');
   showToast('🎨', name + ' theme selected!');
 }
+
 const chartData = [142, 98, 210, 187, 245, 312, 90];
-const chartDays = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+const chartDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 let chartInited = false;
 function initChart() {
-  if(chartInited) return; chartInited = true;
+  if (chartInited) return;
+  chartInited = true;
   const max = Math.max(...chartData);
   const container = document.getElementById('chart');
   const days = document.getElementById('chartDays');
-  container.innerHTML = ''; days.innerHTML = '';
+  container.innerHTML = '';
+  days.innerHTML = '';
   chartData.forEach((v, i) => {
-    const bar = document.createElement('div'); bar.className = 'bar'; bar.style.height = Math.round((v / max) * 100) + '%'; bar.title = chartDays[i] + ': ' + v + ' views'; container.appendChild(bar);
-    const d = document.createElement('div'); d.className = 'bar-day'; d.textContent = chartDays[i]; days.appendChild(d);
+    const bar = document.createElement('div');
+    bar.className = 'bar';
+    bar.style.height = Math.round((v / max) * 100) + '%';
+    bar.title = chartDays[i] + ': ' + v + ' views';
+    container.appendChild(bar);
+    const d = document.createElement('div');
+    d.className = 'bar-day';
+    d.textContent = chartDays[i];
+    days.appendChild(d);
   });
-  animateCounterEl('cnt-views', 1284); animateCounterEl('cnt-roles', 347); animateCounterEl('cnt-links', 92);
+  animateCounterEl('cnt-views', 1284);
+  animateCounterEl('cnt-roles', 347);
+  animateCounterEl('cnt-links', 92);
 }
+
 function animateCounterEl(id, target) {
   const el = document.getElementById(id);
-  const start = performance.now(); const dur = 1200;
-  function tick(now) { const p = Math.min((now - start) / dur, 1); const ease = 1 - Math.pow(1 - p, 3); el.textContent = Math.floor(ease * target).toLocaleString(); if(p < 1) requestAnimationFrame(tick); }
+  const start = performance.now();
+  const dur = 1200;
+  function tick(now) {
+    const p = Math.min((now - start) / dur, 1);
+    const ease = 1 - Math.pow(1 - p, 3);
+    el.textContent = Math.floor(ease * target).toLocaleString();
+    if (p < 1) requestAnimationFrame(tick);
+  }
   requestAnimationFrame(tick);
 }
 
 function buildBotInviteLink() {
   const url = new URL('https://discord.com/oauth2/authorize');
   const guildId = document.getElementById('botGuildId')?.value.trim();
-
   url.searchParams.set('client_id', DISCORD_BOT_CLIENT_ID);
   url.searchParams.set('scope', 'bot applications.commands');
   url.searchParams.set('permissions', DISCORD_BOT_PERMISSIONS);
-
   if (guildId) {
-    if (!/^\d{17,20}$/.test(guildId)) {
-      throw new Error('Please enter a valid Discord server ID.');
-    }
+    if (!/^\d{17,20}$/.test(guildId)) throw new Error('Please enter a valid Discord server ID.');
     url.searchParams.set('guild_id', guildId);
     url.searchParams.set('disable_guild_select', 'true');
   }
-
   return url.toString();
 }
 
 function addBotToServer() {
-  try {
-    window.location.href = buildBotInviteLink();
-  } catch (err) {
-    showToast('❌', err.message);
-  }
+  try { window.location.href = buildBotInviteLink(); }
+  catch (err) { showToast('❌', err.message); }
 }
 
 async function copyBotInviteLink() {
@@ -577,12 +572,14 @@ async function copyBotInviteLink() {
 
 let toastTimer;
 function showToast(icon, msg) {
-  const t = document.getElementById('toast'); document.getElementById('toast-icon').textContent = icon; document.getElementById('toast-msg').textContent = msg;
-  t.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
+  const t = document.getElementById('toast');
+  document.getElementById('toast-icon').textContent = icon;
+  document.getElementById('toast-msg').textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
 }
-</script>
 
-<script>
 function normalizeUser(rawUser) {
   return {
     discord_id: rawUser.discord_id || rawUser.discordId || '',
@@ -595,9 +592,10 @@ function normalizeUser(rawUser) {
 
 async function checkSession() {
   try {
-    const res = await fetch(`${API_BASE}/auth/me`, { credentials: 'include' });
+    const res = await fetch(`${API_BASE}/auth/discord/me`, { credentials: 'include' });
     if (!res.ok) throw new Error('Not logged in');
     const data = await res.json();
+    if (!data.authenticated) throw new Error('Not authenticated');
     const user = normalizeUser(data.user || data);
     showUser(user);
     loadProfile(user);
@@ -621,34 +619,27 @@ function showUser(user) {
   document.getElementById('viewPublicPageLink').href = buildPublicProfileUrl(user.slug);
 }
 
-async function loadRoles(user) {
+async function loadRoles() {
   const roleList = document.getElementById('roleList');
   const roleCount = document.getElementById('roleCount');
   const scanStatus = document.getElementById('scanStatus');
-  roleList.innerHTML = '<div>Loading...</div>';
+  roleList.innerHTML = '<div style="color:var(--muted2);font-size:13px;">Loading...</div>';
   try {
     const res = await fetch(`${API_BASE}/verify/roles`, { credentials: 'include' });
     if (!res.ok) throw new Error('No roles');
     const data = await res.json();
     const roles = data.roles || [];
-
     if (!roles.length) {
-      roleList.innerHTML = '<div>No verified roles found.</div>';
+      roleList.innerHTML = '<div style="color:var(--muted2);font-size:13px;">No verified roles found. Try re-scanning!</div>';
       roleCount.textContent = '0 roles';
       scanStatus.innerHTML = '<div class="scan-dot"></div> No roles found';
       return;
     }
-
     const activeRoles = roles.filter(role => role.is_active);
-    const latestCheck = roles
-      .map(role => role.last_checked_at || role.lastCheckedAt)
-      .filter(Boolean)
-      .sort()
-      .pop();
-
+    const latestCheck = roles.map(role => role.last_checked_at).filter(Boolean).sort().pop();
     roleList.innerHTML = roles.map(role => `
       <div class="role-row">
-        <div class="server-icon" style="background:rgba(88,101,242,0.15);color:#8b9fff">${role.guild_name ? role.guild_name[0] : '?'}</div>
+        <div class="server-icon" style="background:rgba(88,101,242,0.15);color:#8b9fff">${role.guild_name ? role.guild_name[0].toUpperCase() : '?'}</div>
         <div class="role-info">
           <div class="role-name">${role.custom_label || role.role_name}</div>
           <div class="role-meta">${role.guild_name}</div>
@@ -658,13 +649,12 @@ async function loadRoles(user) {
         <div class="toggle ${role.is_public ? 'on' : ''}" onclick="toggleRoleVisibility('${role.id}', ${role.is_public ? 'false' : 'true'}, this)"></div>
       </div>
     `).join('');
-
     roleCount.textContent = `${activeRoles.length} active of ${roles.length} total`;
     scanStatus.innerHTML = latestCheck
       ? `<div class="scan-dot"></div> Last scanned ${new Date(latestCheck).toLocaleString()} · ${activeRoles.length} active roles`
       : `<div class="scan-dot"></div> ${activeRoles.length} active roles`;
   } catch {
-    roleList.innerHTML = '<div>Failed to load roles.</div>';
+    roleList.innerHTML = '<div style="color:var(--muted2);font-size:13px;">Failed to load roles.</div>';
     roleCount.textContent = '0 roles';
     scanStatus.innerHTML = '<div class="scan-dot"></div> Error loading roles';
   }
@@ -678,11 +668,7 @@ async function toggleRoleVisibility(roleId, isPublic, toggleEl) {
       credentials: 'include',
       body: JSON.stringify({ isPublic })
     });
-
-    if (!res.ok) {
-      throw new Error('Failed to update role visibility.');
-    }
-
+    if (!res.ok) throw new Error('Failed to update role visibility.');
     toggleEl.classList.toggle('on', isPublic);
     toggleEl.setAttribute('onclick', `toggleRoleVisibility('${roleId}', ${isPublic ? 'false' : 'true'}, this)`);
     showToast('✅', isPublic ? 'Role is now public.' : 'Role hidden from public profile.');
@@ -725,9 +711,9 @@ async function saveProfile() {
       body: JSON.stringify({ display_name: displayName, slug, bio, social_links })
     });
     if (!res.ok) throw new Error('Failed to save');
-    showToast('✅','Profile saved successfully!');
+    showToast('✅', 'Profile saved successfully!');
     checkSession();
-  } catch { showToast('❌','Failed to save profile!'); }
+  } catch { showToast('❌', 'Failed to save profile!'); }
 }
 
 function updatePreview() {
@@ -739,7 +725,7 @@ function updatePreview() {
   preview.innerHTML = `
     <div class="lp-avatar">${name[0] || '?'}</div>
     <div class="lp-name">${name}</div>
-    <div class="lp-bio">${bio.slice(0,60)}${bio.length > 60 ? '…' : ''}</div>
+    <div class="lp-bio">${bio.slice(0, 60)}${bio.length > 60 ? '…' : ''}</div>
     <div class="lp-roles" id="lp-roles"></div>
   `;
   if (slugVal) {
@@ -757,7 +743,7 @@ function logout() {
   fetch(`${API_BASE}/auth/discord/logout`, { method: 'POST', credentials: 'include' })
     .then(() => {
       document.getElementById('signOutModal').classList.remove('open');
-      window.location.href = 'index.html';
+      window.location.href = '/';
     });
 }
 

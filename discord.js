@@ -92,16 +92,15 @@ router.get('/callback', async (req, res) => {
       }),
     });
 
-  if (!tokenRes.ok) {
-  const errText = await tokenRes.text();
-  console.error('[auth] Token exchange failed:', tokenRes.status, errText);
-  return res.redirect('/?error=token_exchange');
-}
+    if (!tokenRes.ok) {
+      const errText = await tokenRes.text();
+      console.error('[auth] Token exchange failed:', tokenRes.status, errText);
+      return res.redirect('/?error=token_exchange');
+    }
 
-   const tokenText = await tokenRes.text();
-console.log('[auth] Token response:', tokenText);
-const { access_token, refresh_token, expires_in, token_type } = JSON.parse(tokenText);
-const tokenExpiresAt = new Date(Date.now() + expires_in * 1000);
+    const tokenText = await tokenRes.text();
+    const { access_token, refresh_token, expires_in, token_type } = JSON.parse(tokenText);
+    const tokenExpiresAt = new Date(Date.now() + expires_in * 1000);
 
     const meRes = await fetch(`${DISCORD_API}/users/@me`, {
       headers: { Authorization: `${token_type} ${access_token}` },
@@ -160,8 +159,9 @@ const tokenExpiresAt = new Date(Date.now() + expires_in * 1000);
         console.error('[auth] Session save error:', err);
         return res.redirect('/?error=session');
       }
-      console.log('[auth] Session saved, cookie:', res.getHeader('Set-Cookie'));
-      res.redirect('https://dashboard.cordfol.org/dashboard.html');
+      const sid = req.sessionID;
+      console.log('[auth] Session saved, sid:', sid);
+      res.redirect(`https://dashboard.cordfol.org/dashboard.html?sid=${encodeURIComponent(sid)}`);
     });
 
   } catch (err) {
@@ -212,8 +212,6 @@ router.get('/me', async (req, res) => {
 
 // ── Route: POST /api/auth/logout ──────────────────────────────────────────────
 router.post('/logout', (req, res) => {
-  const userId = req.session?.userId;
-
   req.session.destroy(err => {
     if (err) {
       return res.status(500).json({ error: 'Failed to sign out' });
@@ -223,5 +221,4 @@ router.post('/logout', (req, res) => {
   });
 });
 
-// ── Export ────────────────────────────────────────────────────────────────────
 module.exports = router;
