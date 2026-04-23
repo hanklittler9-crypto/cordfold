@@ -403,7 +403,8 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
   const params = new URLSearchParams(window.location.search);
   const sid = params.get('sid');
   if (sid) {
-    document.cookie = `connect.sid=${encodeURIComponent('s:' + decodeURIComponent(sid))}; domain=.cordfol.org; path=/; secure; samesite=none; max-age=604800`;
+    console.log('[debug] sid from URL:', sid);
+    window._authSid = sid;
     window.history.replaceState({}, '', '/dashboard.html');
   }
 })();
@@ -589,28 +590,20 @@ function normalizeUser(rawUser) {
     plan: String(rawUser.plan || 'free').toLowerCase(),
   };
 }
-
 async function checkSession() {
   try {
-    const params = new URLSearchParams(window.location.search);
-    const sid = params.get('sid');
-    
+    const sid = window._authSid;
     let res;
     if (sid) {
-      res = await fetch(`${API_BASE}/auth/token?sid=${sid}`, { credentials: 'include' });
-      window.history.replaceState({}, '', '/dashboard.html');
+      console.log('[debug] Using token auth with sid:', sid);
+      res = await fetch(`https://api.cordfol.org/api/auth/token?sid=${sid}`, { credentials: 'include' });
     } else {
-      res = await fetch(`${API_BASE}/auth/discord/me`, { credentials: 'include' });
+      res = await fetch(`https://api.cordfol.org/api/auth/discord/me`, { credentials: 'include' });
     }
-    
     if (!res.ok) throw new Error('Not logged in');
     const data = await res.json();
     if (!data.authenticated) throw new Error('Not authenticated');
     const user = normalizeUser(data.user || data);
-    
-    // Store sid for future requests
-    if (sid) localStorage.setItem('cordfol_sid', sid);
-    
     showUser(user);
     loadProfile(user);
     loadRoles(user);
