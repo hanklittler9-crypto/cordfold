@@ -12,51 +12,12 @@ const path         = require('path');
 const cors         = require('cors');
 const cookieParser = require('cookie-parser');
 
-// ✅ FIXED: match your exports (module.exports = router)
-const authRouter   = require('./discord');
+const authRouter             = require('./discord');
 const { router: verifyRouter } = require('./scan');
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
 
-app.get('/api/auth/token', async (req, res) => {
-  const { sid } = req.query;
-  if (!sid) return res.status(400).json({ error: 'No sid' });
-
-  try {
-    const result = await db.query(
-      'SELECT sess FROM user_sessions WHERE sid = $1',
-      [sid]
-    );
-    if (result.rowCount === 0) return res.status(401).json({ authenticated: false });
-    
-    const sess = result.rows[0].sess;
-    if (!sess.userId) return res.status(401).json({ authenticated: false });
-
-    const userResult = await db.query(
-      'SELECT discord_id, discord_username, avatar_hash, slug, display_name, bio, plan FROM users WHERE id = $1',
-      [sess.userId]
-    );
-    if (userResult.rowCount === 0) return res.status(401).json({ authenticated: false });
-
-    const u = userResult.rows[0];
-    res.json({
-      authenticated: true,
-      user: {
-        discordId: u.discord_id,
-        username: u.discord_username,
-        avatarUrl: u.avatar_hash ? `https://cdn.discordapp.com/avatars/${u.discord_id}/${u.avatar_hash}.png` : null,
-        slug: u.slug,
-        displayName: u.display_name,
-        bio: u.bio,
-        plan: u.plan,
-      }
-    });
-  } catch (err) {
-    console.error('[token] Error:', err);
-    res.status(500).json({ error: 'Server error' });
-  }
-});
 // ── CORS ─────────────────────────────────────────────────────────────────────
 const FRONTEND_ORIGIN = [
   'https://dashboard.cordfol.org',
@@ -93,7 +54,7 @@ app.use(session({
   saveUninitialized: false,
   cookie: {
     httpOnly: true,
-    secure: true,          // ⚠️ must be HTTPS in production
+    secure: true,
     sameSite: 'none',
     maxAge: 7 * 24 * 60 * 60 * 1000,
     domain: '.cordfol.org',
@@ -103,8 +64,49 @@ app.use(session({
 // ── Static Files ─────────────────────────────────────────────────────────────
 app.use(express.static(path.join(__dirname, 'public')));
 
+// ── Token Auth (for cross-domain session handoff) ─────────────────────────────
+app.get('/api/auth/token', async (req, res) => {
+  const { sid } = req.query;
+  if (!sid) return res.status(400).json({ error: 'No sid' });
+
+  try {
+    const result = await db.query(
+      'SELECT sess FROM user_sessions WHERE sid = $1',
+      [sid]
+    );
+    if (result.rowCount === 0) return res.status(401).json({ authenticated: false });
+
+    const sess = result.rows[0].sess;
+    if (!sess.userId) return res.status(401).json({ authenticated: false });
+
+    const userResult = await db.query(
+      'SELECT discord_id, discord_username, avatar_hash, slug, display_name, bio, plan FROM users WHERE id = $1',
+      [sess.userId]
+    );
+    if (userResult.rowCount === 0) return res.status(401).json({ authenticated: false });
+
+    const u = userResult.rows[0];
+    res.json({
+      authenticated: true,
+      user: {
+        discordId:   u.discord_id,
+        username:    u.discord_username,
+        avatarUrl:   u.avatar_hash ? `https://cdn.discordapp.com/avatars/${u.discord_id}/${u.avatar_hash}.png` : null,
+        slug:        u.slug,
+        displayName: u.display_name,
+        bio:         u.bio,
+        plan:        u.plan,
+      }
+    });
+  } catch (err) {
+    console.error('[token] Error:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 // ── API Routes ───────────────────────────────────────────────────────────────
 app.use('/api/auth/discord', authRouter);
+
 app.get('/api/auth/me', async (req, res) => {
   if (!req.session?.userId) {
     return res.status(401).json({ authenticated: false });
@@ -138,6 +140,7 @@ app.get('/api/auth/me', async (req, res) => {
     res.status(500).json({ error: 'Server error' });
   }
 });
+
 app.use('/api/verify', verifyRouter);
 
 // ── Public Profile API ───────────────────────────────────────────────────────
@@ -175,7 +178,6 @@ app.get('/api/profile/:slug', async (req, res) => {
       ORDER BY display_order ASC, verified_at DESC
     `, [slug]);
 
-    // analytics (non-blocking)
     const visitorId = req.session?.userId || null;
     if (!visitorId || visitorId !== user.id) {
       db.query(`
@@ -217,15 +219,15 @@ app.get('/api/profile/:slug', async (req, res) => {
         customCss:       user.custom_css       || null,
       },
       roles: rolesResult.rows.map(r => ({
-        guildId: r.guild_id,
-        guildName: r.guild_name,
+        guildId:       r.guild_id,
+        guildName:     r.guild_name,
         guildIconHash: r.guild_icon_hash,
-        roleId: r.role_id,
-        roleName: r.custom_label || r.role_name,
-        roleColor: r.role_color
+        roleId:        r.role_id,
+        roleName:      r.custom_label || r.role_name,
+        roleColor:     r.role_color
           ? `#${r.role_color.toString(16).padStart(6, '0')}`
           : null,
-        proofType: r.proof_type,
+        proofType:  r.proof_type,
         verifiedAt: r.verified_at,
       })),
     });
