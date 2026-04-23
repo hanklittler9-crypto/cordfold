@@ -151,9 +151,37 @@ app.get('/api/auth/me', async (req, res) => {
   }
 });
 
+app.use('/api/verify', async (req, res, next) => {
+  const { sid } = req.query;
+  if (sid && !req.session?.userId) {
+    try {
+      const result = await db.query('SELECT sess FROM user_sessions WHERE sid = $1', [sid]);
+      if (result.rowCount > 0 && result.rows[0].sess?.userId) {
+        req.session.userId = result.rows[0].sess.userId;
+      }
+    } catch (err) {
+      console.error('[verify] Session lookup error:', err);
+    }
+  }
+  next();
+});
 app.use('/api/verify', verifyRouter);
 
 // ── Public Profile API ────────────────────────────────────────────────────────
+app.use('/api/profile', async (req, res, next) => {
+  const { sid } = req.query;
+  if (sid && !req.session?.userId) {
+    try {
+      const result = await db.query('SELECT sess FROM user_sessions WHERE sid = $1', [sid]);
+      if (result.rowCount > 0 && result.rows[0].sess?.userId) {
+        req.session.userId = result.rows[0].sess.userId;
+      }
+    } catch (err) {
+      console.error('[profile] Session lookup error:', err);
+    }
+  }
+  next();
+});
 app.get('/api/profile/:slug', async (req, res) => {
   const { slug } = req.params;
 
