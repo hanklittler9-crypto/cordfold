@@ -469,7 +469,9 @@ async function triggerScan(btn) {
   btn.textContent = '⏳ Scanning...';
   btn.disabled = true;
   try {
-    const res = await fetch(`${API_BASE}/verify/scan`, { method: 'POST', credentials: 'include' });
+    const sid = window._authSid;
+    const url = sid ? `${API_BASE}/verify/scan?sid=${sid}` : `${API_BASE}/verify/scan`;
+    const res = await fetch(url, { method: 'POST', credentials: 'include' });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) {
       if (res.status === 429 && data.retryAfter) throw new Error(`Please wait ${data.retryAfter}s before scanning again.`);
@@ -590,15 +592,16 @@ function normalizeUser(rawUser) {
     plan: String(rawUser.plan || 'free').toLowerCase(),
   };
 }
+
 async function checkSession() {
   try {
     const sid = window._authSid;
     let res;
     if (sid) {
       console.log('[debug] Using token auth with sid:', sid);
-      res = await fetch(`https://api.cordfol.org/api/auth/token?sid=${sid}`, { credentials: 'include' });
+      res = await fetch(`${API_BASE}/auth/token?sid=${sid}`, { credentials: 'include' });
     } else {
-      res = await fetch(`https://api.cordfol.org/api/auth/discord/me`, { credentials: 'include' });
+      res = await fetch(`${API_BASE}/auth/discord/me`, { credentials: 'include' });
     }
     if (!res.ok) throw new Error('Not logged in');
     const data = await res.json();
@@ -606,7 +609,7 @@ async function checkSession() {
     const user = normalizeUser(data.user || data);
     showUser(user);
     loadProfile(user);
-    loadRoles(user);
+    loadRoles();
   } catch {
     document.getElementById('loginBtn').style.display = '';
     document.getElementById('userInfo').style.display = 'none';
@@ -632,7 +635,9 @@ async function loadRoles() {
   const scanStatus = document.getElementById('scanStatus');
   roleList.innerHTML = '<div style="color:var(--muted2);font-size:13px;">Loading...</div>';
   try {
-    const res = await fetch(`${API_BASE}/verify/roles`, { credentials: 'include' });
+    const sid = window._authSid;
+    const url = sid ? `${API_BASE}/verify/roles?sid=${sid}` : `${API_BASE}/verify/roles`;
+    const res = await fetch(url, { credentials: 'include' });
     if (!res.ok) throw new Error('No roles');
     const data = await res.json();
     const roles = data.roles || [];
@@ -669,7 +674,9 @@ async function loadRoles() {
 
 async function toggleRoleVisibility(roleId, isPublic, toggleEl) {
   try {
-    const res = await fetch(`${API_BASE}/verify/roles/${roleId}`, {
+    const sid = window._authSid;
+    const url = sid ? `${API_BASE}/verify/roles/${roleId}?sid=${sid}` : `${API_BASE}/verify/roles/${roleId}`;
+    const res = await fetch(url, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
@@ -711,7 +718,9 @@ async function saveProfile() {
     website: document.getElementById('websiteInput').value
   };
   try {
-    const res = await fetch(`${API_BASE}/profile`, {
+    const sid = window._authSid;
+    const url = sid ? `${API_BASE}/profile?sid=${sid}` : `${API_BASE}/profile`;
+    const res = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
