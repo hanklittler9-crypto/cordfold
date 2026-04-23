@@ -64,7 +64,17 @@ app.use(session({
 // ── Static Files ─────────────────────────────────────────────────────────────
 app.use(express.static(path.join(__dirname, 'public')));
 
-// ── Token Auth (for cross-domain session handoff) ─────────────────────────────
+// ── Debug Route ───────────────────────────────────────────────────────────────
+app.get('/api/auth/debug', async (req, res) => {
+  try {
+    const result = await db.query('SELECT sid, sess FROM user_sessions ORDER BY expire DESC LIMIT 5');
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── Token Auth ────────────────────────────────────────────────────────────────
 app.get('/api/auth/token', async (req, res) => {
   const { sid } = req.query;
   if (!sid) return res.status(400).json({ error: 'No sid' });
@@ -104,7 +114,7 @@ app.get('/api/auth/token', async (req, res) => {
   }
 });
 
-// ── API Routes ───────────────────────────────────────────────────────────────
+// ── API Routes ────────────────────────────────────────────────────────────────
 app.use('/api/auth/discord', authRouter);
 
 app.get('/api/auth/me', async (req, res) => {
@@ -143,7 +153,7 @@ app.get('/api/auth/me', async (req, res) => {
 
 app.use('/api/verify', verifyRouter);
 
-// ── Public Profile API ───────────────────────────────────────────────────────
+// ── Public Profile API ────────────────────────────────────────────────────────
 app.get('/api/profile/:slug', async (req, res) => {
   const { slug } = req.params;
 
@@ -238,7 +248,7 @@ app.get('/api/profile/:slug', async (req, res) => {
   }
 });
 
-// ── Update Profile ───────────────────────────────────────────────────────────
+// ── Update Profile ────────────────────────────────────────────────────────────
 app.post('/api/profile', async (req, res) => {
   try {
     const userId = req.session?.userId;
@@ -276,7 +286,7 @@ app.post('/api/profile', async (req, res) => {
   }
 });
 
-// ── Dashboard Route ──────────────────────────────────────────────────────────
+// ── Dashboard Route ───────────────────────────────────────────────────────────
 app.get('/dashboard', (req, res) => {
   if (!req.session?.userId) {
     return res.redirect('/');
@@ -284,7 +294,7 @@ app.get('/dashboard', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
 });
 
-// ── Public Profile Page ──────────────────────────────────────────────────────
+// ── Public Profile Page ───────────────────────────────────────────────────────
 app.get('/:slug', (req, res) => {
   const reserved = ['api', 'dashboard', 'login', 'logout', 'static'];
   if (reserved.includes(req.params.slug)) {
@@ -293,7 +303,7 @@ app.get('/:slug', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'profile.html'));
 });
 
-// ── Start Server ─────────────────────────────────────────────────────────────
+// ── Start Server ──────────────────────────────────────────────────────────────
 app.listen(PORT, () => {
   console.log(`[server] Running on port ${PORT}`);
 });
