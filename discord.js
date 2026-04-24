@@ -17,7 +17,7 @@ const {
 } = process.env;
 
 const DISCORD_API = 'https://discord.com/api/v10';
-const SCOPES = ['identify', 'guilds', 'role_connections.write'].join('%20');
+const SCOPES = ['identify', 'guilds', 'guilds.members.read', 'role_connections.write'].join('%20');
 
 const db = new Pool({
   connectionString: DATABASE_URL,
