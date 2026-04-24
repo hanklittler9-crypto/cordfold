@@ -152,6 +152,9 @@ client.on('interactionCreate', async (interaction) => {
       // 4. Upsert each role into verified_roles with proof_type = 'BOT'
       for (const role of roles) {
         await db.query(`
+          const roles = member.roles.cache
+  .filter(r => r && r.id && r.id !== guild.id)
+  .map(r => ({ id: r.id, name: r.name, color: r.color || 0 }));
           INSERT INTO verified_roles
             (id, user_id, guild_id, guild_name, guild_icon_hash, role_id, role_name, role_color,
              verified_at, last_checked_at, is_active, proof_type, is_public, display_order)
