@@ -206,7 +206,7 @@ async function runScanForUser(userId) {
              verified_at, last_checked_at, is_active, proof_type, is_public, display_order)
           VALUES
             (gen_random_uuid(), $1, $2, $3, $4, $5, $5,
-             NOW(), NOW(), true, 'OAUTH', true, 0)
+             NOW(), NOW(), true, 'OAUTH'::\"ProofType\", true, 0)
           ON CONFLICT (user_id, guild_id, role_id)
           DO UPDATE SET
             is_active       = true,
@@ -215,7 +215,7 @@ async function runScanForUser(userId) {
             guild_icon_hash = EXCLUDED.guild_icon_hash,
             proof_type      = CASE
               WHEN verified_roles.proof_type = 'BOT' THEN 'BOT'
-              ELSE 'OAUTH'
+              ELSE 'OAUTH' 
             END
         `, [userId, guild.id, guild.name, guild.icon, roleId]);
       }
