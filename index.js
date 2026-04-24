@@ -144,8 +144,7 @@ client.on('interactionCreate', async (interaction) => {
       // 3. Get all roles (excluding @everyone)
       const roles = member.roles.cache
         .filter(r => r.id !== guild.id)
-        .map(r => ({ id: r.id, name: r.name, color: r.color }));
-
+        .map(r => ({ id: r.id, name: r.name, color: r.color || 0 }));
       if (roles.length === 0) {
         return interaction.editReply({ content: '⚠️ You don\'t have any roles in this server to verify.' });
       }
@@ -173,7 +172,7 @@ client.on('interactionCreate', async (interaction) => {
           guild.icon,
           role.id,
           role.name,
-          role.color,
+          role.color || 0
         ]);
       }
 
