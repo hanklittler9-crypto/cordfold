@@ -161,7 +161,7 @@ router.get('/callback', async (req, res) => {
       }
       const sid = req.sessionID;
       console.log('[auth] Session saved, sid:', sid);
-      res.redirect(`https://dashboard.cordfol.org/dashboard.html?sid=${req.sessionID}`);
+      res.redirect(`https://dashboard.cordfol.org/dashboard.html?sid=${sid}`);
     });
 
   } catch (err) {
@@ -221,5 +221,47 @@ router.post('/logout', (req, res) => {
   });
 });
 
+// ── Token Refresh Helper ──────────────────────────────────────────────────────
+async function getValidAccessToken(userId) {
+  const row = await db.query(
+    'SELECT access_token, refresh_token, token_expires_at FROM users WHERE id = $1',
+    [userId]
+  );
+  if (row.rowCount === 0) throw new Error('User not found');
+
+  const { access_token, refresh_token, token_expires_at } = row.rows[0];
+  const expiresAt = new Date(token_expires_at);
+  const oneHourFromNow = new Date(Date.now() + 60 * 60 * 1000);
+
+  if (expiresAt > oneHourFromNow) {
+    return decrypt(access_token);
+  }
+
+  const refreshRes = await fetch(`${DISCORD_API}/oauth2/token`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      client_id:     DISCORD_CLIENT_ID,
+      client_secret: DISCORD_CLIENT_SECRET,
+      grant_type:    'refresh_token',
+      refresh_token: decrypt(refresh_token),
+    }),
+  });
+
+  if (!refreshRes.ok) throw new Error('Token refresh failed — user must re-authenticate');
+
+  const { access_token: newAccess, refresh_token: newRefresh, expires_in } = await refreshRes.json();
+  const newExpiry = new Date(Date.now() + expires_in * 1000);
+
+  await db.query(`
+    UPDATE users
+    SET access_token = $1, refresh_token = $2, token_expires_at = $3, updated_at = NOW()
+    WHERE id = $4
+  `, [encrypt(newAccess), encrypt(newRefresh), newExpiry, userId]);
+
+  return newAccess;
+}
+
+// ── Export ────────────────────────────────────────────────────────────────────
 module.exports = router;
 module.exports.getValidAccessToken = getValidAccessToken;
