@@ -336,4 +336,7 @@ app.listen(PORT, () => {
   console.log(`[server] Running on port ${PORT}`);
 });
 
+// ── Start Bot ─────────────────────────────────────────────────────────────────
+require('./bot/index.js');
+
 module.exports = app;
