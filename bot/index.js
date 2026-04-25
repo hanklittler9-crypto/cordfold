@@ -152,8 +152,8 @@ client.on('interactionCreate', async (interaction) => {
 
       // 3. Get all roles (excluding @everyone)
       const roles = member.roles.cache
-        .filter(r => r.id !== guild.id)
-        .map(r => ({ id: r.id, name: r.name, color: r.color }));
+  .filter(r => r && r.id && r.id !== guild.id)
+  .map(r => ({ id: r.id, name: r.name, color: r.color || 0 }));
 
       if (roles.length === 0) {
         if (!interaction.replied && !interaction.deferred) return;

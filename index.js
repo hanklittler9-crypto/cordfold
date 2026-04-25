@@ -153,7 +153,7 @@ client.on('interactionCreate', async (interaction) => {
       for (const role of roles) {
         await db.query(`
           const roles = member.roles.cache
-  .filter(r => r && r.id && r.id !== guild.id)
+  .filter(r => r && r.id && r.id !== guild.id) 
   .map(r => ({ id: r.id, name: r.name, color: r.color || 0 }));
           INSERT INTO verified_roles
             (id, user_id, guild_id, guild_name, guild_icon_hash, role_id, role_name, role_color,
