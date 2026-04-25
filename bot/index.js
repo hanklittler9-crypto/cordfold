@@ -110,6 +110,10 @@ client.on('interactionCreate', async (interaction) => {
 
   // ── /verify ────────────────────────────────────────────────────────────────
   if (commandName === 'verify') {
+  if (!guild) {
+    return interaction.reply({ content: '❌ This command can only be used inside a server.', ephemeral: true });
+  }
+  await interaction.deferReply({ ephemeral: true });
     try {
       await interaction.deferReply({ ephemeral: true });
     } catch (err) {
@@ -151,9 +155,7 @@ client.on('interactionCreate', async (interaction) => {
       }
 
       // 3. Get all roles (excluding @everyone)
-      const roles = member.roles.cache
-  .filter(r => r && r.id && r.id !== guild.id)
-  .map(r => ({ id: r.id, name: r.name, color: r.color || 0 }));
+      
 
       if (roles.length === 0) {
         if (!interaction.replied && !interaction.deferred) return;
