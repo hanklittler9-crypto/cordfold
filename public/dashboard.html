@@ -29,7 +29,6 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
 .topbar-logo span{color:var(--discord);}
 .topbar-right{display:flex;align-items:center;gap:12px;}
 .plan-badge{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:1px;padding:3px 9px;border-radius:4px;background:rgba(255,255,255,0.05);color:var(--muted2);border:1px solid var(--border);}
-.plan-badge.pro{background:rgba(255,184,0,0.1);color:var(--amber);border-color:rgba(255,184,0,0.2);}
 .user-trigger{display:flex;align-items:center;gap:8px;padding:5px 10px 5px 5px;border-radius:8px;cursor:pointer;border:1px solid transparent;transition:background 0.15s,border-color 0.15s;position:relative;}
 .user-trigger:hover{background:var(--surface2);border-color:var(--border);}
 .user-avatar{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--discord),#7C3AED);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:500;color:white;flex-shrink:0;}
@@ -57,7 +56,6 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
 .nav-dot{width:6px;height:6px;border-radius:50%;margin-left:auto;flex-shrink:0;}
 .dot-green{background:var(--neon);}
 .dot-amber{background:var(--amber);}
-.dot-blue{background:var(--discord);}
 .sidebar-spacer{flex:1;}
 .sidebar-bot-cta{margin:12px;padding:12px;background:rgba(88,101,242,0.08);border:1px solid rgba(88,101,242,0.2);border-radius:8px;}
 .bot-cta-title{font-size:12px;font-weight:500;margin-bottom:4px;}
@@ -75,12 +73,6 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
 .card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px;}
 .card-title{font-size:13px;font-weight:500;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;color:var(--text);}
 .card-subtitle{font-size:11px;color:var(--muted2);}
-.metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:18px;}
-.metric{background:var(--surface2);border-radius:8px;padding:14px 16px;}
-.metric-label{font-size:10px;color:var(--muted2);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;}
-.metric-val{font-size:24px;font-weight:500;}
-.metric-delta{font-size:11px;color:var(--neon);margin-top:3px;}
-.metric-delta.neg{color:var(--hot);}
 .role-list{display:flex;flex-direction:column;gap:0;}
 .role-row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);transition:background 0.1s;}
 .role-row:first-child{padding-top:0;}
@@ -127,22 +119,21 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
 .theme-card{border:1.5px solid var(--border);border-radius:10px;padding:14px;cursor:pointer;transition:all 0.15s;}
 .theme-card:hover{border-color:rgba(255,255,255,0.15);}
 .theme-card.selected{border-color:var(--discord);background:rgba(88,101,242,0.05);}
-.theme-card.locked{opacity:0.5;cursor:not-allowed;}
 .theme-preview{height:60px;border-radius:7px;margin-bottom:10px;display:flex;align-items:flex-end;padding:7px;overflow:hidden;}
 .theme-name{font-size:12px;font-weight:500;margin-bottom:2px;}
 .theme-tag{font-size:9px;font-family:'Space Mono',monospace;letter-spacing:0.5px;padding:2px 6px;border-radius:4px;display:inline-block;}
 .tag-free{background:rgba(0,255,178,0.1);color:var(--neon);}
-.tag-pro{background:rgba(255,184,0,0.1);color:var(--amber);}
-.pro-banner{background:linear-gradient(135deg,rgba(88,101,242,0.15),rgba(124,58,237,0.15));border:1px solid rgba(88,101,242,0.3);border-radius:12px;padding:20px;margin-bottom:18px;display:flex;align-items:center;justify-content:space-between;gap:16px;}
-.pro-banner-text .pro-title{font-size:15px;font-weight:500;margin-bottom:4px;}
-.pro-banner-text .pro-desc{font-size:12px;color:var(--muted2);}
-.pro-banner-btn{padding:9px 20px;background:var(--amber);color:#1a0800;font-family:'Space Mono',monospace;font-size:11px;letter-spacing:1px;border:none;border-radius:7px;cursor:pointer;white-space:nowrap;transition:all 0.15s;flex-shrink:0;}
-.pro-banner-btn:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(255,184,0,0.25);}
 .chart-area{height:100px;display:flex;align-items:flex-end;gap:6px;margin-bottom:6px;}
 .bar{flex:1;border-radius:3px 3px 0 0;background:var(--discord);opacity:0.6;transition:opacity 0.15s;cursor:default;min-height:4px;}
 .bar:hover{opacity:1;}
 .bar-days{display:flex;gap:6px;}
 .bar-day{flex:1;font-size:9px;color:var(--muted);text-align:center;font-family:'Space Mono',monospace;}
+.metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:18px;}
+.metric{background:var(--surface2);border-radius:8px;padding:14px 16px;}
+.metric-label{font-size:10px;color:var(--muted2);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;}
+.metric-val{font-size:24px;font-weight:500;}
+.metric-delta{font-size:11px;color:var(--neon);margin-top:3px;}
+.metric-delta.neg{color:var(--hot);}
 .ref-list{display:flex;flex-direction:column;gap:10px;margin-top:4px;}
 .ref-row{display:flex;align-items:center;gap:10px;}
 .ref-label{font-size:12px;color:var(--muted2);width:100px;flex-shrink:0;}
@@ -172,7 +163,7 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
 <body>
 
 <div class="topbar">
-  <a href="index.html" class="topbar-logo">CORD<span>FOL</span>.IO</a>
+  <a href="/" class="topbar-logo">CORD<span>FOL</span>.IO</a>
   <div class="topbar-right" id="topbarRight">
     <button id="loginBtn" class="btn btn-primary" onclick="goToDiscordLogin()">Login with Discord</button>
     <div id="userInfo" style="display:none">
@@ -189,8 +180,6 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
           <a class="menu-item" href="#" onclick="switchTab('profile');closeMenu()"><span class="menu-ico">👤</span> My Profile</a>
           <a class="menu-item" href="#" onclick="switchTab('theme');closeMenu()"><span class="menu-ico">🎨</span> Theme Settings</a>
           <a class="menu-item" id="viewPublicPageLink" href="#" target="_blank" rel="noopener noreferrer"><span class="menu-ico">🌐</span> View Public Page</a>
-          <div class="menu-divider"></div>
-          <a class="menu-item" href="#" onclick="openUpgrade()"><span class="menu-ico">⭐</span> Upgrade to Pro</a>
           <div class="menu-divider"></div>
           <div class="menu-item danger" onclick="openSignOutModal()"><span class="menu-ico">🚪</span> Sign Out</div>
         </div>
@@ -240,7 +229,7 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
 
     <div class="tab" id="tab-profile">
       <div class="page-title">Profile Builder</div>
-      <div class="page-sub" id="profileUrl">Customize your public page at cordfol.io/...</div>
+      <div class="page-sub" id="profileUrl">Customize your public page at cordfol.org/...</div>
       <div style="display:grid;grid-template-columns:1fr 220px;gap:18px">
         <div>
           <div class="card">
@@ -248,7 +237,7 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
             <div class="field"><div class="field-label">Display Name</div><input class="field-input" id="displayName" value="" oninput="updatePreview()"/></div>
             <div class="field">
               <div class="field-label">Your URL</div>
-              <div class="field-prefix-wrap"><div class="field-pre" id="profileHostLabel">cordfol.io/</div><input class="field-input monospace" id="slug" value="" oninput="checkSlug(this)"/></div>
+              <div class="field-prefix-wrap"><div class="field-pre" id="profileHostLabel">cordfol.org/</div><input class="field-input monospace" id="slug" value="" oninput="checkSlug(this)"/></div>
               <div class="field-hint" id="slug-hint">Checking...</div>
             </div>
             <div class="field" style="margin-bottom:0"><div class="field-label">Bio</div><textarea class="field-input" id="bioText" oninput="updatePreview()"></textarea></div>
@@ -271,9 +260,9 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
           <div class="card" style="padding:14px">
             <div class="card-title" style="font-size:11px;font-family:'Space Mono',monospace;letter-spacing:1px;color:var(--muted2)">LIVE PREVIEW</div>
             <div class="live-preview" id="livePreview">
-              <div class="lp-avatar" id="lp-initials">A</div>
-              <div class="lp-name" id="lp-name">User</div>
-              <div class="lp-bio" id="lp-bio">Your bio here.</div>
+              <div class="lp-avatar">A</div>
+              <div class="lp-name">User</div>
+              <div class="lp-bio">Your bio here.</div>
               <div class="lp-roles"><div class="lp-role"><div class="lp-dot"></div>Head Mod</div><div class="lp-role"><div class="lp-dot"></div>Dev</div></div>
             </div>
           </div>
@@ -283,27 +272,38 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
 
     <div class="tab" id="tab-theme">
       <div class="page-title">Theme & Appearance</div>
-      <div class="page-sub">Choose how your public profile looks. Pro unlocks animated glassmorphism themes and custom music.</div>
-      <div class="pro-banner">
-        <div class="pro-banner-text">
-          <div class="pro-title">⭐ Upgrade to Pro — $4.99/mo</div>
-          <div class="pro-desc">Animated glass themes · Custom music · VIP short-links · Priority re-verification</div>
-        </div>
-        <button class="pro-banner-btn" onclick="openUpgrade()">Upgrade Now</button>
-      </div>
+      <div class="page-sub">Choose how your public profile looks.</div>
       <div class="card">
         <div class="card-title">Choose a theme</div>
         <div class="theme-grid">
-          <div class="theme-card selected" onclick="selectTheme(this,'Void')"><div class="theme-preview" style="background:#0d0d0d"><div style="width:100%;height:10px;border-radius:5px;background:#5865F2;opacity:0.9"></div></div><div class="theme-name">Void</div><span class="theme-tag tag-free">FREE</span></div>
-          <div class="theme-card" onclick="selectTheme(this,'Abyss')"><div class="theme-preview" style="background:#0f172a"><div style="width:100%;height:10px;border-radius:5px;background:#38bdf8;opacity:0.9"></div></div><div class="theme-name">Abyss</div><span class="theme-tag tag-free">FREE</span></div>
-          <div class="theme-card" onclick="selectTheme(this,'Nebula')"><div class="theme-preview" style="background:#1a0a2e"><div style="width:100%;height:10px;border-radius:5px;background:#a855f7;opacity:0.9"></div></div><div class="theme-name">Nebula</div><span class="theme-tag tag-free">FREE</span></div>
-          <div class="theme-card locked" onclick="showToast('🔒','Upgrade to Pro to unlock glass themes!')"><div class="theme-preview" style="background:linear-gradient(135deg,#0d0d0d,#1a1a2e)"><div style="width:55%;height:32px;border-radius:7px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12)"></div></div><div class="theme-name">Glass</div><span class="theme-tag tag-pro">PRO · Animated</span></div>
-          <div class="theme-card locked" onclick="showToast('🔒','Upgrade to Pro to unlock glass themes!')"><div class="theme-preview" style="background:linear-gradient(135deg,#050510,#0a0520)"><div style="width:55%;height:32px;border-radius:7px;background:rgba(88,101,242,0.12);border:1px solid rgba(88,101,242,0.25)"></div></div><div class="theme-name">Prismatic</div><span class="theme-tag tag-pro">PRO · Music</span></div>
-          <div class="theme-card locked" onclick="showToast('🔒','Upgrade to Pro to unlock glass themes!')"><div class="theme-preview" style="background:#0a0a0a"><div style="width:55%;height:32px;border-radius:7px;background:rgba(255,184,0,0.1);border:1px solid rgba(255,184,0,0.25)"></div></div><div class="theme-name">Ember</div><span class="theme-tag tag-pro">PRO · Music</span></div>
+          <div class="theme-card selected" onclick="selectTheme(this,'Void')">
+            <div class="theme-preview" style="background:#0d0d0d"><div style="width:100%;height:10px;border-radius:5px;background:#5865F2;opacity:0.9"></div></div>
+            <div class="theme-name">Void</div><span class="theme-tag tag-free">FREE</span>
+          </div>
+          <div class="theme-card" onclick="selectTheme(this,'Abyss')">
+            <div class="theme-preview" style="background:#0f172a"><div style="width:100%;height:10px;border-radius:5px;background:#38bdf8;opacity:0.9"></div></div>
+            <div class="theme-name">Abyss</div><span class="theme-tag tag-free">FREE</span>
+          </div>
+          <div class="theme-card" onclick="selectTheme(this,'Nebula')">
+            <div class="theme-preview" style="background:#1a0a2e"><div style="width:100%;height:10px;border-radius:5px;background:#a855f7;opacity:0.9"></div></div>
+            <div class="theme-name">Nebula</div><span class="theme-tag tag-free">FREE</span>
+          </div>
+          <div class="theme-card" onclick="selectTheme(this,'Glass')">
+            <div class="theme-preview" style="background:linear-gradient(135deg,#0d0d0d,#1a1a2e)"><div style="width:55%;height:32px;border-radius:7px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12)"></div></div>
+            <div class="theme-name">Glass</div><span class="theme-tag tag-free">FREE</span>
+          </div>
+          <div class="theme-card" onclick="selectTheme(this,'Prismatic')">
+            <div class="theme-preview" style="background:linear-gradient(135deg,#050510,#0a0520)"><div style="width:55%;height:32px;border-radius:7px;background:rgba(88,101,242,0.12);border:1px solid rgba(88,101,242,0.25)"></div></div>
+            <div class="theme-name">Prismatic</div><span class="theme-tag tag-free">FREE</span>
+          </div>
+          <div class="theme-card" onclick="selectTheme(this,'Ember')">
+            <div class="theme-preview" style="background:#0a0a0a"><div style="width:55%;height:32px;border-radius:7px;background:rgba(255,184,0,0.1);border:1px solid rgba(255,184,0,0.25)"></div></div>
+            <div class="theme-name">Ember</div><span class="theme-tag tag-free">FREE</span>
+          </div>
         </div>
       </div>
       <div class="card">
-        <div class="card-title">Accent Color <span class="card-subtitle">Free customization</span></div>
+        <div class="card-title">Accent Color</div>
         <div class="grid-2">
           <div class="field"><div class="field-label">Primary Accent</div><input type="color" value="#5865F2" style="width:100%;height:36px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);cursor:pointer;padding:2px;"/></div>
           <div class="field"><div class="field-label">Card Background</div><input type="color" value="#111111" style="width:100%;height:36px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);cursor:pointer;padding:2px;"/></div>
@@ -353,11 +353,11 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
           <div style="padding:14px;background:rgba(88,101,242,0.06);border-radius:8px;border:1px solid rgba(88,101,242,0.15)">
             <div style="font-size:12px;font-weight:500;margin-bottom:6px;color:#8b9fff">👤 User OAuth Bot</div>
-            <div style="font-size:12px;color:var(--muted2);line-height:1.7">Used when <strong style="color:var(--text)">you log in</strong>. Reads your own guild membership and roles. Only sees data about you, nobody else.</div>
+            <div style="font-size:12px;color:var(--muted2);line-height:1.7">Used when <strong style="color:var(--text)">you log in</strong>. Reads your own guild membership and roles.</div>
           </div>
           <div style="padding:14px;background:rgba(0,255,178,0.04);border-radius:8px;border:1px solid rgba(0,255,178,0.15)">
             <div style="font-size:12px;font-weight:500;margin-bottom:6px;color:var(--neon)">🤖 Server Bot</div>
-            <div style="font-size:12px;color:var(--muted2);line-height:1.7">Sits in your server with <code style="background:var(--surface2);padding:1px 4px;border-radius:3px;font-size:10px">READ_MEMBERS</code> permission. When a user logs into Cordfol, the bot confirms their role — adding a second layer of proof.</div>
+            <div style="font-size:12px;color:var(--muted2);line-height:1.7">Sits in your server and confirms roles with bot-level proof.</div>
           </div>
         </div>
       </div>
@@ -374,7 +374,7 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
 
     <div class="tab" id="tab-servers">
       <div class="page-title">My Discord Servers</div>
-      <div class="page-sub">All servers from your last guild scan. Servers with the bot installed get enhanced verification.</div>
+      <div class="page-sub">All servers from your last guild scan.</div>
       <div class="card">
         <div class="card-title">Scanned servers</div>
         <div class="role-list" id="serverList"><div style="color:var(--muted2);font-size:13px;">Loading servers...</div></div>
@@ -387,7 +387,7 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
 <div class="modal-overlay" id="signOutModal" onclick="closeSignOutModal(event)">
   <div class="modal">
     <div class="modal-title">Sign out of Cordfol.io?</div>
-    <div class="modal-desc">Signing out will stop automatic role re-verification until you log back in. Your profile and verified roles will remain visible publicly.<br/><br/><strong style="color:var(--text)">Your roles won't be deleted.</strong></div>
+    <div class="modal-desc">Signing out will stop automatic role re-verification until you log back in. Your roles won't be deleted.</div>
     <div class="modal-actions">
       <button class="btn btn-ghost" onclick="closeSignOutModal()">Cancel</button>
       <button class="btn btn-danger" onclick="logout()">Yes, sign out</button>
@@ -398,12 +398,10 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
 <div class="toast" id="toast"><span class="toast-icon" id="toast-icon">✅</span><span id="toast-msg">Saved!</span></div>
 
 <script>
-// ── Pick up session ID from URL if redirected from OAuth ──────────────────
 (function() {
   const params = new URLSearchParams(window.location.search);
   const sid = params.get('sid');
   if (sid) {
-    console.log('[debug] sid from URL:', sid);
     window._authSid = sid;
     window.history.replaceState({}, '', '/dashboard.html');
   }
@@ -421,9 +419,7 @@ function buildPublicProfileUrl(slug = '') {
   return cleanSlug ? `${PUBLIC_BASE_URL}/${cleanSlug}` : PUBLIC_BASE_URL;
 }
 
-function goToDiscordLogin() {
-  window.location.href = OAUTH_LOGIN_URL;
-}
+function goToDiscordLogin() { window.location.href = OAUTH_LOGIN_URL; }
 
 function switchTab(tab) {
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -434,10 +430,8 @@ function switchTab(tab) {
 }
 
 function toggleUserMenu() {
-  const t = document.getElementById('userTrigger');
-  const m = document.getElementById('userMenu');
-  t.classList.toggle('open');
-  m.classList.toggle('open');
+  document.getElementById('userTrigger').classList.toggle('open');
+  document.getElementById('userMenu').classList.toggle('open');
 }
 
 function closeMenu() {
@@ -456,11 +450,6 @@ function closeSignOutModal(e) {
 function openSignOutModal() {
   closeMenu();
   document.getElementById('signOutModal').classList.add('open');
-}
-
-function openUpgrade() {
-  closeMenu();
-  showToast('⭐', 'Stripe checkout coming soon!');
 }
 
 async function triggerScan(btn) {
@@ -499,7 +488,6 @@ function checkSlug(el) {
 }
 
 function selectTheme(el, name) {
-  if (el.classList.contains('locked')) return;
   document.querySelectorAll('.theme-card').forEach(c => c.classList.remove('selected'));
   el.classList.add('selected');
   showToast('🎨', name + ' theme selected!');
@@ -598,7 +586,6 @@ async function checkSession() {
     const sid = window._authSid;
     let res;
     if (sid) {
-      console.log('[debug] Using token auth with sid:', sid);
       res = await fetch(`${API_BASE}/auth/token?sid=${sid}`, { credentials: 'include' });
     } else {
       res = await fetch(`${API_BASE}/auth/discord/me`, { credentials: 'include' });
@@ -624,7 +611,7 @@ function showUser(user) {
   document.getElementById('userName').textContent = user.display_name || user.discord_username;
   document.getElementById('discordName').textContent = user.discord_username;
   document.getElementById('discordId').textContent = 'ID: ' + user.discord_id;
-  document.getElementById('planBadge').textContent = user.plan === 'pro' ? 'PRO PLAN' : 'FREE PLAN';
+  document.getElementById('planBadge').textContent = 'FREE PLAN';
   document.getElementById('profileUrl').textContent = `Customize your public page at ${PUBLIC_HOST}/${user.slug}`;
   document.getElementById('viewPublicPageLink').href = buildPublicProfileUrl(user.slug);
 }
