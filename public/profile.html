@@ -394,6 +394,92 @@
       color: var(--accent);
       margin-bottom: 8px;
     }
+    .not-found p {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.7;
+    }
+
+    .claim-card {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      padding: 40px 28px;
+      text-align: center;
+    }
+
+    .claim-eyebrow {
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--neon);
+    }
+
+    .claim-slug {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px 14px;
+      border-radius: 999px;
+      border: 1px solid rgba(88,101,242,0.28);
+      background: rgba(88,101,242,0.12);
+      color: var(--text);
+      font-family: 'Space Mono', monospace;
+      font-size: 12px;
+      letter-spacing: 0.5px;
+    }
+
+    .claim-actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 4px;
+    }
+
+    .claim-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 170px;
+      padding: 12px 16px;
+      border-radius: 12px;
+      border: 1px solid var(--accent);
+      background: var(--accent);
+      color: #fff;
+      text-decoration: none;
+      font-size: 12px;
+      font-family: 'Space Mono', monospace;
+      letter-spacing: 0.6px;
+      text-transform: uppercase;
+      transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+      cursor: pointer;
+    }
+    .claim-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 10px 26px rgba(88,101,242,0.24);
+    }
+    .claim-btn.secondary {
+      background: rgba(255,255,255,0.03);
+      color: var(--text);
+      border-color: rgba(255,255,255,0.12);
+      box-shadow: none;
+    }
+    .claim-btn.secondary:hover {
+      background: rgba(255,255,255,0.08);
+      border-color: rgba(255,255,255,0.2);
+    }
+
+    @media (max-width: 520px) {
+      .claim-card {
+        padding: 34px 20px;
+      }
+
+      .claim-btn {
+        width: 100%;
+      }
+    }
   </style>
 </head>
 <body>
@@ -425,8 +511,56 @@ const SOCIAL_ICONS = {
   linkedin: 'in',
 };
 
+const API_BASE = 'https://api.cordfol.org/api';
+const OAUTH_LOGIN_URL = 'https://api.cordfol.org/api/auth/discord';
+const DASHBOARD_URL = 'https://dashboard.cordfol.org/dashboard.html';
+const CLAIM_COOKIE_NAME = 'cordfol_claim_slug';
+
 let audio = null;
 let isPlaying = false;
+
+function sanitizeSlug(value) {
+  return String(value || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9\-]/g, '')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 32);
+}
+
+function setClaimCookie(slug) {
+  document.cookie = `${CLAIM_COOKIE_NAME}=${encodeURIComponent(slug)}; Max-Age=1800; Path=/; Domain=.cordfol.org; Secure; SameSite=Lax`;
+}
+
+function claimSlug(slug, destination = 'oauth') {
+  const cleanSlug = sanitizeSlug(slug);
+  if (!cleanSlug) return;
+  setClaimCookie(cleanSlug);
+  window.location.href = destination === 'dashboard'
+    ? `${DASHBOARD_URL}?claim=${encodeURIComponent(cleanSlug)}`
+    : OAUTH_LOGIN_URL;
+}
+
+function buildMissingProfileMarkup(slug) {
+  const cleanSlug = sanitizeSlug(slug);
+  if (!cleanSlug) {
+    return `<div class="not-found"><h1>404</h1><p>Profile not found.</p></div>`;
+  }
+
+  return `
+    <div class="claim-card">
+      <div class="claim-eyebrow">This handle is open</div>
+      <div class="not-found">
+        <h1>CLAIM IT</h1>
+        <p>No one has created <span class="claim-slug">cordfol.org/${cleanSlug}</span> yet.</p>
+        <p>Log in with Discord and we’ll take you to the profile builder with this handle ready to claim.</p>
+      </div>
+      <div class="claim-actions">
+        <button class="claim-btn" type="button" onclick="claimSlug('${cleanSlug}')">Claim This Link</button>
+        <button class="claim-btn secondary" type="button" onclick="claimSlug('${cleanSlug}', 'dashboard')">Open Dashboard</button>
+      </div>
+    </div>
+  `;
+}
 
 function toggleMusic() {
   if (!audio) return;
@@ -447,7 +581,7 @@ function toggleMusic() {
 
 async function renderProfile() {
   const url = new URL(window.location.href);
-  const slug = window.location.pathname.replace(/^\/+/, '').split('/')[0] || url.searchParams.get('slug') || '';
+  const slug = sanitizeSlug(window.location.pathname.replace(/^\/+/, '').split('/')[0] || url.searchParams.get('slug') || '');
   if (!slug) {
     document.getElementById('card').innerHTML = `<div class="not-found"><h1>404</h1><p>Profile not found.</p></div>`;
     return;
@@ -455,11 +589,11 @@ async function renderProfile() {
 
   let data;
   try {
-    const res = await fetch(`https://api.cordfol.org/api/profile/${slug}`);
+    const res = await fetch(`${API_BASE}/profile/${slug}`);
     if (!res.ok) throw new Error('Not found');
     data = await res.json();
   } catch {
-    document.getElementById('card').innerHTML = `<div class="not-found"><h1>404</h1><p style="color:var(--muted);font-size:13px;">This profile doesn't exist.</p></div>`;
+    document.getElementById('card').innerHTML = buildMissingProfileMarkup(slug);
     return;
   }
 

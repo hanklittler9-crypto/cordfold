@@ -421,16 +421,17 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
 (function() {
   const params = new URLSearchParams(window.location.search);
   const sid = params.get('sid');
-  if (sid) {
-    window._authSid = sid;
-    window.history.replaceState({}, '', '/dashboard.html');
-  }
+  const claim = params.get('claim');
+  if (sid) window._authSid = sid;
+  if (claim) window._claimSlug = claim;
+  if (sid || claim) window.history.replaceState({}, '', '/dashboard.html');
 })();
 
 const API_BASE = 'https://api.cordfol.org/api';
 const OAUTH_LOGIN_URL = 'https://api.cordfol.org/api/auth/discord';
 const PUBLIC_BASE_URL = 'https://cordfol.org';
 const PUBLIC_HOST = 'cordfol.org';
+const CLAIM_COOKIE_NAME = 'cordfol_claim_slug';
 const DISCORD_BOT_CLIENT_ID = '1491214572231721071';
 const DISCORD_BOT_PERMISSIONS = '0';
 
@@ -440,6 +441,47 @@ function buildPublicProfileUrl(slug = '') {
 }
 
 function goToDiscordLogin() { window.location.href = OAUTH_LOGIN_URL; }
+
+function sanitizeSlug(value) {
+  return String(value || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9\-]/g, '')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 32);
+}
+
+function readCookie(name) {
+  const prefix = `${name}=`;
+  return document.cookie
+    .split(';')
+    .map(part => part.trim())
+    .find(part => part.startsWith(prefix))
+    ?.slice(prefix.length) || '';
+}
+
+function clearCookie(name) {
+  document.cookie = `${name}=; Max-Age=0; Path=/; Domain=.cordfol.org; Secure; SameSite=Lax`;
+}
+
+function getPendingClaimSlug() {
+  return sanitizeSlug(window._claimSlug || decodeURIComponent(readCookie(CLAIM_COOKIE_NAME) || ''));
+}
+
+function applyPendingClaimSlug() {
+  const pendingSlug = getPendingClaimSlug();
+  const slugInput = document.getElementById('slug');
+  if (!pendingSlug || !slugInput) return;
+
+  slugInput.value = pendingSlug;
+  checkSlug(slugInput);
+  updatePreview();
+  switchTab('profile');
+  document.getElementById('profileUrl').textContent = `Claim your public page at ${PUBLIC_HOST}/${pendingSlug}`;
+  document.getElementById('viewPublicPageLink').href = buildPublicProfileUrl(pendingSlug);
+  clearCookie(CLAIM_COOKIE_NAME);
+  window._claimSlug = '';
+  showToast('🎯', `Ready to claim ${PUBLIC_HOST}/${pendingSlug}`);
+}
 
 function switchTab(tab) {
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -615,7 +657,8 @@ async function checkSession() {
     if (!data.authenticated) throw new Error('Not authenticated');
     const user = normalizeUser(data.user || data);
     showUser(user);
-    loadProfile(user);
+    await loadProfile(user);
+    applyPendingClaimSlug();
     loadRoles();
   } catch {
     document.getElementById('loginBtn').style.display = '';
