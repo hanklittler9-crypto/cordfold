@@ -444,7 +444,8 @@ function toggleMusic() {
 }
 
 async function renderProfile() {
-  const slug = window.location.pathname.replace(/^\/+/, '').split('/')[0];
+  const url = new URL(window.location.href);
+  const slug = window.location.pathname.replace(/^\/+/, '').split('/')[0] || url.searchParams.get('slug') || '';
   if (!slug) {
     document.getElementById('card').innerHTML = `<div class="not-found"><h1>404</h1><p>Profile not found.</p></div>`;
     return;
@@ -469,9 +470,15 @@ async function renderProfile() {
   const root = document.documentElement;
   root.style.setProperty('--bg', t.backgroundColor || '#0d0d0d');
   root.style.setProperty('--surface', t.cardColor || '#111');
+  root.style.setProperty('--surface2', t.cardColor ? t.cardColor : '#181818');
   root.style.setProperty('--accent', t.accentColor || '#5865F2');
   root.style.setProperty('--text', t.textColor || '#f0f0f0');
-  document.getElementById('bgEl').style.background = t.backgroundColor || '#0d0d0d';
+  root.style.setProperty('--muted', t.textColor ? 'rgba(255,255,255,0.65)' : '#888');
+  if (t.animatedBg) {
+    document.getElementById('bgEl').style.background = `radial-gradient(circle at top left, ${t.accentColor || '#5865F2'} 0%, transparent 60%), radial-gradient(circle at bottom right, ${t.textColor || '#00FFB2'} 0%, transparent 55%)`;
+  } else {
+    document.getElementById('bgEl').style.background = t.backgroundColor || '#0d0d0d';
+  }
   document.title = `${p.displayName} — Cordfol`;
 
   // Custom CSS
@@ -488,7 +495,7 @@ async function renderProfile() {
     if (t.musicAutoplay) {
       audio.play().then(() => { isPlaying = true; }).catch(() => {});
     }
-    const player = document.createElement('div');
+      const player = document.createElement('div');
     player.className = 'music-player';
     player.innerHTML = `
       <button class="music-btn" id="musicBtn" onclick="toggleMusic()">${isPlaying ? '⏸' : '▶'}</button>
@@ -516,9 +523,9 @@ async function renderProfile() {
           <div class="role-dot" style="background:${r.roleColor || t.accentColor || '#5865F2'}"></div>
           <div class="role-info">
             <div class="role-name">${r.roleName || r.roleId}</div>
-            <div class="role-server">${r.guildName || 'Unknown Server'}</div>
+                <div class="role-server">${r.guildName || 'Unknown Server'}</div>
           </div>
-          <div class="role-proof ${r.proofType === 'BOT' ? 'bot' : ''}">${r.proofType}</div>
+          <div class="role-proof ${r.proofType === 'BOT' ? 'bot' : ''}">${r.proofType === 'BOT' ? 'Bot Verified' : r.proofType === 'OAUTH' ? 'OAuth Verified' : r.proofType}</div>
         </div>
       `).join('')}
     </div>

@@ -21,6 +21,8 @@ const PORT = process.env.PORT || 3000;
 // ── CORS ─────────────────────────────────────────────────────────────────────
 const FRONTEND_ORIGIN = [
   'https://dashboard.cordfol.org',
+  'https://cordfol.org',
+  'https://www.cordfol.org',
   'https://cordfold.vercel.app'
 ];
 
@@ -282,7 +284,15 @@ app.post('/api/profile', async (req, res) => {
     const userId = req.session?.userId;
     if (!userId) return res.status(401).json({ error: 'Not authenticated' });
 
-    const { display_name, slug, bio, social_links } = req.body;
+    const {
+      display_name,
+      slug,
+      bio,
+      bannerUrl,
+      social_links,
+      theme = {}
+    } = req.body;
+
     if (!slug || !display_name) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
@@ -301,10 +311,69 @@ app.post('/api/profile', async (req, res) => {
         display_name = $1,
         slug = $2,
         bio = $3,
-        social_links = $4,
+        banner_url = $4,
+        social_links = $5,
         updated_at = NOW()
-      WHERE id = $5
-    `, [display_name, slug, bio, social_links, userId]);
+      WHERE id = $6
+    `, [display_name, slug, bio, bannerUrl, social_links, userId]);
+
+    const themeRow = await db.query(`
+      SELECT t.id, t.is_preset
+      FROM themes t
+      JOIN users u ON u.theme_id = t.id
+      WHERE u.id = $1
+    `, [userId]);
+
+    const themeFields = [
+      theme.backgroundColor || '#0d0d0d',
+      theme.accentColor || '#5865F2',
+      theme.textColor || '#ffffff',
+      theme.cardColor || '#111111',
+      theme.glassEnabled ? true : false,
+      Number(theme.glassBlur || 12),
+      Number(theme.glassOpacity || 0.15),
+      theme.animatedBg ? true : false,
+      theme.musicUrl || null,
+      theme.musicAutoplay ? true : false,
+      theme.customCss || null,
+    ];
+
+    if (themeRow.rowCount > 0 && !themeRow.rows[0].is_preset) {
+      await db.query(`
+        UPDATE themes SET
+          background_color = $1,
+          accent_color     = $2,
+          text_color       = $3,
+          card_color       = $4,
+          glass_enabled    = $5,
+          glass_blur       = $6,
+          glass_opacity    = $7,
+          animated_bg      = $8,
+          music_url        = $9,
+          music_autoplay   = $10,
+          custom_css       = $11
+        WHERE id = $12
+      `, [...themeFields, themeRow.rows[0].id]);
+    } else {
+      const insertTheme = await db.query(`
+        INSERT INTO themes (
+          name, is_default, is_preset,
+          background_color, accent_color, text_color, card_color,
+          glass_enabled, glass_blur, glass_opacity, animated_bg,
+          music_url, music_autoplay, custom_css
+        ) VALUES (
+          $1, false, false,
+          $2, $3, $4, $5,
+          $6, $7, $8, $9,
+          $10, $11, $12
+        ) RETURNING id
+      `, [
+        `Custom theme for user ${userId}`,
+        ...themeFields
+      ]);
+
+      await db.query('UPDATE users SET theme_id = $1 WHERE id = $2', [insertTheme.rows[0].id, userId]);
+    }
 
     res.json({ ok: true });
 

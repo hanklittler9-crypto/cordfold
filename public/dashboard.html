@@ -140,7 +140,9 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
 .ref-bar-wrap{flex:1;height:5px;border-radius:3px;background:var(--surface2);}
 .ref-bar-fill{height:100%;border-radius:3px;background:var(--discord);}
 .ref-pct{font-size:11px;color:var(--text);width:32px;text-align:right;font-family:'Space Mono',monospace;}
-.live-preview{background:#0d0d0d;border-radius:10px;padding:20px;display:flex;flex-direction:column;align-items:center;gap:10px;border:1px solid rgba(255,255,255,0.05);}
+.live-preview{background:#0d0d0d;border-radius:10px;padding:20px;display:flex;flex-direction:column;align-items:center;gap:10px;border:1px solid rgba(255,255,255,0.05);transition:transform 0.3s ease, box-shadow 0.3s ease;}
+.live-preview.preview-animated{animation:previewDrift 8s ease-in-out infinite alternate;}
+@keyframes previewDrift{from{transform:translateY(0);}to{transform:translateY(-4px) translateX(4px);}}
 .lp-avatar{width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,var(--discord),#7C3AED);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:500;color:white;}
 .lp-name{font-size:15px;font-weight:500;color:#f1f5f9;}
 .lp-bio{font-size:11px;color:#64748b;text-align:center;line-height:1.5;}
@@ -249,6 +251,23 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
               <div class="field"><div class="field-label">GitHub</div><input class="field-input" id="githubInput"/></div>
               <div class="field"><div class="field-label">YouTube</div><input class="field-input" id="youtubeInput"/></div>
               <div class="field"><div class="field-label">Website</div><input class="field-input" id="websiteInput"/></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-title">Theme & Media</div>
+            <div class="field"><div class="field-label">Banner URL</div><input class="field-input" id="bannerUrlInput" oninput="updatePreview()"/></div>
+            <div class="grid-2">
+              <div class="field"><div class="field-label">Background</div><input class="field-input" type="color" id="backgroundColorInput" value="#0d0d0d" onchange="updatePreview()"/></div>
+              <div class="field"><div class="field-label">Accent</div><input class="field-input" type="color" id="accentColorInput" value="#5865F2" onchange="updatePreview()"/></div>
+            </div>
+            <div class="grid-2">
+              <div class="field"><div class="field-label">Text</div><input class="field-input" type="color" id="textColorInput" value="#ffffff" onchange="updatePreview()"/></div>
+              <div class="field"><div class="field-label">Card</div><input class="field-input" type="color" id="cardColorInput" value="#111111" onchange="updatePreview()"/></div>
+            </div>
+            <div class="field"><div class="field-label">Music / Sound URL</div><input class="field-input" id="musicUrlInput" oninput="updatePreview()"/></div>
+            <div class="grid-2">
+              <div class="field"><label class="field-label"><input type="checkbox" id="musicAutoplayInput" onchange="updatePreview()"/> Autoplay music</label></div>
+              <div class="field"><label class="field-label"><input type="checkbox" id="animatedBgInput" onchange="updatePreview()"/> Animated background</label></div>
             </div>
           </div>
           <div class="btn-row right">
@@ -690,6 +709,14 @@ async function loadProfile(user) {
     document.getElementById('githubInput').value = data.profile.socialLinks?.github || '';
     document.getElementById('youtubeInput').value = data.profile.socialLinks?.youtube || '';
     document.getElementById('websiteInput').value = data.profile.socialLinks?.website || '';
+    document.getElementById('bannerUrlInput').value = data.profile.bannerUrl || '';
+    document.getElementById('backgroundColorInput').value = data.theme?.backgroundColor || '#0d0d0d';
+    document.getElementById('accentColorInput').value = data.theme?.accentColor || '#5865F2';
+    document.getElementById('textColorInput').value = data.theme?.textColor || '#ffffff';
+    document.getElementById('cardColorInput').value = data.theme?.cardColor || '#111111';
+    document.getElementById('musicUrlInput').value = data.theme?.musicUrl || '';
+    document.getElementById('musicAutoplayInput').checked = !!data.theme?.musicAutoplay;
+    document.getElementById('animatedBgInput').checked = !!data.theme?.animatedBg;
     updatePreview();
   } catch { /* leave blank */ }
 }
@@ -704,6 +731,17 @@ async function saveProfile() {
     youtube: document.getElementById('youtubeInput').value,
     website: document.getElementById('websiteInput').value
   };
+  const bannerUrl = document.getElementById('bannerUrlInput').value;
+  const theme = {
+    backgroundColor: document.getElementById('backgroundColorInput').value,
+    accentColor: document.getElementById('accentColorInput').value,
+    textColor: document.getElementById('textColorInput').value,
+    cardColor: document.getElementById('cardColorInput').value,
+    musicUrl: document.getElementById('musicUrlInput').value,
+    musicAutoplay: document.getElementById('musicAutoplayInput').checked,
+    animatedBg: document.getElementById('animatedBgInput').checked,
+    customCss: null
+  };
   try {
     const sid = window._authSid;
     const url = sid ? `${API_BASE}/profile?sid=${sid}` : `${API_BASE}/profile`;
@@ -711,7 +749,7 @@ async function saveProfile() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
-      body: JSON.stringify({ display_name: displayName, slug, bio, social_links })
+      body: JSON.stringify({ display_name: displayName, slug, bio, bannerUrl, social_links, theme })
     });
     if (!res.ok) throw new Error('Failed to save');
     showToast('✅', 'Profile saved successfully!');
@@ -724,13 +762,38 @@ function updatePreview() {
   if (!preview) return;
   const name = document.getElementById('displayName').value || 'User';
   const bio = document.getElementById('bioText').value || '';
-  const slugVal = document.getElementById('slug').value;
+  const bannerUrl = document.getElementById('bannerUrlInput').value;
+  const backgroundColor = document.getElementById('backgroundColorInput').value;
+  const accentColor = document.getElementById('accentColorInput').value;
+  const textColor = document.getElementById('textColorInput').value;
+  const cardColor = document.getElementById('cardColorInput').value;
+  const musicUrl = document.getElementById('musicUrlInput').value;
+  const animatedBg = document.getElementById('animatedBgInput').checked;
+
+  preview.style.background = cardColor;
+  preview.style.color = textColor;
+  preview.style.borderColor = `${accentColor}33`;
+  preview.style.backgroundImage = bannerUrl
+    ? `linear-gradient(to bottom, rgba(0,0,0,0.22), rgba(0,0,0,0.75)), url('${bannerUrl}')`
+    : 'none';
+  preview.style.backgroundSize = bannerUrl ? 'cover' : 'unset';
+  preview.style.backgroundPosition = bannerUrl ? 'center' : 'unset';
+
+  if (animatedBg) {
+    preview.classList.add('preview-animated');
+  } else {
+    preview.classList.remove('preview-animated');
+  }
+
   preview.innerHTML = `
-    <div class="lp-avatar">${name[0] || '?'}</div>
+    <div class="lp-avatar" style="background:${accentColor};color:${textColor};">${name[0] || '?'}</div>
     <div class="lp-name">${name}</div>
     <div class="lp-bio">${bio.slice(0, 60)}${bio.length > 60 ? '…' : ''}</div>
     <div class="lp-roles" id="lp-roles"></div>
+    ${musicUrl ? `<div style="font-size:11px;color:${accentColor};margin-top:12px;display:flex;align-items:center;gap:6px;">🎵 Music enabled</div>` : ''}
   `;
+
+  const slugVal = document.getElementById('slug').value;
   if (slugVal) {
     fetch(`${API_BASE}/profile/${slugVal}`)
       .then(res => res.json())
