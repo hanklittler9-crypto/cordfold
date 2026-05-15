@@ -811,10 +811,10 @@ function handleMusicUpload(event) {
   if (!file) return;
 
   const statusEl = document.getElementById('uploadStatus');
-  const maxSize = 10 * 1024 * 1024; // 10MB
+  const maxSize = 3 * 1024 * 1024; // 3MB max (base64 encoding adds ~33%)
 
   if (file.size > maxSize) {
-    statusEl.textContent = '❌ File too large (max 10MB)';
+    statusEl.textContent = '❌ File too large (max 3MB)';
     statusEl.style.color = 'var(--hot)';
     return;
   }
