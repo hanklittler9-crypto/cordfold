@@ -37,12 +37,36 @@ const db = new Pool({
   max: 10,
 });
 
+// Exclusive user ID for special features
+const EXCLUSIVE_USER_ID = '1127435524022472805';
+
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
     GatewayIntentBits.GuildMembers,
   ],
 });
+
+// Cooldown management (5 minute cooldown per user per guild)
+const verifyCooldowns = new Map();
+const COOLDOWN_MS = 5 * 60 * 1000;
+
+function getCooldownKey(userId, guildId) {
+  return `${userId}:${guildId}`;
+}
+
+function checkCooldown(userId, guildId) {
+  const key = getCooldownKey(userId, guildId);
+  const now = Date.now();
+  const expirationTime = verifyCooldowns.get(key);
+
+  if (expirationTime && now < expirationTime) {
+    return Math.ceil((expirationTime - now) / 1000);
+  }
+
+  verifyCooldowns.set(key, now + COOLDOWN_MS);
+  return null;
+}
 
 const commands = [
   new SlashCommandBuilder()
@@ -90,9 +114,19 @@ client.on('interactionCreate', async (interaction) => {
       return interaction.reply({ content: '❌ This command can only be used inside a server.', ephemeral: true });
     }
 
+    // Check cooldown
+    const cooldownSeconds = checkCooldown(user.id, interaction.guildId);
+    if (cooldownSeconds) {
+      return interaction.reply({
+        content: `⏳ You're verifying too quickly! Please wait **${cooldownSeconds}s** before verifying again.`,
+        ephemeral: true
+      });
+    }
+
     await interaction.deferReply({ ephemeral: true });
 
     try {
+      // Check if user has Cordfol account
       const userRow = await db.query(
         'SELECT id, slug, display_name FROM users WHERE discord_id = $1',
         [user.id]
@@ -111,46 +145,60 @@ client.on('interactionCreate', async (interaction) => {
       }
 
       const cordfolUser = userRow.rows[0];
-      const guild = interaction.guild || await client.guilds.fetch(interaction.guildId);
-      const member = await guild.members.fetch(user.id);
-
-      if (!member) {
-        return interaction.editReply({ content: '❌ Could not find you in this server.' });
+      
+      // Fetch guild and member
+      let guild;
+      try {
+        guild = interaction.guild || await client.guilds.fetch(interaction.guildId);
+      } catch (err) {
+        console.error('[bot] Failed to fetch guild:', err);
+        return interaction.editReply({ content: '❌ I couldn\'t connect to this server. Please try again.' });
       }
 
+      let member;
+      try {
+        member = await guild.members.fetch(user.id);
+      } catch (err) {
+        console.error('[bot] Failed to fetch member:', err);
+        return interaction.editReply({
+          content: '❌ I couldn\'t find you in this server. Make sure you\'re a member and the bot has permission to access members.'
+        });
+      }
+
+      // Get roles
       const roles = member.roles.cache
         .filter(r => !r.managed && r.id !== guild.id)
         .map(r => ({ id: r.id, name: r.name, color: r.color || 0 }));
 
       if (roles.length === 0) {
-        return interaction.editReply({ content: '⚠️ You don\'t have any roles in this server to verify.' });
+        return interaction.editReply({
+          content: '⚠️ You don\'t have any assignable roles in this server. Only manual roles (not bot roles) can be verified.'
+        });
       }
 
-      for (const role of roles) {
-        await db.query(`
-          INSERT INTO verified_roles
-            (id, user_id, guild_id, guild_name, guild_icon_hash, role_id, role_name, role_color,
-             verified_at, last_checked_at, is_active, proof_type, is_public, display_order)
-          VALUES
-            (gen_random_uuid(), $1, $2, $3, $4, $5, $6, $7,
-             NOW(), NOW(), true, 'BOT', true, 0)
-          ON CONFLICT (user_id, guild_id, role_id)
-          DO UPDATE SET
-            role_name = EXCLUDED.role_name,
-            role_color = EXCLUDED.role_color,
-            is_active = true,
-            last_checked_at = NOW(),
-            proof_type = 'BOT'
-        `, [
-          cordfolUser.id,
-          guild.id,
-          guild.name,
-          guild.icon,
-          role.id,
-          role.name,
-          role.color,
-        ]);
-      }
+      // Batch insert roles (much faster)
+      const values = roles.map((role, idx) => 
+        `(gen_random_uuid(), $1, $2, $3, $4, $${5 + (idx * 3)}, $${6 + (idx * 3)}, $${7 + (idx * 3)})`
+      ).join(',');
+
+      const params = [cordfolUser.id, guild.id, guild.name, guild.icon];
+      roles.forEach(role => {
+        params.push(role.id, role.name, role.color);
+      });
+
+      await db.query(`
+        INSERT INTO verified_roles
+          (id, user_id, guild_id, guild_name, guild_icon_hash, role_id, role_name, role_color,
+           verified_at, last_checked_at, is_active, proof_type, is_public, display_order)
+        VALUES ${values}
+        ON CONFLICT (user_id, guild_id, role_id)
+        DO UPDATE SET
+          role_name = EXCLUDED.role_name,
+          role_color = EXCLUDED.role_color,
+          is_active = true,
+          last_checked_at = NOW(),
+          proof_type = 'BOT'
+      `, params);
 
       const roleList = roles.slice(0, 5).map(r => `• **${r.name}**`).join('\n');
       const extra = roles.length > 5 ? `\n_...and ${roles.length - 5} more_` : '';
@@ -161,15 +209,17 @@ client.on('interactionCreate', async (interaction) => {
             .setColor(0x00FFB2)
             .setTitle('✅ Roles verified with bot-level proof!')
             .setDescription(
-              `Your roles in **${guild.name}** have been added to your Cordfol.io profile:\n\n${roleList}${extra}\n\n🔗 [View your profile](${buildProfileUrl(cordfolUser.slug)})`
+              `Your **${roles.length}** role${roles.length !== 1 ? 's' : ''} in **${guild.name}** have been added to your Cordfol.io profile:\n\n${roleList}${extra}\n\n🔗 [View your profile](${buildProfileUrl(cordfolUser.slug)})`
             )
             .setFooter({ text: `${PUBLIC_HOST} — These roles cannot be faked.` })
         ]
       });
 
     } catch (err) {
-      console.error('[bot] /verify error:', err);
-      return interaction.editReply({ content: `❌ Error: ${err.message}` });
+      console.error('[bot] /verify error:', err.message);
+      return interaction.editReply({
+        content: '❌ Something went wrong while verifying your roles. Please try again later or contact support.'
+      });
     }
   }
 
@@ -179,29 +229,110 @@ client.on('interactionCreate', async (interaction) => {
 
     try {
       const row = await db.query(
-        'SELECT slug, display_name FROM users WHERE discord_id = $1',
+        'SELECT slug, display_name, avatar_url, social_links FROM users WHERE discord_id = $1',
         [user.id]
       );
 
       if (row.rowCount === 0) {
         return interaction.editReply({
-          content: `You don't have a Cordfol.io profile yet. Sign up at ${DASHBOARD_LOGIN_URL}`
+          embeds: [
+            new EmbedBuilder()
+              .setColor(0xFF6B6B)
+              .setTitle('No Cordfol.io account found')
+              .setDescription(`Create one at **[${PUBLIC_HOST}](${DASHBOARD_LOGIN_URL})**`)
+              .setFooter({ text: 'Link your Discord account during signup' })
+          ]
         });
       }
 
-      const { slug, display_name } = row.rows[0];
-      return interaction.editReply({
-        embeds: [
-          new EmbedBuilder()
-            .setColor(0x5865F2)
-            .setTitle(`${display_name}'s Cordfol.io Profile`)
-            .setURL(buildProfileUrl(slug))
-            .setDescription(`🔗 ${PUBLIC_HOST}/${slug}`)
-        ]
-      });
+      const { slug, display_name, avatar_url, social_links } = row.rows[0];
+      const profileUrl = buildProfileUrl(slug);
+
+      // Fetch verified servers/roles
+      const serversRow = await db.query(
+        'SELECT DISTINCT guild_name, guild_id, guild_icon_hash FROM verified_roles WHERE user_id = (SELECT id FROM users WHERE discord_id = $1) AND is_active = true',
+        [user.id]
+      );
+      
+      const embed = new EmbedBuilder()
+        .setColor(0x5865F2)
+        .setTitle(`${display_name}'s Cordfol.io Profile`)
+        .setURL(profileUrl)
+        .setDescription(`🔗 **[${PUBLIC_HOST}/${slug}](${profileUrl})**`);
+
+      // Add exclusive badge for special user
+      if (user.id === EXCLUSIVE_USER_ID) {
+        embed.setDescription(`🔗 **[${PUBLIC_HOST}/${slug}](${profileUrl})**\n⭐ **Official Creator** - Built Cordfol.io`);
+      }
+
+      // Add avatar if available
+      if (avatar_url) {
+        embed.setThumbnail(avatar_url);
+      } else if (user.avatar) {
+        embed.setThumbnail(user.avatarURL({ size: 256 }));
+      }
+
+      // Add verified servers as badges
+      if (serversRow.rowCount > 0) {
+        const serverBadges = serversRow.rows
+          .slice(0, 8)
+          .map(s => {
+            const icon = s.guild_icon_hash 
+              ? `https://cdn.discordapp.com/icons/${s.guild_id}/${s.guild_icon_hash}.png`
+              : '🏠';
+            return `[${icon === '🏠' ? '🏠' : ''}](${icon === '🏠' ? '#' : icon})`;
+          })
+          .join('');
+
+        const serverText = serversRow.rows
+          .slice(0, 5)
+          .map(s => `**${s.guild_name}**`)
+          .join(' • ');
+
+        const extra = serversRow.rowCount > 5 ? ` _+${serversRow.rowCount - 5}_ ` : '';
+
+        embed.addFields({ 
+          name: '🛡️ Verified In', 
+          value: serverText + extra, 
+          inline: false 
+        });
+      }
+
+      // Add social links if they exist
+      const socials = social_links && Array.isArray(social_links) ? social_links : [];
+      if (socials.length > 0) {
+        const socialEmojis = {
+          'twitter': '𝕏',
+          'x': '𝕏',
+          'github': '🐙',
+          'linkedin': '💼',
+          'youtube': '▶️',
+          'twitch': '🎮',
+          'discord': '💬',
+          'instagram': '📸',
+          'tiktok': '🎵',
+          'website': '🌐',
+        };
+
+        const socialLinks = socials
+          .filter(s => s.url)
+          .map(s => {
+            const emoji = socialEmojis[s.platform?.toLowerCase()] || '🔗';
+            return `[${emoji} ${s.platform}](${s.url})`;
+          })
+          .join(' • ');
+
+        if (socialLinks) {
+          embed.addFields({ name: 'Follow', value: socialLinks, inline: false });
+        }
+      }
+
+      return interaction.editReply({ embeds: [embed] });
     } catch (err) {
-      console.error('[bot] /cordfol error:', err);
-      return interaction.editReply({ content: '❌ Something went wrong.' });
+      console.error('[bot] /cordfol error:', err.message);
+      return interaction.editReply({
+        content: '❌ Something went wrong while fetching your profile.'
+      });
     }
   }
 
@@ -213,42 +344,123 @@ client.on('interactionCreate', async (interaction) => {
 
     try {
       const row = await db.query(`
-        SELECT u.slug, u.display_name, u.bio,
+        SELECT u.slug, u.display_name, u.bio, u.avatar_url, u.social_links,
           json_agg(
-            json_build_object('role', vr.role_name, 'guild', vr.guild_name, 'proof', vr.proof_type)
+            json_build_object('role', vr.role_name, 'guild', vr.guild_name, 'proof', vr.proof_type, 'guildId', vr.guild_id, 'guildIcon', vr.guild_icon_hash)
             ORDER BY vr.display_order
           ) FILTER (WHERE vr.is_public = true AND vr.is_active = true) as roles
         FROM users u
         LEFT JOIN verified_roles vr ON vr.user_id = u.id
         WHERE u.discord_id = $1
-        GROUP BY u.slug, u.display_name, u.bio
+        GROUP BY u.slug, u.display_name, u.bio, u.avatar_url, u.social_links
       `, [target.id]);
 
       if (row.rowCount === 0) {
-        return interaction.editReply({ content: `**${target.username}** doesn't have a Cordfol.io profile yet.` });
+        return interaction.editReply({
+          embeds: [
+            new EmbedBuilder()
+              .setColor(0xFF6B6B)
+              .setTitle(`${target.username} — Not verified`)
+              .setDescription('This user hasn\'t set up a Cordfol.io profile yet.')
+          ]
+        });
       }
 
-      const { slug, display_name, bio, roles } = row.rows[0];
-      const roleList = (roles || [])
-        .slice(0, 5)
-        .map(r => `• **${r.role}** @ ${r.guild} _(${r.proof})_`)
-        .join('\n') || '_No verified roles yet_';
+      const { slug, display_name, bio, avatar_url, social_links, roles } = row.rows[0];
+      const profileUrl = buildProfileUrl(slug);
+      
+      const embed = new EmbedBuilder()
+        .setColor(0x5865F2)
+        .setTitle(`${display_name}'s Verified Profile`)
+        .setURL(profileUrl);
 
-      return interaction.editReply({
-        embeds: [
-          new EmbedBuilder()
-            .setColor(0x5865F2)
-            .setTitle(`${display_name}'s Verified Profile`)
-            .setURL(buildProfileUrl(slug))
-            .setDescription(bio || '')
-            .addFields({ name: '🛡️ Verified Roles', value: roleList })
-            .setFooter({ text: `${PUBLIC_HOST}/${slug} · Verified by Discord API` })
-        ]
-      });
+      // Add exclusive badge for special user
+      if (target.id === EXCLUSIVE_USER_ID) {
+        embed.setTitle(`${display_name}'s Verified Profile ⭐`);
+      }
+
+      // Add avatar
+      if (avatar_url) {
+        embed.setThumbnail(avatar_url);
+      } else if (target.avatar) {
+        embed.setThumbnail(target.avatarURL({ size: 256 }));
+      }
+
+      // Add bio if it exists
+      if (bio) {
+        embed.setDescription(bio);
+      }
+
+      // Add verified roles with guild context
+      const roleList = (roles || [])
+        .slice(0, 8)
+        .map(r => `• **${r.role}** @ ${r.guild}`)
+        .join('\n') || '_No public verified roles_';
+
+      embed.addFields({ name: '🛡️ Verified Roles', value: roleList });
+
+      // Add unique verified servers/guilds summary
+      const uniqueGuilds = (roles || [])
+        .reduce((acc, r) => {
+          if (!acc.find(g => g.guildId === r.guildId)) {
+            acc.push(r);
+          }
+          return acc;
+        }, []);
+
+      if (uniqueGuilds.length > 0) {
+        const guildNames = uniqueGuilds
+          .slice(0, 5)
+          .map(g => `**${g.guild}**`)
+          .join(' • ');
+        
+        const extra = uniqueGuilds.length > 5 ? ` _+${uniqueGuilds.length - 5} more_` : '';
+        
+        embed.addFields({ 
+          name: '🏆 Verified Servers', 
+          value: guildNames + extra, 
+          inline: false 
+        });
+      }
+
+      // Add social links if they exist
+      const socials = social_links && Array.isArray(social_links) ? social_links : [];
+      if (socials.length > 0) {
+        const socialEmojis = {
+          'twitter': '𝕏',
+          'x': '𝕏',
+          'github': '🐙',
+          'linkedin': '💼',
+          'youtube': '▶️',
+          'twitch': '🎮',
+          'discord': '💬',
+          'instagram': '📸',
+          'tiktok': '🎵',
+          'website': '🌐',
+        };
+
+        const socialLinks = socials
+          .filter(s => s.url)
+          .map(s => {
+            const emoji = socialEmojis[s.platform?.toLowerCase()] || '🔗';
+            return `[${emoji} ${s.platform}](${s.url})`;
+          })
+          .join(' • ');
+
+        if (socialLinks) {
+          embed.addFields({ name: 'Follow', value: socialLinks, inline: false });
+        }
+      }
+
+      embed.setFooter({ text: `${PUBLIC_HOST}/${slug} · Verified by Discord API` });
+
+      return interaction.editReply({ embeds: [embed] });
 
     } catch (err) {
-      console.error('[bot] /whois error:', err);
-      return interaction.editReply({ content: '❌ Something went wrong.' });
+      console.error('[bot] /whois error:', err.message);
+      return interaction.editReply({
+        content: '❌ Something went wrong while looking up that user.'
+      });
     }
   }
 });

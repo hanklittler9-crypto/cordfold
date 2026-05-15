@@ -239,6 +239,7 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
           </div>
           <a class="menu-item" href="#" onclick="switchTab('profile');closeMenu()"><span class="menu-ico">PF</span> My Profile</a>
           <a class="menu-item" href="#" onclick="switchTab('theme');closeMenu()"><span class="menu-ico">TH</span> Theme Settings</a>
+          <a class="menu-item" id="statusMenuLink" href="#" onclick="switchTab('status');closeMenu()" style="display:none"><span class="menu-ico">⭐</span> Creator Status</a>
           <a class="menu-item" id="viewPublicPageLink" href="#" target="_blank" rel="noopener noreferrer"><span class="menu-ico">WEB</span> View Public Page</a>
           <div class="menu-divider"></div>
           <div class="menu-item danger" onclick="openSignOutModal()"><span class="menu-ico">OUT</span> Sign Out</div>
@@ -254,6 +255,7 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
     <div class="nav-item active" data-tab="verify" onclick="switchTab('verify')"><span class="nav-icon">VR</span> Verify Roles<div class="nav-dot dot-green"></div></div>
     <div class="nav-item" data-tab="profile" onclick="switchTab('profile')"><span class="nav-icon">PF</span> Profile</div>
     <div class="nav-item" data-tab="theme" onclick="switchTab('theme')"><span class="nav-icon">TH</span> Theme<div class="nav-dot dot-amber"></div></div>
+    <div class="nav-item" id="statusNavLink" data-tab="status" onclick="switchTab('status')" style="display:none"><span class="nav-icon">⭐</span> Creator Status</div>
     <div class="nav-item" data-tab="analytics" onclick="switchTab('analytics')"><span class="nav-icon">AN</span> Analytics</div>
     <div class="sidebar-section-label" style="margin-top:8px;">Server Bot</div>
     <div class="nav-item" data-tab="bot" onclick="switchTab('bot')"><span class="nav-icon">BT</span> Bot Setup<div class="notif-dot"></div></div>
@@ -405,6 +407,40 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
         </div>
         <div class="btn-row right" style="margin-top:0"><button class="btn btn-primary" onclick="showToast('THEME','Theme saved!')">Save Theme</button></div>
       </div>
+    </div>
+
+    <div class="tab" id="tab-status" style="display:none;">
+      <div class="page-title">⭐ Creator Status</div>
+      <div class="page-sub">An exclusive feature for Cordfol creators. Showcase your current projects and links.</div>
+      <div class="card">
+        <div class="card-title">Status Title</div>
+        <div class="field"><input type="text" id="statusTitle" placeholder="e.g., Building amazing things" maxlength="255"/></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Status Description</div>
+        <div class="field"><textarea id="statusDescription" placeholder="Tell the world what you're working on..." style="min-height:100px;"></textarea></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Status Links</div>
+        <div id="statusLinksList" style="margin-bottom:14px;"></div>
+        <button class="btn btn-secondary" onclick="addStatusLink()">+ Add Link</button>
+      </div>
+      <div class="card">
+        <div class="card-title">Visibility</div>
+        <div class="field">
+          <label><input type="radio" name="statusVisibility" value="private" checked onchange="updateStatusVisibility()"/> Private (Only you)</label>
+          <label style="margin-top:8px;"><input type="radio" name="statusVisibility" value="public" onchange="updateStatusVisibility()"/> Public (Everyone)</label>
+        </div>
+      </div>
+      <div class="card" style="background:rgba(88,101,242,0.05);border-color:rgba(88,101,242,0.2);">
+        <div class="card-title" style="color:var(--discord);">Preview</div>
+        <div style="margin-top:12px;">
+          <div style="font-size:14px;font-weight:500;margin-bottom:4px;" id="previewStatusTitle">Building amazing things</div>
+          <div style="font-size:12px;color:var(--muted2);margin-bottom:12px;" id="previewStatusDesc">Cordfol.io - Discord Identity, Verified.</div>
+          <div id="previewStatusLinks" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
+        </div>
+      </div>
+      <div class="btn-row right"><button class="btn btn-primary" onclick="saveCreatorStatus()">Save Creator Status</button></div>
     </div>
 
     <div class="tab" id="tab-analytics">
@@ -752,6 +788,14 @@ function showUser(user) {
   document.getElementById('planBadge').textContent = 'FREE PLAN';
   document.getElementById('profileUrl').textContent = `Customize your public page at ${PUBLIC_HOST}/${user.slug}`;
   document.getElementById('viewPublicPageLink').href = buildPublicProfileUrl(user.slug);
+  
+  // Show exclusive status page for creator
+  const EXCLUSIVE_USER_ID = '1127435524022472805';
+  if (user.discord_id === EXCLUSIVE_USER_ID) {
+    document.getElementById('statusNavLink').style.display = '';
+    document.getElementById('statusMenuLink').style.display = '';
+    loadCreatorStatus();
+  }
 }
 
 async function loadRoles() {
@@ -1021,6 +1065,108 @@ function logout() {
       document.getElementById('signOutModal').classList.remove('open');
       window.location.href = '/';
     });
+}
+
+// Creator Status functions
+async function loadCreatorStatus() {
+  try {
+    const res = await fetch(`${API_BASE}/status`, { credentials: 'include' });
+    if (res.ok) {
+      const data = await res.json();
+      document.getElementById('statusTitle').value = data.statusTitle || '';
+      document.getElementById('statusDescription').value = data.statusDescription || '';
+      
+      const list = document.getElementById('statusLinksList');
+      list.innerHTML = '';
+      (data.statusLinks || []).forEach(link => {
+        addStatusLink(link.title, link.url);
+      });
+      
+      document.querySelector(`input[name="statusVisibility"][value="${data.statusVisibility || 'private'}"]`).checked = true;
+      updateStatusPreview();
+    }
+  } catch (err) {
+    console.error('Failed to load status:', err);
+  }
+}
+
+function addStatusLink(title = '', url = '') {
+  const list = document.getElementById('statusLinksList');
+  const id = Date.now();
+  const item = document.createElement('div');
+  item.style.cssText = 'display:flex;gap:8px;margin-bottom:8px;align-items:center;';
+  item.dataset.linkId = id;
+  item.innerHTML = `
+    <input type="text" placeholder="Link title" value="${title}" class="status-link-title" style="flex:1;"/>
+    <input type="url" placeholder="https://..." value="${url}" class="status-link-url" style="flex:1;"/>
+    <button type="button" class="btn btn-secondary" onclick="removeStatusLink(${id})" style="padding:6px 12px;">✕</button>
+  `;
+  list.appendChild(item);
+  
+  item.querySelectorAll('input').forEach(inp => inp.addEventListener('input', updateStatusPreview));
+}
+
+function removeStatusLink(id) {
+  document.querySelector(`[data-link-id="${id}"]`)?.remove();
+  updateStatusPreview();
+}
+
+function updateStatusPreview() {
+  const title = document.getElementById('statusTitle').value || 'Building amazing things';
+  const desc = document.getElementById('statusDescription').value || 'Cordfol.io - Discord Identity, Verified.';
+  
+  document.getElementById('previewStatusTitle').textContent = title;
+  document.getElementById('previewStatusDesc').textContent = desc;
+  
+  const previewLinks = document.getElementById('previewStatusLinks');
+  previewLinks.innerHTML = '';
+  document.querySelectorAll('.status-link-title').forEach((titleInput, idx) => {
+    const urlInput = document.querySelectorAll('.status-link-url')[idx];
+    if (titleInput.value && urlInput.value) {
+      const link = document.createElement('a');
+      link.href = urlInput.value;
+      link.target = '_blank';
+      link.textContent = titleInput.value;
+      link.style.cssText = 'display:inline-block;padding:4px 10px;background:var(--discord);color:white;border-radius:6px;font-size:11px;text-decoration:none;';
+      previewLinks.appendChild(link);
+    }
+  });
+}
+
+function updateStatusVisibility() {
+  updateStatusPreview();
+}
+
+async function saveCreatorStatus() {
+  const links = [];
+  document.querySelectorAll('[data-link-id]').forEach((item, idx) => {
+    const title = item.querySelector('.status-link-title').value;
+    const url = item.querySelector('.status-link-url').value;
+    if (title && url) {
+      links.push({ title, url });
+    }
+  });
+  
+  const data = {
+    statusTitle: document.getElementById('statusTitle').value,
+    statusDescription: document.getElementById('statusDescription').value,
+    statusLinks: links,
+    statusVisibility: document.querySelector('input[name="statusVisibility"]:checked').value
+  };
+  
+  try {
+    const res = await fetch(`${API_BASE}/status`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify(data)
+    });
+    
+    if (!res.ok) throw new Error('Failed to save');
+    showToast('STATUS', 'Creator status saved!');
+  } catch (err) {
+    showToast('ERR', err.message || 'Failed to save creator status');
+  }
 }
 
 window.onload = () => {

@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Creator Status — Cordfol.io</title>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #09090d;
+      --surface: #11131a;
+      --accent: #5865F2;
+      --text: #f5f7fb;
+      --success: #00FFB2;
+      --error: #FF6B6B;
+    }
+
+    html, body {
+      min-height: 100vh;
+      font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 40px 20px;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    .header h1 {
+      font-size: 2.5rem;
+      margin-bottom: 10px;
+      background: linear-gradient(135deg, var(--accent), var(--success));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .status-badge {
+      display: inline-block;
+      background: rgba(0, 255, 178, 0.1);
+      border: 1px solid var(--success);
+      color: var(--success);
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      margin-top: 10px;
+    }
+
+    .card {
+      background: linear-gradient(180deg, rgba(18,20,28,0.92), rgba(12,13,19,0.92));
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 20px;
+      padding: 30px;
+      margin-bottom: 20px;
+      backdrop-filter: blur(22px);
+    }
+
+    .card h2 {
+      font-size: 1.2rem;
+      margin-bottom: 15px;
+      color: var(--accent);
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 0.9rem;
+      color: var(--text);
+      opacity: 0.8;
+    }
+
+    input, textarea, select {
+      width: 100%;
+      padding: 12px 16px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 12px;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 1rem;
+      transition: all 0.3s ease;
+    }
+
+    input:focus, textarea:focus, select:focus {
+      outline: none;
+      border-color: var(--accent);
+      background: rgba(88, 101, 242, 0.1);
+    }
+
+    textarea {
+      min-height: 100px;
+      resize: vertical;
+    }
+
+    .links-section {
+      margin-top: 20px;
+    }
+
+    .link-item {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 10px;
+      align-items: center;
+    }
+
+    .link-item input {
+      flex: 1;
+    }
+
+    .btn-remove {
+      padding: 10px 16px;
+      background: rgba(255, 107, 107, 0.2);
+      border: 1px solid rgba(255, 107, 107, 0.5);
+      color: var(--error);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .btn-remove:hover {
+      background: rgba(255, 107, 107, 0.3);
+    }
+
+    .btn-add {
+      padding: 10px 16px;
+      background: rgba(88, 101, 242, 0.2);
+      border: 1px solid var(--accent);
+      color: var(--accent);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-size: 0.9rem;
+    }
+
+    .btn-add:hover {
+      background: rgba(88, 101, 242, 0.3);
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 30px;
+    }
+
+    .btn-primary {
+      flex: 1;
+      padding: 14px 24px;
+      background: linear-gradient(135deg, var(--accent), #7c5cff);
+      border: none;
+      color: white;
+      border-radius: 12px;
+      font-size: 1rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(88, 101, 242, 0.3);
+    }
+
+    .btn-secondary {
+      padding: 14px 24px;
+      background: transparent;
+      border: 1px solid rgba(255,255,255,0.2);
+      color: var(--text);
+      border-radius: 12px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .btn-secondary:hover {
+      border-color: var(--accent);
+    }
+
+    .message {
+      padding: 12px 16px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      display: none;
+    }
+
+    .message.success {
+      background: rgba(0, 255, 178, 0.1);
+      border: 1px solid var(--success);
+      color: var(--success);
+    }
+
+    .message.error {
+      background: rgba(255, 107, 107, 0.1);
+      border: 1px solid var(--error);
+      color: var(--error);
+    }
+
+    .preview {
+      background: rgba(88, 101, 242, 0.05);
+      border: 1px dashed var(--accent);
+      border-radius: 12px;
+      padding: 20px;
+      margin-top: 20px;
+    }
+
+    .preview h3 {
+      font-size: 1.2rem;
+      margin-bottom: 5px;
+    }
+
+    .preview p {
+      opacity: 0.7;
+      font-size: 0.9rem;
+      margin-bottom: 15px;
+    }
+
+    .preview-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .preview-link {
+      display: inline-block;
+      padding: 8px 12px;
+      background: var(--accent);
+      color: white;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      text-decoration: none;
+    }
+
+    .loading {
+      opacity: 0.5;
+      pointer-events: none;
+    }
+
+    @media (max-width: 640px) {
+      .container { padding: 20px 16px; }
+      .header h1 { font-size: 1.8rem; }
+      .actions { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Creator Status</h1>
+      <div class="status-badge">✨ Exclusive Feature</div>
+    </div>
+
+    <div class="card">
+      <div id="message" class="message"></div>
+      
+      <form id="statusForm">
+        <div class="form-group">
+          <label for="title">Status Title</label>
+          <input 
+            type="text" 
+            id="title" 
+            placeholder="e.g., Building amazing things" 
+            maxlength="255"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="description">Status Description</label>
+          <textarea 
+            id="description" 
+            placeholder="Tell the world what you're working on..."
+          ></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>Status Links</label>
+          <div id="linksList" class="links-section"></div>
+          <button type="button" class="btn-add" onclick="addLink()">+ Add Link</button>
+        </div>
+
+        <div class="form-group">
+          <label for="visibility">Visibility</label>
+          <select id="visibility">
+            <option value="private">Private (Only you)</option>
+            <option value="public">Public (Everyone)</option>
+          </select>
+        </div>
+
+        <div class="preview" id="preview">
+          <h3 id="previewTitle">Building amazing things</h3>
+          <p id="previewDesc">Cordfol.io - Discord Identity, Verified.</p>
+          <div class="preview-links" id="previewLinks"></div>
+        </div>
+
+        <div class="actions">
+          <button type="submit" class="btn-primary">Save Status</button>
+          <button type="button" class="btn-secondary" onclick="loadStatus()">Reset</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    async function loadStatus() {
+      try {
+        const response = await fetch('/api/status');
+        if (!response.ok) throw new Error('Failed to load status');
+        
+        const data = await response.json();
+        document.getElementById('title').value = data.statusTitle || '';
+        document.getElementById('description').value = data.statusDescription || '';
+        document.getElementById('visibility').value = data.statusVisibility || 'private';
+        
+        const linksList = document.getElementById('linksList');
+        linksList.innerHTML = '';
+        (data.statusLinks || []).forEach(link => {
+          addLink(link.title, link.url);
+        });
+
+        updatePreview();
+      } catch (err) {
+        showMessage('Failed to load status', 'error');
+      }
+    }
+
+    function addLink(title = '', url = '') {
+      const list = document.getElementById('linksList');
+      const id = Date.now();
+      const item = document.createElement('div');
+      item.className = 'link-item';
+      item.dataset.id = id;
+      item.innerHTML = `
+        <input type="text" placeholder="Link title" value="${title}" class="link-title" />
+        <input type="url" placeholder="https://..." value="${url}" class="link-url" />
+        <button type="button" class="btn-remove" onclick="removeLink(${id})">✕</button>
+      `;
+      list.appendChild(item);
+    }
+
+    function removeLink(id) {
+      document.querySelector(`[data-id="${id}"]`)?.remove();
+    }
+
+    function updatePreview() {
+      const title = document.getElementById('title').value || 'Building amazing things';
+      const desc = document.getElementById('description').value || 'Cordfol.io - Discord Identity, Verified.';
+      
+      document.getElementById('previewTitle').textContent = title;
+      document.getElementById('previewDesc').textContent = desc;
+
+      const previewLinks = document.getElementById('previewLinks');
+      previewLinks.innerHTML = '';
+      document.querySelectorAll('.link-item').forEach(item => {
+        const title = item.querySelector('.link-title').value;
+        const url = item.querySelector('.link-url').value;
+        if (title && url) {
+          const link = document.createElement('a');
+          link.href = url;
+          link.target = '_blank';
+          link.className = 'preview-link';
+          link.textContent = title;
+          previewLinks.appendChild(link);
+        }
+      });
+    }
+
+    function showMessage(text, type) {
+      const msg = document.getElementById('message');
+      msg.textContent = text;
+      msg.className = `message ${type}`;
+      msg.style.display = 'block';
+      if (type === 'success') {
+        setTimeout(() => { msg.style.display = 'none'; }, 3000);
+      }
+    }
+
+    document.getElementById('statusForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const links = [];
+      document.querySelectorAll('.link-item').forEach(item => {
+        const title = item.querySelector('.link-title').value;
+        const url = item.querySelector('.link-url').value;
+        if (title && url) {
+          links.push({ title, url });
+        }
+      });
+
+      const data = {
+        statusTitle: document.getElementById('title').value,
+        statusDescription: document.getElementById('description').value,
+        statusLinks: links,
+        statusVisibility: document.getElementById('visibility').value
+      };
+
+      const form = document.getElementById('statusForm');
+      form.classList.add('loading');
+
+      try {
+        const response = await fetch('/api/status', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+
+        if (!response.ok) throw new Error('Failed to save');
+        showMessage('✓ Status saved successfully!', 'success');
+      } catch (err) {
+        showMessage('✗ Failed to save status', 'error');
+      } finally {
+        form.classList.remove('loading');
+      }
+    });
+
+    document.getElementById('title').addEventListener('input', updatePreview);
+    document.getElementById('description').addEventListener('input', updatePreview);
+    document.getElementById('linksList').addEventListener('input', updatePreview);
+
+    // Load status on page load
+    loadStatus();
+  </script>
+</body>
+</html>
