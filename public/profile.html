@@ -436,10 +436,12 @@ function toggleMusic() {
     document.getElementById('musicBtn').textContent = '▶';
     document.querySelectorAll('.music-bar').forEach(b => b.classList.add('paused'));
   } else {
-    audio.play();
-    isPlaying = true;
-    document.getElementById('musicBtn').textContent = '⏸';
-    document.querySelectorAll('.music-bar').forEach(b => b.classList.remove('paused'));
+    audio.muted = false;
+    audio.play().then(() => {
+      isPlaying = true;
+      document.getElementById('musicBtn').textContent = '⏸';
+      document.querySelectorAll('.music-bar').forEach(b => b.classList.remove('paused'));
+    }).catch(err => console.error('Audio play failed:', err));
   }
 }
 
@@ -492,10 +494,17 @@ async function renderProfile() {
   if (t.musicUrl) {
     audio = new Audio(t.musicUrl);
     audio.loop = true;
+    audio.crossOrigin = 'anonymous';
     if (t.musicAutoplay) {
-      audio.play().then(() => { isPlaying = true; }).catch(() => {});
+      audio.muted = true;
+      audio.play().then(() => {
+        audio.muted = false;
+        isPlaying = true;
+        document.getElementById('musicBtn').textContent = '⏸';
+        document.querySelectorAll('.music-bar').forEach(b => b.classList.remove('paused'));
+      }).catch(err => console.error('Autoplay failed:', err));
     }
-      const player = document.createElement('div');
+    const player = document.createElement('div');
     player.className = 'music-player';
     player.innerHTML = `
       <button class="music-btn" id="musicBtn" onclick="toggleMusic()">${isPlaying ? '⏸' : '▶'}</button>
