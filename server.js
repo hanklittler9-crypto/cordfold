@@ -357,12 +357,12 @@ app.post('/api/profile', async (req, res) => {
     } else {
       const insertTheme = await db.query(`
         INSERT INTO themes (
-          name, is_default, is_preset,
+          id, name, is_default, is_preset, is_pro,
           background_color, accent_color, text_color, card_color,
           glass_enabled, glass_blur, glass_opacity, animated_bg,
           music_url, music_autoplay, custom_css
         ) VALUES (
-          $1, false, false,
+          gen_random_uuid(), $1, false, false, false,
           $2, $3, $4, $5,
           $6, $7, $8, $9,
           $10, $11, $12
