@@ -111,7 +111,7 @@ client.on('interactionCreate', async (interaction) => {
       }
 
       const cordfolUser = userRow.rows[0];
-      const guild = interaction.guild;
+      const guild = interaction.guild || await client.guilds.fetch(interaction.guildId);
       const member = await guild.members.fetch(user.id);
 
       if (!member) {
