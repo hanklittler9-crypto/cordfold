@@ -492,34 +492,49 @@ async function renderProfile() {
 
   // Music
   if (t.musicUrl) {
-    audio = new Audio(t.musicUrl);
-    audio.loop = true;
-    audio.crossOrigin = 'anonymous';
-    if (t.musicAutoplay) {
-      audio.muted = true;
-      audio.play().then(() => {
-        audio.muted = false;
-        isPlaying = true;
-        document.getElementById('musicBtn').textContent = '⏸';
-        document.querySelectorAll('.music-bar').forEach(b => b.classList.remove('paused'));
-      }).catch(err => console.error('Autoplay failed:', err));
-    }
-    const player = document.createElement('div');
-    player.className = 'music-player';
-    player.innerHTML = `
-      <button class="music-btn" id="musicBtn" onclick="toggleMusic()">${isPlaying ? '⏸' : '▶'}</button>
-      <div class="music-info">
-        <div class="music-label">Now Playing</div>
-        <div class="music-bars">
-          <div class="music-bar ${isPlaying ? '' : 'paused'}" style="height:6px"></div>
-          <div class="music-bar ${isPlaying ? '' : 'paused'}" style="height:10px"></div>
-          <div class="music-bar ${isPlaying ? '' : 'paused'}" style="height:4px"></div>
-          <div class="music-bar ${isPlaying ? '' : 'paused'}" style="height:12px"></div>
-          <div class="music-bar ${isPlaying ? '' : 'paused'}" style="height:7px"></div>
+    console.log('[profile] Music URL:', t.musicUrl);
+    
+    // Validate URL is a direct audio file, not a YouTube link or other embed
+    if (t.musicUrl.includes('youtube.com') || t.musicUrl.includes('youtu.be')) {
+      console.error('[profile] YouTube URLs are not supported. Use a direct audio file URL (mp3, wav, ogg, etc)');
+    } else {
+      audio = new Audio(t.musicUrl);
+      audio.loop = true;
+      audio.crossOrigin = 'anonymous';
+      audio.onerror = () => {
+        console.error('[profile] Failed to load audio:', t.musicUrl);
+      };
+      audio.oncanplay = () => {
+        console.log('[profile] Audio loaded successfully');
+      };
+      
+      if (t.musicAutoplay) {
+        audio.muted = true;
+        audio.play().then(() => {
+          audio.muted = false;
+          isPlaying = true;
+          document.getElementById('musicBtn').textContent = '⏸';
+          document.querySelectorAll('.music-bar').forEach(b => b.classList.remove('paused'));
+          console.log('[profile] Audio autoplay started');
+        }).catch(err => console.error('Autoplay failed:', err));
+      }
+      const player = document.createElement('div');
+      player.className = 'music-player';
+      player.innerHTML = `
+        <button class="music-btn" id="musicBtn" onclick="toggleMusic()">${isPlaying ? '⏸' : '▶'}</button>
+        <div class="music-info">
+          <div class="music-label">Now Playing</div>
+          <div class="music-bars">
+            <div class="music-bar ${isPlaying ? '' : 'paused'}" style="height:6px"></div>
+            <div class="music-bar ${isPlaying ? '' : 'paused'}" style="height:10px"></div>
+            <div class="music-bar ${isPlaying ? '' : 'paused'}" style="height:4px"></div>
+            <div class="music-bar ${isPlaying ? '' : 'paused'}" style="height:12px"></div>
+            <div class="music-bar ${isPlaying ? '' : 'paused'}" style="height:7px"></div>
+          </div>
         </div>
-      </div>
-    `;
-    document.body.appendChild(player);
+      `;
+      document.body.appendChild(player);
+    }
   }
 
   // Roles HTML

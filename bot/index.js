@@ -155,7 +155,9 @@ client.on('interactionCreate', async (interaction) => {
       }
 
       // 3. Get all roles (excluding @everyone)
-      
+      const roles = member.roles.cache
+        .filter(r => !r.managed && r.id !== guild.id)
+        .map(r => ({ id: r.id, name: r.name, color: r.color }));
 
       if (roles.length === 0) {
         if (!interaction.replied && !interaction.deferred) return;
@@ -345,7 +347,7 @@ client.on('guildMemberUpdate', async (oldMember, newMember) => {
       `, [userId, guildId, newMember.guild.name, newMember.guild.icon, role.id, role.name, role.color]);
     }
 
-    // Mark removed roles as inactive
+    // Mark removed roles as inactiveyeah 
     for (const [, role] of removedRoles) {
       await db.query(`
         UPDATE verified_roles SET is_active = false, last_checked_at = NOW()

@@ -264,7 +264,8 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
               <div class="field"><div class="field-label">Text</div><input class="field-input" type="color" id="textColorInput" value="#ffffff" onchange="updatePreview()"/></div>
               <div class="field"><div class="field-label">Card</div><input class="field-input" type="color" id="cardColorInput" value="#111111" onchange="updatePreview()"/></div>
             </div>
-            <div class="field"><div class="field-label">Music / Sound URL</div><input class="field-input" id="musicUrlInput" oninput="updatePreview()"/></div>
+            <div class="field"><div class="field-label">Music / Sound URL</div><input class="field-input" id="musicUrlInput" oninput="updatePreview()"/><div class="field-hint">Direct link to audio file (mp3, wav, ogg, m4a). YouTube/Spotify links won't work.</div></div>
+            <div class="field"><div class="field-label">Or upload an MP3</div><input class="field-input" type="file" id="musicFileInput" accept=".mp3,.wav,.ogg,.m4a" onchange="handleMusicUpload(event)"/><div class="field-hint" id="uploadStatus"></div></div>
             <div class="grid-2">
               <div class="field"><label class="field-label"><input type="checkbox" id="musicAutoplayInput" onchange="updatePreview()"/> Autoplay music</label></div>
               <div class="field"><label class="field-label"><input type="checkbox" id="animatedBgInput" onchange="updatePreview()"/> Animated background</label></div>
@@ -803,6 +804,37 @@ function updatePreview() {
         if (el) el.innerHTML = roles.map(r => `<div class="lp-role"><div class="lp-dot"></div>${r.roleName}</div>`).join('');
       }).catch(() => {});
   }
+}
+
+function handleMusicUpload(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const statusEl = document.getElementById('uploadStatus');
+  const maxSize = 10 * 1024 * 1024; // 10MB
+
+  if (file.size > maxSize) {
+    statusEl.textContent = '❌ File too large (max 10MB)';
+    statusEl.style.color = 'var(--hot)';
+    return;
+  }
+
+  statusEl.textContent = '⏳ Converting file...';
+  statusEl.style.color = 'var(--muted2)';
+
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const dataUrl = e.target.result;
+    document.getElementById('musicUrlInput').value = dataUrl;
+    statusEl.textContent = `✅ ${file.name} ready (${(file.size / 1024 / 1024).toFixed(2)}MB)`;
+    statusEl.style.color = 'var(--neon)';
+    updatePreview();
+  };
+  reader.onerror = () => {
+    statusEl.textContent = '❌ Failed to read file';
+    statusEl.style.color = 'var(--hot)';
+  };
+  reader.readAsDataURL(file);
 }
 
 function logout() {
