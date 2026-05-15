@@ -74,6 +74,17 @@ nav{
 .hero-title .line3{display:block;color:var(--neon);}
 .hero-sub{font-size:17px;color:rgba(240,240,240,0.6);max-width:480px;line-height:1.7;margin-bottom:40px;opacity:0;animation:fadein 0.6s 0.6s forwards;}
 .hero-actions{display:flex;gap:14px;flex-wrap:wrap;opacity:0;animation:fadein 0.6s 0.8s forwards;}
+.claim-module{width:min(860px,100%);margin-top:28px;opacity:0;animation:fadein 0.6s 1s forwards;position:relative;z-index:2;}
+.claim-label{display:flex;align-items:center;gap:10px;margin-bottom:12px;font-family:'Space Mono',monospace;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);}
+.claim-label::before{content:'';width:42px;height:1px;background:linear-gradient(90deg,var(--discord),transparent);}
+.claim-bar{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:14px;padding:14px;border:1px solid rgba(255,255,255,0.1);border-radius:24px;background:linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0.015));box-shadow:0 24px 80px rgba(0,0,0,0.28),inset 0 1px 0 rgba(255,255,255,0.04);backdrop-filter:blur(14px);}
+.claim-input-wrap{display:flex;align-items:center;gap:0;min-width:0;padding:0 6px 0 12px;border-radius:16px;background:rgba(0,0,0,0.28);border:1px solid rgba(255,255,255,0.05);}
+.claim-prefix{flex-shrink:0;font-family:'Space Mono',monospace;font-size:13px;letter-spacing:0.4px;color:rgba(240,240,240,0.45);}
+.claim-input{flex:1;min-width:0;background:transparent;border:none;outline:none;color:var(--text);font-family:'Black Han Sans',sans-serif;font-size:clamp(24px,4vw,36px);letter-spacing:-0.5px;padding:18px 12px 18px 4px;}
+.claim-input::placeholder{color:rgba(240,240,240,0.2);}
+.claim-submit{display:inline-flex;align-items:center;justify-content:center;padding:0 28px;min-height:78px;border:none;border-radius:16px;background:linear-gradient(135deg,var(--discord),#7a84ff 58%,var(--neon));color:#050505;font-family:'Black Han Sans',sans-serif;font-size:clamp(20px,2vw,28px);letter-spacing:-0.4px;text-transform:uppercase;cursor:pointer;transition:transform 0.2s,box-shadow 0.2s,filter 0.2s;box-shadow:0 18px 44px rgba(88,101,242,0.35);}
+.claim-submit:hover{transform:translateY(-2px);box-shadow:0 22px 56px rgba(88,101,242,0.45);filter:saturate(1.05);}
+.claim-note{margin-top:12px;font-size:13px;color:rgba(240,240,240,0.45);max-width:620px;line-height:1.6;}
 .btn-primary{padding:14px 32px;background:var(--discord);color:white;font-family:'Space Mono',monospace;font-size:13px;letter-spacing:1px;border:none;border-radius:8px;cursor:pointer;text-decoration:none;transition:all 0.2s;display:inline-flex;align-items:center;gap:8px;}
 .btn-primary:hover{background:#4752C4;transform:translateY(-2px);box-shadow:0 8px 30px rgba(88,101,242,0.4);}
 .btn-outline{padding:14px 32px;background:transparent;color:var(--text);font-family:'Space Mono',monospace;font-size:13px;letter-spacing:1px;border:1px solid rgba(255,255,255,0.2);border-radius:8px;cursor:pointer;text-decoration:none;transition:all 0.2s;}
@@ -172,6 +183,23 @@ footer{padding:40px;border-top:1px solid rgba(255,255,255,0.06);display:flex;ali
 .sc-role{display:flex;align-items:center;gap:7px;font-size:12px;padding:6px 10px;background:rgba(255,255,255,0.03);border-radius:6px;border:1px solid rgba(255,255,255,0.05);}
 .sc-role-dot{width:7px;height:7px;border-radius:50%;background:var(--neon);flex-shrink:0;}
 .sc-verified{margin-top:12px;font-family:'Space Mono',monospace;font-size:9px;letter-spacing:1px;color:var(--neon);display:flex;align-items:center;gap:5px;}
+@media (max-width:960px){
+  .emoji-field{display:none;}
+  .claim-bar{grid-template-columns:1fr;}
+  .claim-submit{min-height:64px;width:100%;}
+}
+@media (max-width:720px){
+  body{cursor:auto;}
+  #cursor,#cursor-trail{display:none;}
+  nav,.hero,.stats-section,.features-section,.how-section,.showcase-section,.cta-section,footer{padding-left:20px;padding-right:20px;}
+  .nav-links{gap:14px;flex-wrap:wrap;justify-content:flex-end;}
+  .hero{min-height:auto;padding-top:120px;}
+  .claim-input-wrap{padding-left:10px;}
+  .claim-prefix{font-size:11px;}
+  .claim-input{font-size:22px;padding-top:16px;padding-bottom:16px;}
+  .claim-submit{font-size:20px;}
+  .proof-row{flex-direction:column;}
+}
 </style>
 </head>
 <body>
@@ -203,6 +231,17 @@ footer{padding:40px;border-top:1px solid rgba(255,255,255,0.06);display:flex;ali
       Login with Discord
     </a>
     <a href="#how" class="btn-outline">See how it works →</a>
+  </div>
+  <div class="claim-module">
+    <div class="claim-label">Claim your public profile link</div>
+    <form class="claim-bar" id="claimForm">
+      <div class="claim-input-wrap">
+        <span class="claim-prefix">cordfol.org/</span>
+        <input class="claim-input" id="claimSlugInput" name="slug" type="text" inputmode="text" autocomplete="off" spellcheck="false" maxlength="32" placeholder="yourname" aria-label="Choose your Cordfol handle"/>
+      </div>
+      <button class="claim-submit" type="submit">Claim your Cordfol</button>
+    </form>
+    <p class="claim-note">Pick the handle you want, log in with Discord, and we will carry it into your builder so you can lock it in fast.</p>
   </div>
   <div class="emoji-field">
     <div class="emoji-badge badge-green float1"><span class="ico">⭐</span> Head Moderator · Verified</div>
@@ -319,9 +358,43 @@ footer{padding:40px;border-top:1px solid rgba(255,255,255,0.06);display:flex;ali
 
 <script>
 const OAUTH_LOGIN_URL = 'https://api.cordfol.org/api/auth/discord';
+const CLAIM_COOKIE_NAME = 'cordfol_claim_slug';
 document.querySelectorAll('[data-oauth-link]').forEach(link => {
   link.href = OAUTH_LOGIN_URL;
 });
+
+function sanitizeSlug(value) {
+  return String(value || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9\-]/g, '')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 32);
+}
+
+function setClaimCookie(slug) {
+  document.cookie = `${CLAIM_COOKIE_NAME}=${encodeURIComponent(slug)}; Max-Age=1800; Path=/; Domain=.cordfol.org; Secure; SameSite=Lax`;
+}
+
+const claimForm = document.getElementById('claimForm');
+const claimInput = document.getElementById('claimSlugInput');
+if (claimInput) {
+  claimInput.addEventListener('input', () => {
+    claimInput.value = sanitizeSlug(claimInput.value);
+  });
+}
+if (claimForm && claimInput) {
+  claimForm.addEventListener('submit', event => {
+    event.preventDefault();
+    const slug = sanitizeSlug(claimInput.value);
+    if (!slug) {
+      claimInput.focus();
+      return;
+    }
+    claimInput.value = slug;
+    setClaimCookie(slug);
+    window.location.href = OAUTH_LOGIN_URL;
+  });
+}
 
 const cur = document.getElementById('cursor');
 const trail = document.getElementById('cursor-trail');
