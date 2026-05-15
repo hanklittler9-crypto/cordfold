@@ -389,14 +389,26 @@ const EXCLUSIVE_USER_ID = '1127435524022472805';
 app.get('/api/status', async (req, res) => {
   try {
     const userId = req.session?.userId;
-    if (!userId) return res.status(401).json({ error: 'Not authenticated' });
+    if (!userId) {
+      console.log('[status] No userId in session');
+      return res.status(401).json({ error: 'Not authenticated' });
+    }
 
     const userResult = await db.query(
       'SELECT discord_id FROM users WHERE id = $1',
       [userId]
     );
 
-    if (userResult.rowCount === 0 || userResult.rows[0].discord_id !== EXCLUSIVE_USER_ID) {
+    if (userResult.rowCount === 0) {
+      console.log('[status] User not found');
+      return res.status(401).json({ error: 'User not found' });
+    }
+
+    const userDiscordId = userResult.rows[0].discord_id;
+    console.log(`[status] Checking user ${userDiscordId} against ${EXCLUSIVE_USER_ID}`);
+
+    if (userDiscordId !== EXCLUSIVE_USER_ID) {
+      console.log('[status] User is not exclusive user');
       return res.status(403).json({ error: 'This feature is exclusive to the creator' });
     }
 
@@ -410,7 +422,7 @@ app.get('/api/status', async (req, res) => {
         statusTitle: 'Building amazing things',
         statusDescription: 'Cordfol.io - Discord Identity, Verified.',
         statusLinks: [],
-        statusVisibility: 'public'
+        statusVisibility: 'private'
       });
     }
 
@@ -419,7 +431,7 @@ app.get('/api/status', async (req, res) => {
       statusTitle: status.status_title,
       statusDescription: status.status_description,
       statusLinks: status.status_links || [],
-      statusVisibility: status.status_visibility || 'public'
+      statusVisibility: status.status_visibility || 'private'
     });
 
   } catch (err) {
@@ -431,7 +443,9 @@ app.get('/api/status', async (req, res) => {
 app.post('/api/status', async (req, res) => {
   try {
     const userId = req.session?.userId;
-    if (!userId) return res.status(401).json({ error: 'Not authenticated' });
+    if (!userId) {
+      return res.status(401).json({ error: 'Not authenticated' });
+    }
 
     const userResult = await db.query(
       'SELECT discord_id FROM users WHERE id = $1',
@@ -479,18 +493,23 @@ app.get('/api/status/public/:slug', async (req, res) => {
     const { slug } = req.params;
 
     const userResult = await db.query(
-      'SELECT u.id, u.discord_id FROM users u WHERE u.slug = $1 AND u.discord_id = $2',
-      [slug, EXCLUSIVE_USER_ID]
+      'SELECT u.id, u.discord_id FROM users u WHERE u.slug = $1',
+      [slug]
     );
 
     if (userResult.rowCount === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const user = userResult.rows[0];
+    if (user.discord_id !== EXCLUSIVE_USER_ID) {
       return res.status(404).json({ error: 'Status page not found' });
     }
 
     const statusResult = await db.query(`
       SELECT status_title, status_description, status_links, status_visibility
       FROM user_metadata WHERE user_id = $1
-    `, [userResult.rows[0].id]);
+    `, [user.id]);
 
     if (statusResult.rowCount === 0) {
       return res.status(404).json({ error: 'Status not configured' });
