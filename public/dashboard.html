@@ -9,33 +9,38 @@
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
 :root{
-  --bg:#0a0a0a;
-  --surface:#111;
-  --surface2:#181818;
-  --border:rgba(255,255,255,0.07);
+  --bg:#09090d;
+  --surface:#11131a;
+  --surface2:#171922;
+  --surface3:#1d2130;
+  --border:rgba(255,255,255,0.08);
   --discord:#5865F2;
   --discord-dim:#4752C4;
+  --accent2:#7c5cff;
   --neon:#00FFB2;
   --hot:#FF3366;
   --amber:#FFB800;
-  --text:#F0F0F0;
+  --text:#F5F7FB;
   --muted:#555;
-  --muted2:#888;
+  --muted2:rgba(245,247,251,0.55);
+  --shadow:0 24px 70px rgba(0,0,0,0.35);
 }
 html,body{height:100%;overflow:hidden;}
-body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);display:flex;flex-direction:column;}
-.topbar{height:52px;min-height:52px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 20px;background:var(--surface);position:relative;z-index:50;flex-shrink:0;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);display:flex;flex-direction:column;position:relative;}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(circle at top left, rgba(88,101,242,0.16), transparent 30%),radial-gradient(circle at bottom right, rgba(0,255,178,0.08), transparent 34%);pointer-events:none;}
+body::after{content:'';position:fixed;inset:0;opacity:0.04;pointer-events:none;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");}
+.topbar{height:60px;min-height:60px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 22px;background:rgba(17,19,26,0.82);backdrop-filter:blur(18px);position:relative;z-index:50;flex-shrink:0;}
 .topbar-logo{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;color:var(--text);text-decoration:none;}
 .topbar-logo span{color:var(--discord);}
 .topbar-right{display:flex;align-items:center;gap:12px;}
-.plan-badge{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:1px;padding:3px 9px;border-radius:4px;background:rgba(255,255,255,0.05);color:var(--muted2);border:1px solid var(--border);}
-.user-trigger{display:flex;align-items:center;gap:8px;padding:5px 10px 5px 5px;border-radius:8px;cursor:pointer;border:1px solid transparent;transition:background 0.15s,border-color 0.15s;position:relative;}
-.user-trigger:hover{background:var(--surface2);border-color:var(--border);}
-.user-avatar{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--discord),#7C3AED);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:500;color:white;flex-shrink:0;}
+.plan-badge{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:1px;padding:5px 10px;border-radius:999px;background:rgba(255,255,255,0.05);color:var(--muted2);border:1px solid var(--border);}
+.user-trigger{display:flex;align-items:center;gap:8px;padding:6px 12px 6px 6px;border-radius:14px;cursor:pointer;border:1px solid transparent;transition:background 0.15s,border-color 0.15s;position:relative;}
+.user-trigger:hover{background:rgba(255,255,255,0.04);border-color:var(--border);}
+.user-avatar{width:32px;height:32px;border-radius:14px;background:linear-gradient(135deg,var(--discord),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:500;color:white;flex-shrink:0;box-shadow:0 10px 24px rgba(88,101,242,0.28);}
 .user-name{font-size:13px;font-weight:500;}
 .user-caret{font-size:10px;color:var(--muted2);transition:transform 0.2s;}
 .user-trigger.open .user-caret{transform:rotate(180deg);}
-.user-menu{position:absolute;top:calc(100% + 8px);right:0;width:200px;background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;z-index:200;opacity:0;transform:translateY(-6px);pointer-events:none;transition:opacity 0.15s,transform 0.15s;}
+.user-menu{position:absolute;top:calc(100% + 8px);right:0;width:220px;background:rgba(17,19,26,0.96);border:1px solid var(--border);border-radius:16px;overflow:hidden;z-index:200;opacity:0;transform:translateY(-6px);pointer-events:none;transition:opacity 0.15s,transform 0.15s;backdrop-filter:blur(18px);box-shadow:var(--shadow);}
 .user-menu.open{opacity:1;transform:translateY(0);pointer-events:all;}
 .menu-header{padding:14px 14px 10px;border-bottom:1px solid var(--border);}
 .menu-discord-name{font-size:13px;font-weight:500;}
@@ -44,33 +49,33 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
 .menu-item:hover{background:var(--surface2);}
 .menu-item.danger{color:#FF6B6B;}
 .menu-item.danger:hover{background:rgba(255,51,102,0.08);}
-.menu-ico{font-size:14px;width:18px;text-align:center;}
+.menu-ico,.nav-icon{width:22px;height:22px;border-radius:8px;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.04);display:inline-flex;align-items:center;justify-content:center;font-family:'Space Mono',monospace;font-size:9px;letter-spacing:0.5px;color:var(--muted2);flex-shrink:0;}
 .menu-divider{height:1px;background:var(--border);margin:4px 0;}
-.layout{display:flex;flex:1;overflow:hidden;}
-.sidebar{width:200px;min-width:200px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:16px 0;overflow-y:auto;flex-shrink:0;}
+.layout{display:flex;flex:1;overflow:hidden;gap:12px;padding:12px;position:relative;z-index:1;}
+.sidebar{width:228px;min-width:228px;background:linear-gradient(180deg,rgba(17,19,26,0.92),rgba(13,15,22,0.92));border:1px solid var(--border);border-radius:22px;display:flex;flex-direction:column;padding:16px 10px;overflow-y:auto;flex-shrink:0;box-shadow:var(--shadow);}
 .sidebar-section-label{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;padding:8px 16px 4px;}
-.nav-item{display:flex;align-items:center;gap:9px;padding:9px 14px;font-size:13px;color:var(--muted2);cursor:pointer;border-radius:0;border-right:2px solid transparent;transition:all 0.15s;user-select:none;}
-.nav-item:hover{background:rgba(255,255,255,0.03);color:var(--text);}
-.nav-item.active{background:rgba(88,101,242,0.08);color:var(--text);border-right-color:var(--discord);font-weight:500;}
-.nav-icon{font-size:14px;width:18px;text-align:center;}
+.nav-item{display:flex;align-items:center;gap:9px;padding:10px 14px;font-size:13px;color:var(--muted2);cursor:pointer;border-radius:14px;border:1px solid transparent;transition:all 0.15s;user-select:none;margin:2px 6px;}
+.nav-item:hover{background:rgba(255,255,255,0.03);color:var(--text);border-color:rgba(255,255,255,0.04);}
+.nav-item.active{background:linear-gradient(135deg,rgba(88,101,242,0.14),rgba(124,92,255,0.08));color:var(--text);border-color:rgba(88,101,242,0.22);font-weight:500;box-shadow:inset 0 1px 0 rgba(255,255,255,0.04);}
 .nav-dot{width:6px;height:6px;border-radius:50%;margin-left:auto;flex-shrink:0;}
 .dot-green{background:var(--neon);}
 .dot-amber{background:var(--amber);}
 .sidebar-spacer{flex:1;}
-.sidebar-bot-cta{margin:12px;padding:12px;background:rgba(88,101,242,0.08);border:1px solid rgba(88,101,242,0.2);border-radius:8px;}
+.sidebar-bot-cta{margin:12px 6px 6px;padding:14px;background:linear-gradient(135deg,rgba(88,101,242,0.12),rgba(124,92,255,0.08));border:1px solid rgba(88,101,242,0.22);border-radius:16px;}
 .bot-cta-title{font-size:12px;font-weight:500;margin-bottom:4px;}
 .bot-cta-desc{font-size:11px;color:var(--muted2);line-height:1.5;margin-bottom:10px;}
 .bot-cta-btn{display:block;width:100%;text-align:center;padding:7px;background:var(--discord);color:white;font-size:11px;font-family:'Space Mono',monospace;letter-spacing:1px;border:none;border-radius:6px;cursor:pointer;text-decoration:none;transition:background 0.15s;}
 .bot-cta-btn:hover{background:var(--discord-dim);}
-.main{flex:1;overflow-y:auto;padding:28px 32px;}
+.main{flex:1;overflow-y:auto;padding:8px 10px 24px;}
 .main::-webkit-scrollbar{width:4px;}
 .main::-webkit-scrollbar-track{background:transparent;}
 .main::-webkit-scrollbar-thumb{background:var(--surface2);border-radius:2px;}
-.tab{display:none;}
+.tab{display:none;max-width:1180px;margin:0 auto;}
 .tab.active{display:block;}
-.page-title{font-size:20px;font-weight:500;margin-bottom:4px;}
-.page-sub{font-size:13px;color:var(--muted2);margin-bottom:24px;line-height:1.5;}
-.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px;}
+.page-title{font-size:22px;font-weight:500;margin-bottom:6px;letter-spacing:-0.02em;}
+.page-sub{font-size:13px;color:var(--muted2);margin-bottom:24px;line-height:1.65;max-width:72ch;}
+.card{background:linear-gradient(180deg,rgba(17,19,26,0.92),rgba(13,15,22,0.92));border:1px solid var(--border);border-radius:22px;padding:22px;margin-bottom:16px;box-shadow:var(--shadow);position:relative;overflow:hidden;}
+.card::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(88,101,242,0.08),transparent 34%,rgba(0,255,178,0.03));pointer-events:none;}
 .card-title{font-size:13px;font-weight:500;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;color:var(--text);}
 .card-subtitle{font-size:11px;color:var(--muted2);}
 .role-list{display:flex;flex-direction:column;gap:0;}
@@ -92,17 +97,17 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
 .toggle.on::after{left:17px;}
 .field{display:flex;flex-direction:column;gap:5px;margin-bottom:14px;}
 .field-label{font-size:11px;font-weight:500;color:var(--muted2);text-transform:uppercase;letter-spacing:0.5px;}
-.field-input{height:36px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:0 12px;font-size:13px;color:var(--text);font-family:'DM Sans',sans-serif;transition:border-color 0.15s;outline:none;}
-.field-input:focus{border-color:rgba(88,101,242,0.5);}
+.field-input{height:40px;background:rgba(255,255,255,0.035);border:1px solid var(--border);border-radius:12px;padding:0 12px;font-size:13px;color:var(--text);font-family:'DM Sans',sans-serif;transition:border-color 0.15s, background 0.15s;outline:none;}
+.field-input:focus{border-color:rgba(88,101,242,0.5);background:rgba(255,255,255,0.05);}
 .field-input.monospace{font-family:'Space Mono',monospace;font-size:12px;}
 textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
 .field-prefix-wrap{display:flex;}
-.field-pre{height:36px;display:flex;align-items:center;padding:0 10px;background:var(--surface2);border:1px solid var(--border);border-right:none;border-radius:8px 0 0 8px;font-family:'Space Mono',monospace;font-size:11px;color:var(--muted2);flex-shrink:0;}
-.field-prefix-wrap .field-input{border-radius:0 8px 8px 0;}
+.field-pre{height:40px;display:flex;align-items:center;padding:0 12px;background:rgba(255,255,255,0.035);border:1px solid var(--border);border-right:none;border-radius:12px 0 0 12px;font-family:'Space Mono',monospace;font-size:11px;color:var(--muted2);flex-shrink:0;}
+.field-prefix-wrap .field-input{border-radius:0 12px 12px 0;}
 .field-hint{font-size:11px;color:var(--neon);margin-top:2px;}
 .field-hint.err{color:var(--hot);}
 .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
-.btn{height:36px;padding:0 18px;border-radius:8px;cursor:pointer;font-family:'Space Mono',monospace;font-size:11px;letter-spacing:1px;border:none;transition:all 0.15s;display:inline-flex;align-items:center;gap:7px;}
+.btn{height:38px;padding:0 18px;border-radius:12px;cursor:pointer;font-family:'Space Mono',monospace;font-size:11px;letter-spacing:1px;border:none;transition:all 0.15s;display:inline-flex;align-items:center;gap:7px;}
 .btn-primary{background:var(--discord);color:white;}
 .btn-primary:hover{background:var(--discord-dim);transform:translateY(-1px);}
 .btn-ghost{background:transparent;color:var(--muted2);border:1px solid var(--border);}
@@ -116,7 +121,7 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
 .scan-dot{width:6px;height:6px;border-radius:50%;background:var(--neon);animation:pulse 2s infinite;}
 @keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.3;}}
 .theme-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
-.theme-card{border:1.5px solid var(--border);border-radius:10px;padding:14px;cursor:pointer;transition:all 0.15s;}
+.theme-card{border:1.5px solid var(--border);border-radius:16px;padding:14px;cursor:pointer;transition:all 0.15s;background:rgba(255,255,255,0.02);}
 .theme-card:hover{border-color:rgba(255,255,255,0.15);}
 .theme-card.selected{border-color:var(--discord);background:rgba(88,101,242,0.05);}
 .theme-preview{height:60px;border-radius:7px;margin-bottom:10px;display:flex;align-items:flex-end;padding:7px;overflow:hidden;}
@@ -129,7 +134,7 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
 .bar-days{display:flex;gap:6px;}
 .bar-day{flex:1;font-size:9px;color:var(--muted);text-align:center;font-family:'Space Mono',monospace;}
 .metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:18px;}
-.metric{background:var(--surface2);border-radius:8px;padding:14px 16px;}
+.metric{background:rgba(255,255,255,0.035);border:1px solid rgba(255,255,255,0.06);border-radius:16px;padding:14px 16px;}
 .metric-label{font-size:10px;color:var(--muted2);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;}
 .metric-val{font-size:24px;font-weight:500;}
 .metric-delta{font-size:11px;color:var(--neon);margin-top:3px;}
@@ -140,26 +145,79 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
 .ref-bar-wrap{flex:1;height:5px;border-radius:3px;background:var(--surface2);}
 .ref-bar-fill{height:100%;border-radius:3px;background:var(--discord);}
 .ref-pct{font-size:11px;color:var(--text);width:32px;text-align:right;font-family:'Space Mono',monospace;}
-.live-preview{background:#0d0d0d;border-radius:10px;padding:20px;display:flex;flex-direction:column;align-items:center;gap:10px;border:1px solid rgba(255,255,255,0.05);transition:transform 0.3s ease, box-shadow 0.3s ease;}
+.live-preview{background:linear-gradient(180deg,rgba(10,10,14,0.98),rgba(17,19,26,0.92));border-radius:20px;display:flex;flex-direction:column;align-items:stretch;gap:0;border:1px solid rgba(255,255,255,0.07);transition:transform 0.3s ease, box-shadow 0.3s ease;box-shadow:inset 0 1px 0 rgba(255,255,255,0.04);overflow:hidden;min-height:340px;}
 .live-preview.preview-animated{animation:previewDrift 8s ease-in-out infinite alternate;}
 @keyframes previewDrift{from{transform:translateY(0);}to{transform:translateY(-4px) translateX(4px);}}
-.lp-avatar{width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,var(--discord),#7C3AED);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:500;color:white;}
-.lp-name{font-size:15px;font-weight:500;color:#f1f5f9;}
-.lp-bio{font-size:11px;color:#64748b;text-align:center;line-height:1.5;}
-.lp-roles{display:flex;flex-wrap:wrap;gap:5px;justify-content:center;margin-top:4px;}
-.lp-role{font-size:10px;padding:3px 9px;border-radius:10px;border:1px solid #1e293b;color:#475569;display:flex;align-items:center;gap:4px;}
+.lp-banner{height:92px;background:linear-gradient(135deg,var(--discord),var(--accent2) 55%,rgba(0,255,178,0.7));position:relative;}
+.lp-banner::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(9,9,13,0) 0%, rgba(9,9,13,0.3) 100%);}
+.lp-avatar-wrap{padding:0 18px;margin-top:-32px;position:relative;z-index:1;}
+.lp-avatar{width:64px;height:64px;border-radius:20px;background:linear-gradient(135deg,var(--discord),#7C3AED);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:500;color:white;border:3px solid rgba(9,9,13,0.95);box-shadow:0 12px 28px rgba(0,0,0,0.32);}
+.lp-body{padding:10px 18px 18px;display:flex;flex-direction:column;gap:10px;}
+.lp-kicker{display:inline-flex;align-items:center;gap:6px;padding:5px 9px;border-radius:999px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);font-family:'Space Mono',monospace;font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--muted2);width:max-content;}
+.lp-kicker::before{content:'';width:7px;height:7px;border-radius:50%;background:var(--neon);box-shadow:0 0 14px rgba(0,255,178,0.6);}
+.lp-name{font-size:18px;font-weight:500;color:#f1f5f9;letter-spacing:-0.02em;}
+.lp-tag{display:inline-flex;align-items:center;padding:7px 10px;border-radius:999px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);font-family:'Space Mono',monospace;font-size:10px;letter-spacing:0.7px;color:var(--muted2);width:max-content;}
+.lp-bio{font-size:12px;color:rgba(245,247,251,0.62);line-height:1.6;max-width:30ch;}
+.lp-summary{display:flex;flex-wrap:wrap;gap:6px;}
+.lp-stat{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);font-family:'Space Mono',monospace;font-size:9px;letter-spacing:0.7px;text-transform:uppercase;color:var(--muted2);}
+.lp-stat strong{font-size:10px;color:var(--text);}
+.lp-roles{display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-start;margin-top:2px;}
+.lp-role{font-size:10px;padding:5px 9px;border-radius:999px;border:1px solid rgba(255,255,255,0.08);color:rgba(245,247,251,0.74);display:flex;align-items:center;gap:5px;background:rgba(255,255,255,0.03);}
 .lp-dot{width:5px;height:5px;border-radius:50%;background:var(--neon);}
-.toast{position:fixed;bottom:24px;right:24px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 18px;font-size:13px;z-index:999;display:flex;align-items:center;gap:10px;transform:translateY(80px);opacity:0;transition:all 0.25s;box-shadow:0 8px 32px rgba(0,0,0,0.5);}
+.lp-music{font-size:10px;color:var(--neon);margin-top:4px;display:inline-flex;align-items:center;gap:6px;font-family:'Space Mono',monospace;letter-spacing:0.7px;text-transform:uppercase;}
+.lp-music::before{content:'';width:7px;height:7px;border-radius:50%;background:currentColor;box-shadow:0 0 14px rgba(0,255,178,0.55);}
+.toast{position:fixed;bottom:24px;right:24px;background:rgba(17,19,26,0.96);border:1px solid var(--border);border-radius:16px;padding:12px 18px;font-size:13px;z-index:999;display:flex;align-items:center;gap:10px;transform:translateY(80px);opacity:0;transition:all 0.25s;box-shadow:0 18px 42px rgba(0,0,0,0.42);backdrop-filter:blur(16px);}
 .toast.show{transform:translateY(0);opacity:1;}
-.toast-icon{font-size:16px;}
+.toast-icon{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:1px;color:var(--muted2);}
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:500;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.2s;}
 .modal-overlay.open{opacity:1;pointer-events:all;}
-.modal{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:28px;width:360px;transform:scale(0.95);transition:transform 0.2s;}
+.modal{background:linear-gradient(180deg,rgba(17,19,26,0.98),rgba(13,15,22,0.94));border:1px solid var(--border);border-radius:18px;padding:28px;width:360px;transform:scale(0.95);transition:transform 0.2s;box-shadow:var(--shadow);}
 .modal-overlay.open .modal{transform:scale(1);}
 .modal-title{font-size:16px;font-weight:500;margin-bottom:8px;}
 .modal-desc{font-size:13px;color:var(--muted2);line-height:1.6;margin-bottom:24px;}
 .modal-actions{display:flex;gap:10px;justify-content:flex-end;}
 .notif-dot{width:7px;height:7px;border-radius:50%;background:var(--hot);margin-left:auto;flex-shrink:0;}
+.profile-layout{display:grid;grid-template-columns:minmax(0,1fr) 260px;gap:18px;}
+.preview-card{padding:14px;}
+.preview-title{font-size:11px;font-family:'Space Mono',monospace;letter-spacing:1px;color:var(--muted2);}
+.split-panels{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.helper-card{padding:14px 20px;}
+.helper-copy{font-size:12px;color:var(--muted2);line-height:1.7;}
+.helper-copy strong{color:var(--text);}
+.helper-stack{display:flex;flex-direction:column;gap:16px;}
+.helper-list{display:flex;flex-direction:column;gap:10px;margin-top:12px;}
+.helper-item{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border-radius:12px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);font-size:11px;color:var(--muted2);}
+.helper-item strong{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:0.7px;color:var(--text);text-transform:uppercase;}
+.bot-compare{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.bot-panel{padding:14px;border-radius:14px;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.03);}
+.bot-panel.blue{background:rgba(88,101,242,0.06);border-color:rgba(88,101,242,0.15);}
+.bot-panel.green{background:rgba(0,255,178,0.04);border-color:rgba(0,255,178,0.15);}
+.bot-panel-title{font-size:12px;font-weight:500;margin-bottom:6px;}
+.bot-panel-title.blue{color:#8b9fff;}
+.bot-panel-title.green{color:var(--neon);}
+.bot-panel-copy{font-size:12px;color:var(--muted2);line-height:1.7;}
+.hint-text{font-size:13px;color:var(--muted2);margin-bottom:16px;line-height:1.7;}
+.empty-state{padding:14px;border-radius:14px;border:1px dashed rgba(255,255,255,0.12);background:rgba(255,255,255,0.02);color:var(--muted2);font-size:13px;line-height:1.6;}
+@media (max-width: 1100px){
+  .profile-layout{grid-template-columns:1fr;}
+}
+@media (max-width: 860px){
+  html,body{overflow:auto;}
+  .layout{flex-direction:column;padding:10px;}
+  .sidebar{width:100%;min-width:0;border-radius:18px;}
+  .main{padding:4px 0 20px;}
+  .grid-2,.metrics,.split-panels,.bot-compare{grid-template-columns:1fr;}
+}
+@media (max-width: 640px){
+  .topbar{padding:0 14px;}
+  .topbar-right{gap:8px;}
+  .plan-badge{display:none;}
+  .sidebar{padding:12px 8px;}
+  .main .tab{padding:0 2px;}
+  .card{padding:18px;}
+  .theme-grid{grid-template-columns:1fr 1fr;}
+  .btn-row{flex-wrap:wrap;}
+}
 </style>
 </head>
 <body>
@@ -179,11 +237,11 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
             <div class="menu-discord-name" id="discordName">...</div>
             <div class="menu-discord-id" id="discordId">ID: ...</div>
           </div>
-          <a class="menu-item" href="#" onclick="switchTab('profile');closeMenu()"><span class="menu-ico">👤</span> My Profile</a>
-          <a class="menu-item" href="#" onclick="switchTab('theme');closeMenu()"><span class="menu-ico">🎨</span> Theme Settings</a>
-          <a class="menu-item" id="viewPublicPageLink" href="#" target="_blank" rel="noopener noreferrer"><span class="menu-ico">🌐</span> View Public Page</a>
+          <a class="menu-item" href="#" onclick="switchTab('profile');closeMenu()"><span class="menu-ico">PF</span> My Profile</a>
+          <a class="menu-item" href="#" onclick="switchTab('theme');closeMenu()"><span class="menu-ico">TH</span> Theme Settings</a>
+          <a class="menu-item" id="viewPublicPageLink" href="#" target="_blank" rel="noopener noreferrer"><span class="menu-ico">WEB</span> View Public Page</a>
           <div class="menu-divider"></div>
-          <div class="menu-item danger" onclick="openSignOutModal()"><span class="menu-ico">🚪</span> Sign Out</div>
+          <div class="menu-item danger" onclick="openSignOutModal()"><span class="menu-ico">OUT</span> Sign Out</div>
         </div>
       </div>
     </div>
@@ -193,18 +251,18 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
 <div class="layout">
   <div class="sidebar">
     <div class="sidebar-section-label">Main</div>
-    <div class="nav-item active" data-tab="verify" onclick="switchTab('verify')"><span class="nav-icon">🛡️</span> Verify Roles<div class="nav-dot dot-green"></div></div>
-    <div class="nav-item" data-tab="profile" onclick="switchTab('profile')"><span class="nav-icon">👤</span> Profile</div>
-    <div class="nav-item" data-tab="theme" onclick="switchTab('theme')"><span class="nav-icon">🎨</span> Theme<div class="nav-dot dot-amber"></div></div>
-    <div class="nav-item" data-tab="analytics" onclick="switchTab('analytics')"><span class="nav-icon">📊</span> Analytics</div>
+    <div class="nav-item active" data-tab="verify" onclick="switchTab('verify')"><span class="nav-icon">VR</span> Verify Roles<div class="nav-dot dot-green"></div></div>
+    <div class="nav-item" data-tab="profile" onclick="switchTab('profile')"><span class="nav-icon">PF</span> Profile</div>
+    <div class="nav-item" data-tab="theme" onclick="switchTab('theme')"><span class="nav-icon">TH</span> Theme<div class="nav-dot dot-amber"></div></div>
+    <div class="nav-item" data-tab="analytics" onclick="switchTab('analytics')"><span class="nav-icon">AN</span> Analytics</div>
     <div class="sidebar-section-label" style="margin-top:8px;">Server Bot</div>
-    <div class="nav-item" data-tab="bot" onclick="switchTab('bot')"><span class="nav-icon">🤖</span> Bot Setup<div class="notif-dot"></div></div>
-    <div class="nav-item" data-tab="servers" onclick="switchTab('servers')"><span class="nav-icon">🏠</span> My Servers</div>
+    <div class="nav-item" data-tab="bot" onclick="switchTab('bot')"><span class="nav-icon">BT</span> Bot Setup<div class="notif-dot"></div></div>
+    <div class="nav-item" data-tab="servers" onclick="switchTab('servers')"><span class="nav-icon">SV</span> My Servers</div>
     <div class="sidebar-spacer"></div>
     <div class="sidebar-bot-cta">
       <div class="bot-cta-title">Add bot to server</div>
       <div class="bot-cta-desc">Enable role verification for your members.</div>
-      <a href="#" class="bot-cta-btn" onclick="switchTab('bot')">Add Bot →</a>
+      <a href="#" class="bot-cta-btn" onclick="switchTab('bot')">Open Setup</a>
     </div>
   </div>
 
@@ -215,15 +273,15 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
       <div class="page-sub">These roles are confirmed via Discord's API. Toggle visibility on your public profile. Roles re-verify every 24h automatically.</div>
       <div class="scan-header">
         <div class="scan-status" id="scanStatus"><div class="scan-dot"></div> Loading...</div>
-        <button class="btn btn-ghost" onclick="triggerScan(this)">🔄 Re-scan Guilds</button>
+        <button class="btn btn-ghost" onclick="triggerScan(this)">Rescan Guilds</button>
       </div>
       <div class="card">
         <div class="card-title">Active verified roles<span class="card-subtitle" id="roleCount">Loading...</span></div>
         <div class="role-list" id="roleList"></div>
       </div>
-      <div class="card" style="padding:14px 20px">
-        <div style="font-size:12px;color:var(--muted2);line-height:1.7">
-          <strong style="color:var(--text)">How verification works:</strong>
+      <div class="card helper-card">
+        <div class="helper-copy">
+          <strong>How verification works:</strong>
           Roles are verified using your Discord OAuth token. Servers with our bot installed get additional bot-level proof. You cannot add roles manually — this is what makes your profile trustworthy.
         </div>
       </div>
@@ -232,7 +290,7 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
     <div class="tab" id="tab-profile">
       <div class="page-title">Profile Builder</div>
       <div class="page-sub" id="profileUrl">Customize your public page at cordfol.org/...</div>
-      <div style="display:grid;grid-template-columns:1fr 220px;gap:18px">
+      <div class="profile-layout">
         <div>
           <div class="card">
             <div class="card-title">Identity</div>
@@ -276,14 +334,31 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
             <button class="btn btn-primary" onclick="saveProfile()">Save Changes</button>
           </div>
         </div>
-        <div>
-          <div class="card" style="padding:14px">
-            <div class="card-title" style="font-size:11px;font-family:'Space Mono',monospace;letter-spacing:1px;color:var(--muted2)">LIVE PREVIEW</div>
+        <div class="helper-stack">
+          <div class="card preview-card">
+            <div class="preview-title">LIVE PREVIEW</div>
             <div class="live-preview" id="livePreview">
-              <div class="lp-avatar">A</div>
-              <div class="lp-name">User</div>
-              <div class="lp-bio">Your bio here.</div>
-              <div class="lp-roles"><div class="lp-role"><div class="lp-dot"></div>Head Mod</div><div class="lp-role"><div class="lp-dot"></div>Dev</div></div>
+              <div class="lp-banner"></div>
+              <div class="lp-avatar-wrap"><div class="lp-avatar">A</div></div>
+              <div class="lp-body">
+                <div class="lp-kicker">Verified profile</div>
+                <div class="lp-name">User</div>
+                <div class="lp-tag">cordfol.org/yourname</div>
+                <div class="lp-bio">Your bio here.</div>
+                <div class="lp-summary">
+                  <div class="lp-stat"><strong>2</strong> Roles</div>
+                  <div class="lp-stat"><strong>1</strong> Bot Proof</div>
+                </div>
+                <div class="lp-roles"><div class="lp-role"><div class="lp-dot"></div>Head Mod</div><div class="lp-role"><div class="lp-dot"></div>Dev</div></div>
+              </div>
+            </div>
+          </div>
+          <div class="card helper-card">
+            <div class="preview-title">PROFILE SIGNALS</div>
+            <div class="helper-list">
+              <div class="helper-item"><span>Handle status</span><strong id="previewHandleState">Ready to claim</strong></div>
+              <div class="helper-item"><span>Profile style</span><strong id="previewThemeState">Clean glass</strong></div>
+              <div class="helper-item"><span>Trust layer</span><strong>OAuth + Bot</strong></div>
             </div>
           </div>
         </div>
@@ -328,7 +403,7 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
           <div class="field"><div class="field-label">Primary Accent</div><input type="color" value="#5865F2" style="width:100%;height:36px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);cursor:pointer;padding:2px;"/></div>
           <div class="field"><div class="field-label">Card Background</div><input type="color" value="#111111" style="width:100%;height:36px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);cursor:pointer;padding:2px;"/></div>
         </div>
-        <div class="btn-row right" style="margin-top:0"><button class="btn btn-primary" onclick="showToast('🎨','Theme saved!')">Save Theme</button></div>
+        <div class="btn-row right" style="margin-top:0"><button class="btn btn-primary" onclick="showToast('THEME','Theme saved!')">Save Theme</button></div>
       </div>
     </div>
 
@@ -345,7 +420,7 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
         <div class="chart-area" id="chart"></div>
         <div class="bar-days" id="chartDays"></div>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      <div class="split-panels">
         <div class="card">
           <div class="card-title">Top referrers</div>
           <div class="ref-list">
@@ -369,21 +444,21 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
       <div class="page-title">Bot Setup</div>
       <div class="page-sub">The Cordfol bot enables enhanced server-side role verification. Add it to any server you manage.</div>
       <div class="card" style="border-color:rgba(255,184,0,0.2)">
-        <div class="card-title">⚡ How the dual-bot architecture works</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
-          <div style="padding:14px;background:rgba(88,101,242,0.06);border-radius:8px;border:1px solid rgba(88,101,242,0.15)">
-            <div style="font-size:12px;font-weight:500;margin-bottom:6px;color:#8b9fff">👤 User OAuth Bot</div>
-            <div style="font-size:12px;color:var(--muted2);line-height:1.7">Used when <strong style="color:var(--text)">you log in</strong>. Reads your own guild membership and roles.</div>
+        <div class="card-title">How the dual-bot architecture works</div>
+        <div class="bot-compare">
+          <div class="bot-panel blue">
+            <div class="bot-panel-title blue">User OAuth Bot</div>
+            <div class="bot-panel-copy">Used when <strong>you log in</strong>. Reads your own guild membership and roles.</div>
           </div>
-          <div style="padding:14px;background:rgba(0,255,178,0.04);border-radius:8px;border:1px solid rgba(0,255,178,0.15)">
-            <div style="font-size:12px;font-weight:500;margin-bottom:6px;color:var(--neon)">🤖 Server Bot</div>
-            <div style="font-size:12px;color:var(--muted2);line-height:1.7">Sits in your server and confirms roles with bot-level proof.</div>
+          <div class="bot-panel green">
+            <div class="bot-panel-title green">Server Bot</div>
+            <div class="bot-panel-copy">Sits in your server and confirms roles with bot-level proof.</div>
           </div>
         </div>
       </div>
       <div class="card">
         <div class="card-title">Add the bot to a server</div>
-        <div style="font-size:13px;color:var(--muted2);margin-bottom:16px;line-height:1.7">You must have <strong style="color:var(--text)">Manage Server</strong> permission in the target Discord server.</div>
+        <div class="hint-text">You must have <strong style="color:var(--text)">Manage Server</strong> permission in the target Discord server.</div>
         <div class="field"><div class="field-label">Server ID (optional)</div><input id="botGuildId" class="field-input monospace" placeholder="e.g. 1234567890123456789"/></div>
         <div class="btn-row">
           <button class="btn btn-primary" onclick="addBotToServer()">Add Bot to Server</button>
@@ -397,7 +472,7 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
       <div class="page-sub">All servers from your last guild scan.</div>
       <div class="card">
         <div class="card-title">Scanned servers</div>
-        <div class="role-list" id="serverList"><div style="color:var(--muted2);font-size:13px;">Loading servers...</div></div>
+        <div class="role-list" id="serverList"><div class="empty-state">Loading servers...</div></div>
       </div>
     </div>
 
@@ -415,7 +490,7 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
   </div>
 </div>
 
-<div class="toast" id="toast"><span class="toast-icon" id="toast-icon">✅</span><span id="toast-msg">Saved!</span></div>
+<div class="toast" id="toast"><span class="toast-icon" id="toast-icon">OK</span><span id="toast-msg">Saved!</span></div>
 
 <script>
 (function() {
@@ -480,7 +555,7 @@ function applyPendingClaimSlug() {
   document.getElementById('viewPublicPageLink').href = buildPublicProfileUrl(pendingSlug);
   clearCookie(CLAIM_COOKIE_NAME);
   window._claimSlug = '';
-  showToast('🎯', `Ready to claim ${PUBLIC_HOST}/${pendingSlug}`);
+  showToast('CLAIM', `Ready to claim ${PUBLIC_HOST}/${pendingSlug}`);
 }
 
 function switchTab(tab) {
@@ -517,7 +592,7 @@ function openSignOutModal() {
 async function triggerScan(btn) {
   const defaultLabel = btn.dataset.defaultLabel || btn.textContent;
   btn.dataset.defaultLabel = defaultLabel;
-  btn.textContent = '⏳ Scanning...';
+  btn.textContent = 'Scanning...';
   btn.disabled = true;
   try {
     const sid = window._authSid;
@@ -528,11 +603,11 @@ async function triggerScan(btn) {
       if (res.status === 429 && data.retryAfter) throw new Error(`Please wait ${data.retryAfter}s before scanning again.`);
       throw new Error(data.error || 'Failed to start scan.');
     }
-    btn.textContent = '✅ Scan started';
-    showToast('🔄', 'Guild re-scan started.');
+    btn.textContent = 'Scan started';
+    showToast('SYNC', 'Guild re-scan started.');
     loadRoles();
   } catch (err) {
-    showToast('❌', err.message || 'Failed to start scan.');
+    showToast('ERR', err.message || 'Failed to start scan.');
   } finally {
     setTimeout(() => { btn.textContent = defaultLabel; btn.disabled = false; }, 2500);
   }
@@ -544,15 +619,15 @@ function checkSlug(el) {
   const v = el.value.toLowerCase().replace(/[^a-z0-9\-]/g, '');
   el.value = v;
   if (!v) { hint.textContent = ''; return; }
-  if (taken.includes(v)) { hint.textContent = '✗ ' + v + ' is taken'; hint.className = 'field-hint err'; }
-  else { hint.textContent = '✓ ' + v + ' is available'; hint.className = 'field-hint'; }
+  if (taken.includes(v)) { hint.textContent = v + ' is taken'; hint.className = 'field-hint err'; }
+  else { hint.textContent = v + ' is available'; hint.className = 'field-hint'; }
   updatePreview();
 }
 
 function selectTheme(el, name) {
   document.querySelectorAll('.theme-card').forEach(c => c.classList.remove('selected'));
   el.classList.add('selected');
-  showToast('🎨', name + ' theme selected!');
+  showToast('THEME', name + ' theme selected!');
 }
 
 const chartData = [142, 98, 210, 187, 245, 312, 90];
@@ -611,15 +686,15 @@ function buildBotInviteLink() {
 
 function addBotToServer() {
   try { window.location.href = buildBotInviteLink(); }
-  catch (err) { showToast('❌', err.message); }
+  catch (err) { showToast('ERR', err.message); }
 }
 
 async function copyBotInviteLink() {
   try {
     await navigator.clipboard.writeText(buildBotInviteLink());
-    showToast('🔗', 'Invite link copied!');
+    showToast('LINK', 'Invite link copied!');
   } catch (err) {
-    showToast('❌', err.message || 'Could not copy the invite link.');
+    showToast('ERR', err.message || 'Could not copy the invite link.');
   }
 }
 
@@ -683,7 +758,7 @@ async function loadRoles() {
   const roleList = document.getElementById('roleList');
   const roleCount = document.getElementById('roleCount');
   const scanStatus = document.getElementById('scanStatus');
-  roleList.innerHTML = '<div style="color:var(--muted2);font-size:13px;">Loading...</div>';
+  roleList.innerHTML = '<div class="empty-state">Loading...</div>';
   try {
     const sid = window._authSid;
     const url = sid ? `${API_BASE}/verify/roles?sid=${sid}` : `${API_BASE}/verify/roles`;
@@ -692,7 +767,7 @@ async function loadRoles() {
     const data = await res.json();
     const roles = data.roles || [];
     if (!roles.length) {
-      roleList.innerHTML = '<div style="color:var(--muted2);font-size:13px;">No verified roles found. Try re-scanning!</div>';
+      roleList.innerHTML = '<div class="empty-state">No verified roles found yet. Try another guild scan.</div>';
       roleCount.textContent = '0 roles';
       scanStatus.innerHTML = '<div class="scan-dot"></div> No roles found';
       return;
@@ -716,7 +791,7 @@ async function loadRoles() {
       ? `<div class="scan-dot"></div> Last scanned ${new Date(latestCheck).toLocaleString()} · ${activeRoles.length} active roles`
       : `<div class="scan-dot"></div> ${activeRoles.length} active roles`;
   } catch {
-    roleList.innerHTML = '<div style="color:var(--muted2);font-size:13px;">Failed to load roles.</div>';
+    roleList.innerHTML = '<div class="empty-state">Failed to load roles.</div>';
     roleCount.textContent = '0 roles';
     scanStatus.innerHTML = '<div class="scan-dot"></div> Error loading roles';
   }
@@ -735,9 +810,9 @@ async function toggleRoleVisibility(roleId, isPublic, toggleEl) {
     if (!res.ok) throw new Error('Failed to update role visibility.');
     toggleEl.classList.toggle('on', isPublic);
     toggleEl.setAttribute('onclick', `toggleRoleVisibility('${roleId}', ${isPublic ? 'false' : 'true'}, this)`);
-    showToast('✅', isPublic ? 'Role is now public.' : 'Role hidden from public profile.');
+    showToast('OK', isPublic ? 'Role is now public.' : 'Role hidden from public profile.');
   } catch (err) {
-    showToast('❌', err.message || 'Failed to update role visibility.');
+    showToast('ERR', err.message || 'Failed to update role visibility.');
   }
 }
 
@@ -796,9 +871,9 @@ async function saveProfile() {
       body: JSON.stringify({ display_name: displayName, slug, bio, bannerUrl, social_links, theme })
     });
     if (!res.ok) throw new Error('Failed to save');
-    showToast('✅', 'Profile saved successfully!');
+    showToast('OK', 'Profile saved successfully!');
     checkSession();
-  } catch { showToast('❌', 'Failed to save profile!'); }
+  } catch { showToast('ERR', 'Failed to save profile!'); }
 }
 
 function updatePreview() {
@@ -813,6 +888,66 @@ function updatePreview() {
   const cardColor = document.getElementById('cardColorInput').value;
   const musicUrl = document.getElementById('musicUrlInput').value;
   const animatedBg = document.getElementById('animatedBgInput').checked;
+  const slugPreview = document.getElementById('slug').value;
+
+  preview.style.background = `linear-gradient(180deg, ${cardColor}, ${cardColor})`;
+  preview.style.color = textColor;
+  preview.style.borderColor = `${accentColor}33`;
+
+  if (animatedBg) {
+    preview.classList.add('preview-animated');
+  } else {
+    preview.classList.remove('preview-animated');
+  }
+
+  preview.innerHTML = `
+    <div class="lp-banner"></div>
+    <div class="lp-avatar-wrap"><div class="lp-avatar">${name[0] || '?'}</div></div>
+    <div class="lp-body">
+      <div class="lp-kicker">Verified profile</div>
+      <div class="lp-name">${name}</div>
+      <div class="lp-tag">${PUBLIC_HOST}/${slugPreview || 'yourname'}</div>
+      <div class="lp-bio">${bio ? `${bio.slice(0, 88)}${bio.length > 88 ? '...' : ''}` : 'Show your verified Discord history with a cleaner public profile.'}</div>
+      <div class="lp-summary">
+        <div class="lp-stat"><strong>2</strong> Roles</div>
+        <div class="lp-stat"><strong>1</strong> Bot Proof</div>
+      </div>
+      <div class="lp-roles" id="lp-roles"></div>
+      ${musicUrl ? `<div class="lp-music">Music enabled</div>` : ''}
+    </div>
+  `;
+
+  const bannerEl = preview.querySelector('.lp-banner');
+  const avatarEl = preview.querySelector('.lp-avatar');
+  const bioEl = preview.querySelector('.lp-bio');
+  const tagEl = preview.querySelector('.lp-tag');
+  bannerEl.style.background = bannerUrl
+    ? `linear-gradient(to bottom, rgba(0,0,0,0.1), rgba(0,0,0,0.34)), url('${bannerUrl}') center/cover`
+    : `linear-gradient(135deg, ${accentColor}, ${accentColor}cc 48%, rgba(0,255,178,0.72))`;
+  avatarEl.style.background = `linear-gradient(135deg, ${accentColor}, ${accentColor}cc)`;
+  avatarEl.style.color = textColor;
+  bioEl.style.color = `${textColor}aa`;
+  tagEl.style.color = `${textColor}aa`;
+  document.getElementById('previewHandleState').textContent = slugPreview ? `${PUBLIC_HOST}/${slugPreview}` : 'Needs a handle';
+  document.getElementById('previewThemeState').textContent = animatedBg ? 'Animated glow' : 'Clean glass';
+
+  if (slugPreview) {
+    fetch(`${API_BASE}/profile/${slugPreview}`)
+      .then(res => res.json())
+      .then(data => {
+        const roles = data.roles || [];
+        const el = document.getElementById('lp-roles');
+        if (el) {
+          el.innerHTML = roles.length
+            ? roles.slice(0, 4).map(r => `<div class="lp-role"><div class="lp-dot"></div>${r.roleName}</div>`).join('')
+            : '<div class="lp-role"><div class="lp-dot"></div>No verified roles yet</div>';
+        }
+      }).catch(() => {});
+  } else {
+    const el = document.getElementById('lp-roles');
+    if (el) el.innerHTML = '<div class="lp-role"><div class="lp-dot"></div>Verified roles appear here</div>';
+  }
+  return;
 
   preview.style.background = cardColor;
   preview.style.color = textColor;
@@ -857,24 +992,24 @@ function handleMusicUpload(event) {
   const maxSize = 3 * 1024 * 1024; // 3MB max (base64 encoding adds ~33%)
 
   if (file.size > maxSize) {
-    statusEl.textContent = '❌ File too large (max 3MB)';
+    statusEl.textContent = 'File too large (max 3MB)';
     statusEl.style.color = 'var(--hot)';
     return;
   }
 
-  statusEl.textContent = '⏳ Converting file...';
+  statusEl.textContent = 'Converting file...';
   statusEl.style.color = 'var(--muted2)';
 
   const reader = new FileReader();
   reader.onload = (e) => {
     const dataUrl = e.target.result;
     document.getElementById('musicUrlInput').value = dataUrl;
-    statusEl.textContent = `✅ ${file.name} ready (${(file.size / 1024 / 1024).toFixed(2)}MB)`;
+    statusEl.textContent = `${file.name} ready (${(file.size / 1024 / 1024).toFixed(2)}MB)`;
     statusEl.style.color = 'var(--neon)';
     updatePreview();
   };
   reader.onerror = () => {
-    statusEl.textContent = '❌ Failed to read file';
+    statusEl.textContent = 'Failed to read file';
     statusEl.style.color = 'var(--hot)';
   };
   reader.readAsDataURL(file);
