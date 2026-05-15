@@ -1,10 +1,5 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // Cordfol.io — Server Bot (bot/index.js)
-// Role: Sits inside Discord servers. When a user logs in via dashboard OAuth,
-//       this bot confirms their role membership server-side (bot-level proof).
-//
-// Separate from the OAuth user token — this bot uses its own Bot Token which
-// has higher rate limits (1000 req/10s vs 50/s for user OAuth tokens).
 // ─────────────────────────────────────────────────────────────────────────────
 
 require('dotenv').config();
@@ -12,68 +7,52 @@ require('dotenv').config();
 const { Client, GatewayIntentBits, SlashCommandBuilder, REST, Routes, EmbedBuilder } = require('discord.js');
 const { Pool } = require('pg');
 
-// ── Environment ───────────────────────────────────────────────────────────────
 const {
-  BOT_TOKEN,          // Discord bot token (from Discord Developer Portal)
-  BOT_CLIENT_ID,      // Your bot's application/client ID
-  DATABASE_URL,       // Neon PostgreSQL connection string
-  DASHBOARD_URL,      // e.g. https://cordfol.io/dashboard
+  BOT_TOKEN,
+  BOT_CLIENT_ID,
+  DATABASE_URL,
+  DASHBOARD_URL,
 } = process.env;
 
 const DASHBOARD_LOGIN_URL = DASHBOARD_URL || 'https://dashboard.cordfol.org/dashboard';
 const PUBLIC_BASE_URL = (() => {
-  if (process.env.PUBLIC_BASE_URL) {
-    return process.env.PUBLIC_BASE_URL.replace(/\/$/, '');
-  }
-
+  if (process.env.PUBLIC_BASE_URL) return process.env.PUBLIC_BASE_URL.replace(/\/$/, '');
   try {
     const dashboardUrl = new URL(DASHBOARD_LOGIN_URL);
     return `${dashboardUrl.protocol}//${dashboardUrl.host.replace(/^dashboard\./, '')}`;
-  } catch {
-    return 'https://cordfol.io';
-  }
+  } catch { return 'https://cordfol.org'; }
 })();
 const PUBLIC_HOST = (() => {
-  try {
-    return new URL(PUBLIC_BASE_URL).host;
-  } catch {
-    return 'cordfol.io';
-  }
+  try { return new URL(PUBLIC_BASE_URL).host; }
+  catch { return 'cordfol.org'; }
 })();
 
 function buildProfileUrl(slug) {
   return `${PUBLIC_BASE_URL}/${slug}`;
 }
 
-// ── Database ──────────────────────────────────────────────────────────────────
 const db = new Pool({
   connectionString: DATABASE_URL,
   ssl: { rejectUnauthorized: false },
   max: 10,
 });
 
-// ── Discord Client ────────────────────────────────────────────────────────────
-// IMPORTANT: We only need GuildMembers intent to read role data.
-// We do NOT need MessageContent or Presence — keeps the bot minimal and
-// avoids requiring privileged intent approval for basic use.
 const client = new Client({
   intents: [
+    GatewayIntentBits.Guilds,
     GatewayIntentBits.GuildMembers,
   ],
 });
 
-// ── Slash Commands ─────────────────────────────────────────────────────────────
 const commands = [
   new SlashCommandBuilder()
     .setName('verify')
     .setDescription('Sync your Cordfol.io profile with your roles in this server')
     .toJSON(),
-
   new SlashCommandBuilder()
     .setName('cordfol')
     .setDescription('Get your Cordfol.io profile link')
     .toJSON(),
-
   new SlashCommandBuilder()
     .setName('whois')
     .setDescription('Look up a user\'s verified Cordfol.io profile')
@@ -83,7 +62,6 @@ const commands = [
     .toJSON(),
 ];
 
-// ── Register Commands (run once on startup) ───────────────────────────────────
 async function registerCommands() {
   const rest = new REST({ version: '10' }).setToken(BOT_TOKEN);
   try {
@@ -95,76 +73,59 @@ async function registerCommands() {
   }
 }
 
-// ── Ready ─────────────────────────────────────────────────────────────────────
 client.once('ready', async () => {
   console.log(`[bot] Logged in as ${client.user.tag}`);
   console.log(`[bot] In ${client.guilds.cache.size} servers`);
   await registerCommands();
 });
 
-// ── Interaction Handler ───────────────────────────────────────────────────────
 client.on('interactionCreate', async (interaction) => {
   if (!interaction.isChatInputCommand()) return;
 
-  const { commandName, guild, user } = interaction;
+  const { commandName, user } = interaction;
 
   // ── /verify ────────────────────────────────────────────────────────────────
   if (commandName === 'verify') {
-  if (!guild) {
-    return interaction.reply({ content: '❌ This command can only be used inside a server.', ephemeral: true });
-  }
-  await interaction.deferReply({ ephemeral: true });
-    try {
-      await interaction.deferReply({ ephemeral: true });
-    } catch (err) {
-      // Ignore if already deferred or replied
-      if (interaction.deferred || interaction.replied) return;
-      console.error('[bot] Failed to defer reply:', err);
-      return;
+    if (!interaction.guildId) {
+      return interaction.reply({ content: '❌ This command can only be used inside a server.', ephemeral: true });
     }
+
+    await interaction.deferReply({ ephemeral: true });
+
     try {
-      // 1. Check if this Discord user has a Cordfol account
       const userRow = await db.query(
         'SELECT id, slug, display_name FROM users WHERE discord_id = $1',
         [user.id]
       );
 
       if (userRow.rowCount === 0) {
-        if (!interaction.replied && !interaction.deferred) return;
         return interaction.editReply({
           embeds: [
             new EmbedBuilder()
               .setColor(0x5865F2)
               .setTitle('You don\'t have a Cordfol.io account yet')
-              .setDescription(
-                `Log in with Discord at **[${PUBLIC_HOST}](${DASHBOARD_LOGIN_URL})** to create your verified profile.\n\nOnce you log in, your roles in **${guild.name}** will be verified automatically.`
-              )
+              .setDescription(`Log in at **[${PUBLIC_HOST}](${DASHBOARD_LOGIN_URL})** to create your verified profile.`)
               .setFooter({ text: `${PUBLIC_HOST} — Discord Identity, Verified.` })
           ]
         });
       }
 
       const cordfolUser = userRow.rows[0];
-
-      // 2. Fetch the member's roles in THIS guild using the bot token
-      //    This is the "bot proof" — higher trust than OAuth alone
+      const guild = interaction.guild;
       const member = await guild.members.fetch(user.id);
+
       if (!member) {
-        if (!interaction.replied && !interaction.deferred) return;
         return interaction.editReply({ content: '❌ Could not find you in this server.' });
       }
 
-      // 3. Get all roles (excluding @everyone)
       const roles = member.roles.cache
         .filter(r => !r.managed && r.id !== guild.id)
-        .map(r => ({ id: r.id, name: r.name, color: r.color }));
+        .map(r => ({ id: r.id, name: r.name, color: r.color || 0 }));
 
       if (roles.length === 0) {
-        if (!interaction.replied && !interaction.deferred) return;
         return interaction.editReply({ content: '⚠️ You don\'t have any roles in this server to verify.' });
       }
 
-      // 4. Upsert each role into verified_roles with proof_type = 'BOT'
       for (const role of roles) {
         await db.query(`
           INSERT INTO verified_roles
@@ -191,11 +152,9 @@ client.on('interactionCreate', async (interaction) => {
         ]);
       }
 
-      // 5. Reply with success
       const roleList = roles.slice(0, 5).map(r => `• **${r.name}**`).join('\n');
       const extra = roles.length > 5 ? `\n_...and ${roles.length - 5} more_` : '';
 
-      if (!interaction.replied && !interaction.deferred) return;
       return interaction.editReply({
         embeds: [
           new EmbedBuilder()
@@ -209,9 +168,7 @@ client.on('interactionCreate', async (interaction) => {
       });
 
     } catch (err) {
-      console.error('[bot] /verify error:', err.message);
-      console.error('[bot] Full error:', err);
-      if (!interaction.replied && !interaction.deferred) return;
+      console.error('[bot] /verify error:', err);
       return interaction.editReply({ content: `❌ Error: ${err.message}` });
     }
   }
@@ -296,10 +253,7 @@ client.on('interactionCreate', async (interaction) => {
   }
 });
 
-// ── Guild Member Remove — mark roles inactive instantly ──────────────────────
-// Instead of waiting 24h for the background re-check, we listen for the
-// GUILD_MEMBER_REMOVE event and immediately flip is_active = false for
-// all roles in that guild for that user.
+// ── Guild Member Remove ───────────────────────────────────────────────────────
 client.on('guildMemberRemove', async (member) => {
   try {
     const userRow = await db.query(
@@ -320,21 +274,20 @@ client.on('guildMemberRemove', async (member) => {
   }
 });
 
-// ── Guild Member Role Update — update roles in real-time ─────────────────────
+// ── Guild Member Role Update ──────────────────────────────────────────────────
 client.on('guildMemberUpdate', async (oldMember, newMember) => {
   try {
     const userRow = await db.query(
       'SELECT id FROM users WHERE discord_id = $1',
       [newMember.user.id]
     );
-    if (userRow.rowCount === 0) return; // Not a Cordfol user
+    if (userRow.rowCount === 0) return;
 
     const addedRoles = newMember.roles.cache.filter(r => !oldMember.roles.cache.has(r.id) && r.id !== newMember.guild.id);
     const removedRoles = oldMember.roles.cache.filter(r => !newMember.roles.cache.has(r.id) && r.id !== newMember.guild.id);
     const userId = userRow.rows[0].id;
     const guildId = newMember.guild.id;
 
-    // Add new roles
     for (const [, role] of addedRoles) {
       await db.query(`
         INSERT INTO verified_roles
@@ -344,10 +297,9 @@ client.on('guildMemberUpdate', async (oldMember, newMember) => {
           (gen_random_uuid(), $1, $2, $3, $4, $5, $6, $7, NOW(), NOW(), true, 'BOT', true, 0)
         ON CONFLICT (user_id, guild_id, role_id)
         DO UPDATE SET is_active = true, last_checked_at = NOW(), role_name = EXCLUDED.role_name
-      `, [userId, guildId, newMember.guild.name, newMember.guild.icon, role.id, role.name, role.color]);
+      `, [userId, guildId, newMember.guild.name, newMember.guild.icon, role.id, role.name, role.color || 0]);
     }
 
-    // Mark removed roles as inactiveyeah 
     for (const [, role] of removedRoles) {
       await db.query(`
         UPDATE verified_roles SET is_active = false, last_checked_at = NOW()
