@@ -3,130 +3,560 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Cordfol.io Profile</title>
+  <title>Cordfol Profile</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet"/>
   <style>
-    body {
-      background: var(--bg, #0d0d0d);
-      color: var(--text, #fff);
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #0d0d0d;
+      --surface: #111;
+      --surface2: #181818;
+      --accent: #5865F2;
+      --text: #f0f0f0;
+      --muted: #888;
+      --neon: #00FFB2;
+    }
+
+    html, body {
+      min-height: 100vh;
       font-family: 'DM Sans', sans-serif;
-      margin: 0;
-      padding: 0;
+      background: var(--bg);
+      color: var(--text);
+      overflow-x: hidden;
+    }
+
+    /* ── Animated background ── */
+    .bg-animated {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      background: var(--bg);
+      overflow: hidden;
+    }
+    .bg-animated::before {
+      content: '';
+      position: absolute;
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, var(--accent) 0%, transparent 70%);
+      top: -200px;
+      left: -200px;
+      opacity: 0.15;
+      animation: drift1 12s ease-in-out infinite alternate;
+    }
+    .bg-animated::after {
+      content: '';
+      position: absolute;
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, var(--neon) 0%, transparent 70%);
+      bottom: -200px;
+      right: -200px;
+      opacity: 0.08;
+      animation: drift2 15s ease-in-out infinite alternate;
+    }
+    @keyframes drift1 { from { transform: translate(0,0) scale(1); } to { transform: translate(100px, 80px) scale(1.2); } }
+    @keyframes drift2 { from { transform: translate(0,0) scale(1); } to { transform: translate(-80px, -60px) scale(1.15); } }
+
+    .noise {
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+      opacity: 0.03;
+      pointer-events: none;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+    }
+
+    /* ── Layout ── */
+    .page {
+      position: relative;
+      z-index: 2;
       min-height: 100vh;
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: flex-start;
+      padding: 48px 16px 80px;
     }
-    .profile-container {
-      margin-top: 60px;
-      background: var(--surface, #181818);
-      border-radius: 18px;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.25);
-      padding: 40px 32px;
-      max-width: 480px;
+
+    /* ── Card ── */
+    .card {
       width: 100%;
-      text-align: center;
+      max-width: 500px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 20px;
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      overflow: hidden;
+      box-shadow: 0 24px 64px rgba(0,0,0,0.4);
     }
-    .profile-avatar {
+
+    /* ── Banner ── */
+    .banner {
+      width: 100%;
+      height: 120px;
+      background: linear-gradient(135deg, var(--accent), #7C3AED);
+      position: relative;
+      flex-shrink: 0;
+    }
+    .banner img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    /* ── Avatar ── */
+    .avatar-wrap {
+      display: flex;
+      justify-content: center;
+      margin-top: -48px;
+      position: relative;
+      z-index: 2;
+    }
+    .avatar {
       width: 96px;
       height: 96px;
       border-radius: 50%;
-      margin: 0 auto 18px;
+      border: 4px solid var(--bg);
       background: #222;
       object-fit: cover;
-      border: 3px solid var(--accent, #5865F2);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
     }
+
+    /* ── Body ── */
+    .card-body {
+      padding: 16px 28px 28px;
+      text-align: center;
+    }
+
     .profile-name {
-      font-size: 2.2em;
-      font-weight: 700;
-      margin-bottom: 8px;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2rem;
+      letter-spacing: 2px;
+      margin-bottom: 4px;
+      color: var(--text);
     }
+
+    .profile-tag {
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: 1px;
+      margin-bottom: 12px;
+    }
+
     .profile-bio {
-      color: #aaa;
-      margin-bottom: 18px;
-      font-size: 1.1em;
+      font-size: 14px;
+      color: rgba(255,255,255,0.6);
+      line-height: 1.6;
+      margin-bottom: 20px;
+      max-width: 380px;
+      margin-left: auto;
+      margin-right: auto;
     }
-    .profile-roles {
-      margin: 18px 0 0 0;
+
+    /* ── Divider ── */
+    .divider {
+      height: 1px;
+      background: rgba(255,255,255,0.06);
+      margin: 0 0 20px;
+    }
+
+    /* ── Roles ── */
+    .roles-title {
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 2px;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-bottom: 12px;
+      text-align: left;
+    }
+
+    .roles-list {
       display: flex;
       flex-direction: column;
       gap: 8px;
+      margin-bottom: 20px;
     }
-    .role-badge {
-      background: var(--card, #111);
-      color: var(--text, #fff);
-      border-radius: 8px;
-      padding: 8px 14px;
-      display: inline-block;
-      font-size: 1em;
-      margin: 0 auto;
-      border-left: 5px solid var(--accent, #5865F2);
-    }
-    .profile-socials {
-      margin-top: 18px;
+
+    .role-item {
       display: flex;
+      align-items: center;
       gap: 12px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 10px;
+      padding: 10px 14px;
+      text-align: left;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .role-item:hover {
+      background: rgba(255,255,255,0.06);
+      border-color: rgba(255,255,255,0.12);
+    }
+
+    .role-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .role-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .role-name {
+      font-size: 13px;
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .role-server {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 1px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .role-proof {
+      font-family: 'Space Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 0.5px;
+      padding: 2px 7px;
+      border-radius: 6px;
+      background: rgba(88,101,242,0.12);
+      color: #8b9fff;
+      border: 1px solid rgba(88,101,242,0.2);
+      flex-shrink: 0;
+    }
+    .role-proof.bot {
+      background: rgba(0,255,178,0.08);
+      color: var(--neon);
+      border-color: rgba(0,255,178,0.2);
+    }
+
+    /* ── Socials ── */
+    .socials {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
       justify-content: center;
+      margin-top: 4px;
     }
-    .profile-socials a {
-      color: var(--accent, #5865F2);
+
+    .social-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 14px;
+      border-radius: 8px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: var(--text);
       text-decoration: none;
-      font-size: 1.3em;
-      transition: color 0.2s;
+      font-size: 12px;
+      font-family: 'Space Mono', monospace;
+      letter-spacing: 0.5px;
+      transition: all 0.15s;
     }
-    .profile-socials a:hover {
-      color: var(--neon, #00FFB2);
+    .social-link:hover {
+      background: rgba(255,255,255,0.08);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    /* ── Music player ── */
+    .music-player {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 100;
+      background: rgba(17,17,17,0.9);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 12px;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+      min-width: 200px;
+    }
+
+    .music-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--accent);
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      flex-shrink: 0;
+      transition: background 0.15s;
+    }
+    .music-btn:hover { background: #4752C4; }
+
+    .music-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .music-label {
+      font-size: 10px;
+      color: var(--muted);
+      font-family: 'Space Mono', monospace;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 2px;
+    }
+
+    .music-bars {
+      display: flex;
+      align-items: flex-end;
+      gap: 2px;
+      height: 14px;
+    }
+
+    .music-bar {
+      width: 3px;
+      border-radius: 2px;
+      background: var(--accent);
+      animation: musicbar 0.8s ease-in-out infinite alternate;
+    }
+    .music-bar:nth-child(1) { animation-delay: 0s; }
+    .music-bar:nth-child(2) { animation-delay: 0.15s; }
+    .music-bar:nth-child(3) { animation-delay: 0.3s; }
+    .music-bar:nth-child(4) { animation-delay: 0.45s; }
+    .music-bar:nth-child(5) { animation-delay: 0.6s; }
+    .music-bar.paused { animation-play-state: paused; }
+
+    @keyframes musicbar {
+      from { height: 3px; }
+      to { height: 14px; }
+    }
+
+    /* ── Footer ── */
+    .profile-footer {
+      margin-top: 24px;
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      color: rgba(255,255,255,0.2);
+      letter-spacing: 1px;
+      text-align: center;
+    }
+    .profile-footer a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+    .profile-footer a:hover { color: var(--neon); }
+
+    /* ── Loading ── */
+    .loading {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      padding: 60px 0;
+      color: var(--muted);
+      font-family: 'Space Mono', monospace;
+      font-size: 12px;
+      letter-spacing: 1px;
+    }
+    .loading-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent);
+      animation: pulse 1s ease-in-out infinite;
+    }
+    @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.2;} }
+
+    /* ── Not found ── */
+    .not-found {
+      text-align: center;
+      padding: 60px 0;
+      font-family: 'Space Mono', monospace;
+    }
+    .not-found h1 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 4rem;
+      color: var(--accent);
+      margin-bottom: 8px;
     }
   </style>
 </head>
 <body>
-  <div class="profile-container" id="profile">
-    <div>Loading profile...</div>
+
+<div class="bg-animated" id="bgEl"></div>
+<div class="noise"></div>
+
+<div class="page">
+  <div class="card" id="card">
+    <div class="loading">
+      <div class="loading-dot"></div>
+      LOADING PROFILE...
+    </div>
   </div>
-  <script>
-    async function renderProfile() {
-      const slug = window.location.pathname.replace(/^\//, '');
-      const res = await fetch(`/api/profile/${slug}`);
-      if (!res.ok) {
-        document.getElementById('profile').innerHTML = '<div>Profile not found.</div>';
-        return;
-      }
-      const data = await res.json();
-      const p = data.profile;
-      const t = data.theme;
-      const roles = data.roles || [];
-      const socialLinks =
-        p.socialLinks && typeof p.socialLinks === 'object' && !Array.isArray(p.socialLinks)
-          ? p.socialLinks
-          : {};
-      // Set theme
-      document.body.style.setProperty('--bg', t.backgroundColor);
-      document.body.style.setProperty('--surface', t.cardColor);
-      document.body.style.setProperty('--accent', t.accentColor);
-      document.body.style.setProperty('--text', t.textColor);
-      if (t.customCss) {
-        const style = document.createElement('style');
-        style.innerHTML = t.customCss;
-        document.head.appendChild(style);
-      }
-      // Animated background
-      if (t.animatedBg) {
-        document.body.style.background = `linear-gradient(135deg, ${t.backgroundColor} 60%, ${t.accentColor} 100%)`;
-      }
-      // Profile HTML
-      document.getElementById('profile').innerHTML = `
-        <img class="profile-avatar" src="${p.avatarUrl || '/public/avatar.png'}" alt="avatar" />
-        <div class="profile-name">${p.displayName}</div>
-        <div class="profile-bio">${p.bio || ''}</div>
-        <div class="profile-roles">
-          ${roles.map(r => `<span class="role-badge" style="border-left-color:${r.roleColor || t.accentColor}">${r.roleName}</span>`).join('')}
-        </div>
-        <div class="profile-socials">
-          ${Object.entries(socialLinks).map(([k, v]) => `<a href="${v}" target="_blank" rel="noopener noreferrer">${k[0].toUpperCase() + k.slice(1)}</a>`).join('')}
-        </div>
-      `;
+  <div class="profile-footer">
+    Powered by <a href="https://cordfol.org" target="_blank">CORDFOL.ORG</a> · Discord Identity, Verified.
+  </div>
+</div>
+
+<script>
+const SOCIAL_ICONS = {
+  twitter: '𝕏',
+  github: '⌥',
+  youtube: '▶',
+  website: '🌐',
+  twitch: '📡',
+  instagram: '📸',
+  tiktok: '♪',
+  linkedin: 'in',
+};
+
+let audio = null;
+let isPlaying = false;
+
+function toggleMusic() {
+  if (!audio) return;
+  if (isPlaying) {
+    audio.pause();
+    isPlaying = false;
+    document.getElementById('musicBtn').textContent = '▶';
+    document.querySelectorAll('.music-bar').forEach(b => b.classList.add('paused'));
+  } else {
+    audio.play();
+    isPlaying = true;
+    document.getElementById('musicBtn').textContent = '⏸';
+    document.querySelectorAll('.music-bar').forEach(b => b.classList.remove('paused'));
+  }
+}
+
+async function renderProfile() {
+  const slug = window.location.pathname.replace(/^\/+/, '').split('/')[0];
+  if (!slug) {
+    document.getElementById('card').innerHTML = `<div class="not-found"><h1>404</h1><p>Profile not found.</p></div>`;
+    return;
+  }
+
+  let data;
+  try {
+    const res = await fetch(`https://api.cordfol.org/api/profile/${slug}`);
+    if (!res.ok) throw new Error('Not found');
+    data = await res.json();
+  } catch {
+    document.getElementById('card').innerHTML = `<div class="not-found"><h1>404</h1><p style="color:var(--muted);font-size:13px;">This profile doesn't exist.</p></div>`;
+    return;
+  }
+
+  const p = data.profile;
+  const t = data.theme || {};
+  const roles = data.roles || [];
+  const socialLinks = (p.socialLinks && typeof p.socialLinks === 'object') ? p.socialLinks : {};
+
+  // Apply theme
+  const root = document.documentElement;
+  root.style.setProperty('--bg', t.backgroundColor || '#0d0d0d');
+  root.style.setProperty('--surface', t.cardColor || '#111');
+  root.style.setProperty('--accent', t.accentColor || '#5865F2');
+  root.style.setProperty('--text', t.textColor || '#f0f0f0');
+  document.getElementById('bgEl').style.background = t.backgroundColor || '#0d0d0d';
+  document.title = `${p.displayName} — Cordfol`;
+
+  // Custom CSS
+  if (t.customCss) {
+    const style = document.createElement('style');
+    style.innerHTML = t.customCss;
+    document.head.appendChild(style);
+  }
+
+  // Music
+  if (t.musicUrl) {
+    audio = new Audio(t.musicUrl);
+    audio.loop = true;
+    if (t.musicAutoplay) {
+      audio.play().then(() => { isPlaying = true; }).catch(() => {});
     }
-    renderProfile();
-  </script>
+    const player = document.createElement('div');
+    player.className = 'music-player';
+    player.innerHTML = `
+      <button class="music-btn" id="musicBtn" onclick="toggleMusic()">${isPlaying ? '⏸' : '▶'}</button>
+      <div class="music-info">
+        <div class="music-label">Now Playing</div>
+        <div class="music-bars">
+          <div class="music-bar ${isPlaying ? '' : 'paused'}" style="height:6px"></div>
+          <div class="music-bar ${isPlaying ? '' : 'paused'}" style="height:10px"></div>
+          <div class="music-bar ${isPlaying ? '' : 'paused'}" style="height:4px"></div>
+          <div class="music-bar ${isPlaying ? '' : 'paused'}" style="height:12px"></div>
+          <div class="music-bar ${isPlaying ? '' : 'paused'}" style="height:7px"></div>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(player);
+  }
+
+  // Roles HTML
+  const rolesHtml = roles.length ? `
+    <div class="divider"></div>
+    <div class="roles-title">🛡️ Verified Roles</div>
+    <div class="roles-list">
+      ${roles.map(r => `
+        <div class="role-item">
+          <div class="role-dot" style="background:${r.roleColor || t.accentColor || '#5865F2'}"></div>
+          <div class="role-info">
+            <div class="role-name">${r.roleName || r.roleId}</div>
+            <div class="role-server">${r.guildName || 'Unknown Server'}</div>
+          </div>
+          <div class="role-proof ${r.proofType === 'BOT' ? 'bot' : ''}">${r.proofType}</div>
+        </div>
+      `).join('')}
+    </div>
+  ` : '';
+
+  // Socials HTML
+  const socialsHtml = Object.entries(socialLinks).filter(([,v]) => v).length ? `
+    <div class="divider"></div>
+    <div class="socials">
+      ${Object.entries(socialLinks).filter(([,v]) => v).map(([k, v]) => `
+        <a href="${v}" target="_blank" rel="noopener noreferrer" class="social-link">
+          ${SOCIAL_ICONS[k] || '🔗'} ${k.charAt(0).toUpperCase() + k.slice(1)}
+        </a>
+      `).join('')}
+    </div>
+  ` : '';
+
+  // Banner
+  const bannerHtml = p.bannerUrl
+    ? `<div class="banner"><img src="${p.bannerUrl}" alt="banner"/></div>`
+    : `<div class="banner" style="background:linear-gradient(135deg, ${t.accentColor || '#5865F2'} 0%, #7C3AED 100%)"></div>`;
+
+  document.getElementById('card').innerHTML = `
+    ${bannerHtml}
+    <div class="avatar-wrap">
+      <img class="avatar" src="${p.avatarUrl || ''}" alt="avatar" onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'"/>
+    </div>
+    <div class="card-body">
+      <div class="profile-name">${p.displayName}</div>
+      <div class="profile-tag">cordfol.org/${p.slug}</div>
+      ${p.bio ? `<div class="profile-bio">${p.bio}</div>` : ''}
+      ${rolesHtml}
+      ${socialsHtml}
+    </div>
+  `;
+}
+
+renderProfile();
+</script>
 </body>
 </html>
