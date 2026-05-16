@@ -14,6 +14,7 @@ const cookieParser = require('cookie-parser');
 
 const authRouter             = require('./discord');
 const { router: verifyRouter } = require('./scan');
+const spotifyRouter          = require('./spotify');
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
@@ -118,6 +119,7 @@ app.get('/api/auth/token', async (req, res) => {
 
 // ── API Routes ────────────────────────────────────────────────────────────────
 app.use('/api/auth/discord', authRouter);
+app.use('/auth/spotify', spotifyRouter);
 
 app.get('/api/auth/me', async (req, res) => {
   if (!req.session?.userId) {
@@ -192,6 +194,7 @@ app.get('/api/profile/:slug', async (req, res) => {
       SELECT
         u.id, u.discord_id, u.discord_username, u.display_name, u.bio,
         u.avatar_hash, u.avatar_url, u.banner_url, u.social_links, u.plan,
+        u.spotify_enabled, u.spotify_access_token, u.spotify_refresh_token, u.spotify_token_expires_at,
         t.background_color, t.accent_color, t.text_color, t.card_color,
         t.glass_enabled, t.glass_blur, t.glass_opacity, t.animated_bg,
         t.music_url, t.music_autoplay, t.custom_css
@@ -244,6 +247,7 @@ app.get('/api/profile/:slug', async (req, res) => {
         bannerUrl:   user.banner_url,
         socialLinks: user.social_links,
         plan:        user.plan,
+        spotifyEnabled: user.spotify_enabled,
       },
       theme: {
         backgroundColor: user.background_color || '#0d0d0d',
@@ -382,6 +386,125 @@ app.post('/api/profile', async (req, res) => {
     res.status(500).json({ error: 'Server error' });
   }
 });
+
+// ── Spotify "Now Playing" ─────────────────────────────────────────────────────
+app.get('/api/spotify/now-playing/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    const userResult = await db.query(
+      'SELECT spotify_access_token, spotify_refresh_token, spotify_token_expires_at FROM users WHERE discord_id = $1',
+      [userId]
+    );
+
+    if (userResult.rowCount === 0 || !userResult.rows[0].spotify_access_token) {
+      return res.status(404).json({ error: 'Spotify not connected' });
+    }
+
+    const user = userResult.rows[0];
+    let token = user.spotify_access_token;
+
+    // Check if token is expired and refresh if needed
+    if (new Date(user.spotify_token_expires_at) < new Date()) {
+      try {
+        const refreshRes = await fetch('https://accounts.spotify.com/api/token', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: new URLSearchParams({
+            grant_type: 'refresh_token',
+            refresh_token: user.spotify_refresh_token,
+            client_id: process.env.SPOTIFY_CLIENT_ID,
+            client_secret: process.env.SPOTIFY_CLIENT_SECRET,
+          }),
+        });
+
+        const refreshData = await refreshRes.json();
+        token = refreshData.access_token;
+
+        await db.query(`
+          UPDATE users SET
+            spotify_access_token = $1,
+            spotify_token_expires_at = NOW() + INTERVAL '1 hour'
+          WHERE discord_id = $2
+        `, [token, userId]);
+      } catch (err) {
+        console.error('[spotify] Token refresh failed:', err);
+        return res.status(401).json({ error: 'Spotify token expired' });
+      }
+    }
+
+    // Fetch currently playing track
+    const spotifyRes = await fetch('https://api.spotify.com/v1/me/player/currently-playing', {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    if (spotifyRes.status === 204 || spotifyRes.status === 404) {
+      return res.json({
+        isPlaying: false,
+        track: null,
+      });
+    }
+
+    const data = await spotifyRes.json();
+
+    if (!data.is_playing || !data.item) {
+      return res.json({
+        isPlaying: false,
+        track: null,
+      });
+    }
+
+    res.json({
+      isPlaying: true,
+      track: {
+        name: data.item.name,
+        artist: data.item.artists[0]?.name || 'Unknown',
+        album: data.item.album?.name || 'Unknown',
+        albumArt: data.item.album?.images?.[0]?.url || null,
+        url: data.item.external_urls?.spotify || null,
+        progress: data.progress_ms,
+        duration: data.item.duration_ms,
+      },
+    });
+  } catch (err) {
+    console.error('[spotify] Error:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// ── Server Status ──────────────────────────────────────────────────────────────
+let botClient = null;
+
+app.get('/api/status/servers', async (req, res) => {
+  try {
+    const botStatus = {
+      online: botClient && botClient.user ? true : false,
+      botName: botClient?.user?.tag || 'Offline',
+      guilds: botClient?.guilds?.cache?.size || 0,
+      ping: botClient?.ws?.ping || 0,
+    };
+
+    const dbStatus = {
+      connected: true,
+      lastCheck: new Date().toISOString(),
+    };
+
+    res.json({
+      bot: botStatus,
+      database: dbStatus,
+      uptime: process.uptime(),
+      timestamp: new Date().toISOString(),
+    });
+  } catch (err) {
+    console.error('[status] Error:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// ── Set Bot Client ─────────────────────────────────────────────────────────────
+global.setBotClient = (client) => {
+  botClient = client;
+};
 
 // ── Exclusive Status Page (Creator Only) ──────────────────────────────────────
 const EXCLUSIVE_USER_ID = '1127435524022472805';
@@ -555,6 +678,6 @@ app.listen(PORT, () => {
 });
 
 // ── Start Bot ─────────────────────────────────────────────────────────────────
-require('./bot/index.js');
+const botClient = require('./bot/index.js');
 
 module.exports = app;

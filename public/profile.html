@@ -354,6 +354,76 @@
       color: var(--accent);
     }
 
+    /* ── Spotify ── */
+    .spotify-section {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 14px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, rgba(29, 185, 84, 0.08), rgba(29, 185, 84, 0.04));
+      border: 1px solid rgba(29, 185, 84, 0.15);
+      margin-top: 16px;
+    }
+
+    .spotify-icon {
+      width: 24px;
+      height: 24px;
+      border-radius: 4px;
+      background: #1DB954;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      flex-shrink: 0;
+      box-shadow: 0 4px 12px rgba(29, 185, 84, 0.3);
+    }
+
+    .spotify-track-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .spotify-track-title {
+      font-size: 12px;
+      font-weight: 500;
+      color: #1DB954;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-bottom: 2px;
+    }
+
+    .spotify-track-artist {
+      font-size: 11px;
+      color: var(--muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .spotify-progress {
+      height: 2px;
+      background: rgba(29, 185, 84, 0.2);
+      border-radius: 1px;
+      margin-top: 4px;
+      overflow: hidden;
+    }
+
+    .spotify-progress-bar {
+      height: 100%;
+      background: #1DB954;
+      border-radius: 1px;
+      transition: width 0.5s linear;
+    }
+
+    .spotify-not-playing {
+      font-size: 11px;
+      color: var(--muted);
+      text-align: center;
+      padding: 8px;
+    }
+
     /* ── Music player ── */
     .music-player {
       position: fixed;
@@ -841,11 +911,44 @@ async function renderProfile() {
       </div>
       ${rolesHtml}
       ${socialsHtml}
+      <div id="spotifySection"></div>
     </div>
   `;
+
+  // Load Spotify if enabled
+  if (p.spotifyEnabled) {
+    fetchSpotifyNowPlaying(p.discordId);
+  }
 }
 
-renderProfile();
+async function fetchSpotifyNowPlaying(discordId) {
+  try {
+    const res = await fetch(`${API_BASE}/spotify/now-playing/${discordId}`);
+    if (!res.ok) {
+      console.log('[spotify] Not connected or no active track');
+      return;
+    }
+
+    const data = await res.json();
+    const spotifySection = document.getElementById('spotifySection');
+    
+    if (data.isPlaying && data.track) {
+      const progress = ((data.track.progress || 0) / (data.track.duration || 1)) * 100;
+      spotifySection.innerHTML = `
+        <div class="spotify-section">
+          <div class="spotify-icon">♪</div>
+          <div class="spotify-track-info">
+            <div class="spotify-track-title">${data.track.name}</div>
+            <div class="spotify-track-artist">${data.track.artist}</div>
+            <div class="spotify-progress"><div class="spotify-progress-bar" style="width:${progress}%"></div></div>
+          </div>
+        </div>
+      `;
+    }
+  } catch (err) {
+    console.error('[spotify] Error fetching now playing:', err);
+  }
+}
 </script>
 </body>
 </html>

@@ -166,6 +166,16 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
 .lp-dot{width:5px;height:5px;border-radius:50%;background:var(--neon);}
 .lp-music{font-size:10px;color:var(--neon);margin-top:4px;display:inline-flex;align-items:center;gap:6px;font-family:'Space Mono',monospace;letter-spacing:0.7px;text-transform:uppercase;}
 .lp-music::before{content:'';width:7px;height:7px;border-radius:50%;background:currentColor;box-shadow:0 0 14px rgba(0,255,178,0.55);}
+.spotify-now-playing{display:flex;align-items:center;gap:12px;padding:14px;border-radius:14px;background:linear-gradient(135deg,rgba(29,185,84,0.08),rgba(29,185,84,0.04));border:1px solid rgba(29,185,84,0.15);margin-top:8px;}
+.spotify-icon{width:24px;height:24px;border-radius:4px;background:#1DB954;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;}
+.spotify-track{flex:1;min-width:0;}
+.spotify-track-name{font-size:12px;font-weight:500;color:#1DB954;margin-bottom:2px;}
+.spotify-track-artist{font-size:11px;color:var(--muted2);}
+.spotify-progress{height:2px;background:rgba(29,185,84,0.2);border-radius:1px;margin-top:4px;}
+.spotify-progress-bar{height:100%;background:#1DB954;border-radius:1px;}
+.social-links-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;}
+.social-badge{display:inline-flex;align-items:center;gap:5px;padding:6px 10px;border-radius:999px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);font-size:10px;color:var(--muted2);text-decoration:none;transition:all 0.15s;font-family:'Space Mono',monospace;}
+.social-badge:hover{background:rgba(255,255,255,0.08);border-color:var(--discord);color:var(--discord);}
 .toast{position:fixed;bottom:24px;right:24px;background:rgba(17,19,26,0.96);border:1px solid var(--border);border-radius:16px;padding:12px 18px;font-size:13px;z-index:999;display:flex;align-items:center;gap:10px;transform:translateY(80px);opacity:0;transition:all 0.25s;box-shadow:0 18px 42px rgba(0,0,0,0.42);backdrop-filter:blur(16px);}
 .toast.show{transform:translateY(0);opacity:1;}
 .toast-icon{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:1px;color:var(--muted2);}
@@ -352,6 +362,14 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
                   <div class="lp-stat"><strong>1</strong> Bot Proof</div>
                 </div>
                 <div class="lp-roles"><div class="lp-role"><div class="lp-dot"></div>Head Mod</div><div class="lp-role"><div class="lp-dot"></div>Dev</div></div>
+                <div class="spotify-now-playing" id="spotifyPreview" style="display:none;margin-top:12px;">
+                  <div class="spotify-icon">♪</div>
+                  <div style="flex:1;min-width:0;">
+                    <div class="spotify-track-name" id="spotifyTrackName">Now Playing</div>
+                    <div class="spotify-track-artist" id="spotifyTrackArtist">On Spotify</div>
+                    <div class="spotify-progress"><div class="spotify-progress-bar" style="width:45%;"></div></div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -411,36 +429,50 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
 
     <div class="tab" id="tab-status" style="display:none;">
       <div class="page-title">⭐ Creator Status</div>
-      <div class="page-sub">An exclusive feature for Cordfol creators. Showcase your current projects and links.</div>
-      <div class="card">
-        <div class="card-title">Status Title</div>
-        <div class="field"><input type="text" id="statusTitle" placeholder="e.g., Building amazing things" maxlength="255"/></div>
-      </div>
-      <div class="card">
-        <div class="card-title">Status Description</div>
-        <div class="field"><textarea id="statusDescription" placeholder="Tell the world what you're working on..." style="min-height:100px;"></textarea></div>
-      </div>
-      <div class="card">
-        <div class="card-title">Status Links</div>
-        <div id="statusLinksList" style="margin-bottom:14px;"></div>
-        <button class="btn btn-secondary" onclick="addStatusLink()">+ Add Link</button>
-      </div>
-      <div class="card">
-        <div class="card-title">Visibility</div>
-        <div class="field">
-          <label><input type="radio" name="statusVisibility" value="private" checked onchange="updateStatusVisibility()"/> Private (Only you)</label>
-          <label style="margin-top:8px;"><input type="radio" name="statusVisibility" value="public" onchange="updateStatusVisibility()"/> Public (Everyone)</label>
+      <div class="page-sub">An exclusive feature. Showcase your current projects, what you're working on, and links to your work.</div>
+      <div class="profile-layout">
+        <div>
+          <div class="card">
+            <div class="card-title">Status Title</div>
+            <div class="field"><input class="field-input" type="text" id="statusTitle" placeholder="e.g., Building amazing things" maxlength="255" oninput="updateStatusPreview()"/></div>
+          </div>
+          <div class="card">
+            <div class="card-title">Description</div>
+            <div class="field"><textarea class="field-input" id="statusDescription" placeholder="Tell the world what you're working on..." style="min-height:100px;height:auto;" oninput="updateStatusPreview()"></textarea></div>
+          </div>
+          <div class="card">
+            <div class="card-title">Status Links</div>
+            <div id="statusLinksList" style="margin-bottom:14px;display:flex;flex-direction:column;gap:8px;"></div>
+            <button class="btn btn-ghost" onclick="addStatusLink()">+ Add Link</button>
+          </div>
+          <div class="card">
+            <div class="card-title">Visibility</div>
+            <div style="display:flex;flex-direction:column;gap:10px;">
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;"><input type="radio" name="statusVisibility" value="private" checked onchange="updateStatusPreview()"/> <span style="font-size:13px;">Private (Only you can see)</span></label>
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;"><input type="radio" name="statusVisibility" value="public" onchange="updateStatusPreview()"/> <span style="font-size:13px;">Public (Share with everyone)</span></label>
+            </div>
+          </div>
+          <div class="btn-row right"><button class="btn btn-primary" onclick="saveCreatorStatus()">Save Creator Status</button></div>
+        </div>
+        <div class="helper-stack">
+          <div class="card preview-card">
+            <div class="preview-title">LIVE PREVIEW</div>
+            <div style="background:linear-gradient(135deg,rgba(88,101,242,0.1),rgba(124,92,255,0.06));border-radius:12px;padding:16px;margin-top:10px;border:1px solid rgba(88,101,242,0.15);">
+              <div style="font-size:14px;font-weight:500;margin-bottom:8px;color:var(--text);" id="previewStatusTitle">Building amazing things</div>
+              <div style="font-size:12px;color:var(--muted2);line-height:1.6;margin-bottom:12px;" id="previewStatusDesc">Cordfol.io - Discord Identity, Verified.</div>
+              <div id="previewStatusLinks" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
+            </div>
+          </div>
+          <div class="card helper-card">
+            <div class="preview-title">TIPS</div>
+            <div class="helper-list">
+              <div class="helper-item"><span>Max title</span><strong style="color:var(--neon);">255 chars</strong></div>
+              <div class="helper-item"><span>Visibility</span><strong id="previewVisibility" style="color:var(--discord);">Private</strong></div>
+              <div class="helper-item"><span>Links</span><strong id="linkCount" style="color:var(--neon);">0</strong></div>
+            </div>
+          </div>
         </div>
       </div>
-      <div class="card" style="background:rgba(88,101,242,0.05);border-color:rgba(88,101,242,0.2);">
-        <div class="card-title" style="color:var(--discord);">Preview</div>
-        <div style="margin-top:12px;">
-          <div style="font-size:14px;font-weight:500;margin-bottom:4px;" id="previewStatusTitle">Building amazing things</div>
-          <div style="font-size:12px;color:var(--muted2);margin-bottom:12px;" id="previewStatusDesc">Cordfol.io - Discord Identity, Verified.</div>
-          <div id="previewStatusLinks" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
-        </div>
-      </div>
-      <div class="btn-row right"><button class="btn btn-primary" onclick="saveCreatorStatus()">Save Creator Status</button></div>
     </div>
 
     <div class="tab" id="tab-analytics">
@@ -1094,12 +1126,18 @@ function addStatusLink(title = '', url = '') {
   const list = document.getElementById('statusLinksList');
   const id = Date.now();
   const item = document.createElement('div');
-  item.style.cssText = 'display:flex;gap:8px;margin-bottom:8px;align-items:center;';
+  item.style.cssText = 'display:flex;gap:8px;align-items:flex-start;';
   item.dataset.linkId = id;
   item.innerHTML = `
-    <input type="text" placeholder="Link title" value="${title}" class="status-link-title" style="flex:1;"/>
-    <input type="url" placeholder="https://..." value="${url}" class="status-link-url" style="flex:1;"/>
-    <button type="button" class="btn btn-secondary" onclick="removeStatusLink(${id})" style="padding:6px 12px;">✕</button>
+    <div style="flex:1;display:flex;flex-direction:column;gap:5px;">
+      <label style="font-size:11px;color:var(--muted2);text-transform:uppercase;letter-spacing:0.5px;">Title</label>
+      <input type="text" placeholder="Link title" value="${title}" class="field-input status-link-title" style="font-size:12px;"/>
+    </div>
+    <div style="flex:1;display:flex;flex-direction:column;gap:5px;">
+      <label style="font-size:11px;color:var(--muted2);text-transform:uppercase;letter-spacing:0.5px;">URL</label>
+      <input type="url" placeholder="https://example.com" value="${url}" class="field-input status-link-url" style="font-size:12px;"/>
+    </div>
+    <button type="button" class="btn btn-danger" onclick="removeStatusLink(${id})" style="align-self:flex-end;margin-top:24px;padding:8px 12px;">✕ Remove</button>
   `;
   list.appendChild(item);
   
@@ -1114,27 +1152,31 @@ function removeStatusLink(id) {
 function updateStatusPreview() {
   const title = document.getElementById('statusTitle').value || 'Building amazing things';
   const desc = document.getElementById('statusDescription').value || 'Cordfol.io - Discord Identity, Verified.';
+  const visibility = document.querySelector('input[name="statusVisibility"]:checked')?.value || 'private';
   
   document.getElementById('previewStatusTitle').textContent = title;
   document.getElementById('previewStatusDesc').textContent = desc;
+  document.getElementById('previewVisibility').textContent = visibility === 'public' ? 'Public' : 'Private';
   
   const previewLinks = document.getElementById('previewStatusLinks');
   previewLinks.innerHTML = '';
-  document.querySelectorAll('.status-link-title').forEach((titleInput, idx) => {
-    const urlInput = document.querySelectorAll('.status-link-url')[idx];
+  
+  let linkCount = 0;
+  document.querySelectorAll('[data-link-id]').forEach((item) => {
+    const titleInput = item.querySelector('.status-link-title');
+    const urlInput = item.querySelector('.status-link-url');
     if (titleInput.value && urlInput.value) {
+      linkCount++;
       const link = document.createElement('a');
       link.href = urlInput.value;
       link.target = '_blank';
       link.textContent = titleInput.value;
-      link.style.cssText = 'display:inline-block;padding:4px 10px;background:var(--discord);color:white;border-radius:6px;font-size:11px;text-decoration:none;';
+      link.className = 'social-badge';
       previewLinks.appendChild(link);
     }
   });
-}
-
-function updateStatusVisibility() {
-  updateStatusPreview();
+  
+  document.getElementById('linkCount').textContent = linkCount;
 }
 
 async function saveCreatorStatus() {

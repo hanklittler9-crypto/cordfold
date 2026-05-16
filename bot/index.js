@@ -101,6 +101,11 @@ client.once('ready', async () => {
   console.log(`[bot] Logged in as ${client.user.tag}`);
   console.log(`[bot] In ${client.guilds.cache.size} servers`);
   await registerCommands();
+  
+  // Register with server
+  if (global.setBotClient) {
+    global.setBotClient(client);
+  }
 });
 
 client.on('interactionCreate', async (interaction) => {
@@ -526,3 +531,5 @@ client.on('guildMemberUpdate', async (oldMember, newMember) => {
 
 // ── Start ─────────────────────────────────────────────────────────────────────
 client.login(BOT_TOKEN);
+
+module.exports = client;
