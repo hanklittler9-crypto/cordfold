@@ -666,13 +666,31 @@ async function triggerScan(btn) {
 }
 
 const taken = ['admin', 'discord', 'cordfol', 'pro', 'verify', 'api'];
-function checkSlug(el) {
+async function checkSlug(el) {
   const hint = document.getElementById('slug-hint');
   const v = el.value.toLowerCase().replace(/[^a-z0-9\-]/g, '');
   el.value = v;
   if (!v) { hint.textContent = ''; return; }
-  if (taken.includes(v)) { hint.textContent = v + ' is taken'; hint.className = 'field-hint err'; }
-  else { hint.textContent = v + ' is available'; hint.className = 'field-hint'; }
+  
+  if (taken.includes(v)) { 
+    hint.textContent = '❌ This handle is unavailable'; 
+    hint.className = 'field-hint err'; 
+  } else {
+    // Check if profile exists for this slug
+    try {
+      const res = await fetch(`${API_BASE}/profile/${v}`);
+      if (res.ok) {
+        hint.textContent = '❌ This handle is unavailable'; 
+        hint.className = 'field-hint err';
+      } else {
+        hint.textContent = '✓ This handle is available'; 
+        hint.className = 'field-hint';
+      }
+    } catch {
+      hint.textContent = '✓ This handle is available'; 
+      hint.className = 'field-hint';
+    }
+  }
   updatePreview();
 }
 
@@ -930,10 +948,20 @@ async function saveProfile() {
       credentials: 'include',
       body: JSON.stringify({ display_name: displayName, slug, bio, bannerUrl, social_links, theme })
     });
-    if (!res.ok) throw new Error('Failed to save');
-    showToast('OK', 'Profile saved successfully!');
+    if (!res.ok) {
+      if (res.status === 409) {
+        showToast('ERR', '❌ This handle is unavailable — already claimed!');
+      } else {
+        const error = await res.json().catch(() => ({ error: 'Failed to save' }));
+        showToast('ERR', error.error || 'Failed to save profile!');
+      }
+      return;
+    }
+    showToast('OK', '✓ Profile saved successfully!');
     checkSession();
-  } catch { showToast('ERR', 'Failed to save profile!'); }
+  } catch (err) { 
+    showToast('ERR', 'Failed to save profile!'); 
+  }
 }
 
 function updatePreview() {
