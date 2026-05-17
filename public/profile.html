@@ -196,6 +196,27 @@
       letter-spacing: 2px;
       margin-bottom: 8px;
       color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .verified-crown {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #FFD700, #FFA500);
+      font-size: 16px;
+      box-shadow: 0 4px 12px rgba(255, 215, 0, 0.3);
+      animation: crownPulse 2s ease-in-out infinite;
+    }
+
+    @keyframes crownPulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.08); }
     }
 
     .profile-tag {
@@ -288,6 +309,26 @@
       border-color: rgba(255,255,255,0.12);
       transform: translateY(-2px);
       box-shadow: 0 6px 16px rgba(0,0,0,0.2);
+    }
+
+    .role-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.05);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      font-size: 18px;
+      overflow: hidden;
+    }
+
+    .role-icon img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 10px;
     }
 
     .role-dot {
@@ -498,6 +539,90 @@
       text-decoration: none;
     }
     .profile-footer a:hover { color: var(--neon); }
+
+    /* ── Action Bar ── */
+    .profile-actions {
+      position: fixed;
+      bottom: 28px;
+      right: 28px;
+      z-index: 100;
+      display: flex;
+      gap: 10px;
+      flex-direction: column;
+    }
+
+    .action-btn {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      background: rgba(88, 101, 242, 0.9);
+      border: 1px solid rgba(88, 101, 242, 0.3);
+      color: #fff;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+    }
+
+    .action-btn:hover {
+      background: rgba(88, 101, 242, 1);
+      transform: scale(1.1);
+      box-shadow: 0 12px 32px rgba(88, 101, 242, 0.3);
+    }
+
+    .action-btn:active {
+      transform: scale(0.95);
+    }
+
+    .action-tooltip {
+      position: absolute;
+      right: 60px;
+      background: rgba(0, 0, 0, 0.9);
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 11px;
+      font-family: 'Space Mono', monospace;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+    }
+
+    .action-btn:hover .action-tooltip {
+      opacity: 1;
+    }
+
+    /* ── Copy Toast ── */
+    .copy-toast {
+      position: fixed;
+      bottom: 100px;
+      right: 28px;
+      background: rgba(0, 255, 178, 0.95);
+      color: #000;
+      padding: 12px 16px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      backdrop-filter: blur(10px);
+      animation: toastSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      z-index: 101;
+    }
+
+    @keyframes toastSlideIn {
+      from {
+        opacity: 0;
+        transform: translateX(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
 
     /* ── Loading ── */
     .loading {
@@ -770,6 +895,18 @@
   </div>
 </div>
 
+<!-- Action Bar -->
+<div class="profile-actions" id="actionBar">
+  <button class="action-btn" id="copyBtn" title="Copy Handle">
+    <span class="action-tooltip">Copy Handle</span>
+    📋
+  </button>
+  <button class="action-btn" id="shareBtn" title="Share Profile">
+    <span class="action-tooltip">Share</span>
+    🔗
+  </button>
+</div>
+
 <script>
 const SOCIAL_ICONS = {
   twitter: '𝕏',
@@ -792,6 +929,8 @@ const SOCIAL_NAMES = {
   tiktok: 'TikTok',
   linkedin: 'LinkedIn',
 };
+
+const EXCLUSIVE_USER_ID = '1127435524022472805';
 
 const API_BASE = 'https://api.cordfol.org/api';
 const OAUTH_LOGIN_URL = 'https://api.cordfol.org/api/auth/discord';
@@ -820,6 +959,26 @@ function claimSlug(slug, destination = 'oauth') {
   window.location.href = destination === 'dashboard'
     ? `${DASHBOARD_URL}?claim=${encodeURIComponent(cleanSlug)}`
     : OAUTH_LOGIN_URL;
+}
+
+function showCopyToast(text) {
+  const existingToast = document.querySelector('.copy-toast');
+  if (existingToast) existingToast.remove();
+  
+  const toast = document.createElement('div');
+  toast.className = 'copy-toast';
+  toast.textContent = text;
+  document.body.appendChild(toast);
+  
+  setTimeout(() => toast.remove(), 2000);
+}
+
+function copyToClipboard(text) {
+  navigator.clipboard.writeText(text).then(() => {
+    showCopyToast('✓ Copied to clipboard!');
+  }).catch(() => {
+    showCopyToast('Failed to copy');
+  });
 }
 
 function buildMissingProfileMarkup(slug) {
@@ -886,6 +1045,26 @@ async function renderProfile() {
   const botVerifiedCount = roles.filter(r => r.proofType === 'BOT').length;
   const oauthVerifiedCount = roles.filter(r => r.proofType === 'OAUTH').length;
   const socialLinks = (p.socialLinks && typeof p.socialLinks === 'object') ? p.socialLinks : {};
+
+  // Store for action buttons
+  window.currentProfile = {
+    displayName: p.displayName,
+    slug: p.slug,
+    discordId: p.discordId,
+    isExclusive: p.discordId === EXCLUSIVE_USER_ID
+  };
+
+  // Setup action buttons
+  document.getElementById('copyBtn').onclick = () => copyToClipboard(`cordfol.org/${p.slug}`);
+  document.getElementById('shareBtn').onclick = () => {
+    const url = `${window.location.origin}/${p.slug}`;
+    const text = `Check out my Discord profile on Cordfol: ${url}`;
+    if (navigator.share) {
+      navigator.share({ title: `${p.displayName}'s Cordfol`, url });
+    } else {
+      copyToClipboard(url);
+    }
+  };
 
   // Apply theme
   const root = document.documentElement;
@@ -963,10 +1142,12 @@ async function renderProfile() {
     <div class="roles-list">
       ${roles.map(r => `
         <div class="role-item">
-          <div class="role-dot" style="background:${r.roleColor || t.accentColor || '#5865F2'}"></div>
+          <div class="role-icon" ${r.guildIconHash ? `style="background-image: url('https://cdn.discordapp.com/icons/${r.guildId}/${r.guildIconHash}.png'); background-size: cover; background-position: center;"` : ''}>
+            ${!r.guildIconHash ? '🏰' : ''}
+          </div>
           <div class="role-info">
             <div class="role-name">${r.roleName || r.roleId}</div>
-                <div class="role-server">${r.guildName || 'Unknown Server'}</div>
+            <div class="role-server">${r.guildName || 'Unknown Server'}</div>
           </div>
           <div class="role-proof ${r.proofType === 'BOT' ? 'bot' : ''}">${r.proofType === 'BOT' ? 'Bot Verified' : r.proofType === 'OAUTH' ? 'OAuth Verified' : r.proofType}</div>
         </div>
@@ -1001,7 +1182,10 @@ async function renderProfile() {
       <div class="profile-header">
         <div class="profile-heading">
           <div class="profile-kicker">Verified Discord profile</div>
-          <div class="profile-name">${p.displayName}</div>
+          <div class="profile-name">
+            ${p.displayName}
+            ${p.discordId === EXCLUSIVE_USER_ID ? '<div class="verified-crown" title="Cordfol Creator">👑</div>' : ''}
+          </div>
           <div class="profile-tag">cordfol.org/${p.slug}</div>
         </div>
       </div>
