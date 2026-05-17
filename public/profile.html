@@ -93,6 +93,7 @@
       overflow: hidden;
       box-shadow: 0 30px 90px rgba(0,0,0,0.46), inset 0 1px 0 rgba(255,255,255,0.05);
       position: relative;
+      animation: cardSlideIn 0.6s cubic-bezier(0.16, 1, 0.3, 1);
     }
     .card::before {
       content: '';
@@ -100,6 +101,16 @@
       inset: 0;
       background: linear-gradient(135deg, rgba(88,101,242,0.14), transparent 34%, rgba(0,255,178,0.05));
       pointer-events: none;
+    }
+    @keyframes cardSlideIn {
+      from {
+        opacity: 0;
+        transform: translateY(16px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
 
     /* ── Banner ── */
@@ -269,12 +280,14 @@
       border-radius: 16px;
       padding: 12px 14px;
       text-align: left;
-      transition: background 0.15s, border-color 0.15s, transform 0.15s;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      cursor: pointer;
     }
     .role-item:hover {
       background: rgba(255,255,255,0.06);
       border-color: rgba(255,255,255,0.12);
-      transform: translateY(-1px);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(0,0,0,0.2);
     }
 
     .role-dot {
@@ -328,31 +341,75 @@
     .socials {
       display: flex;
       flex-wrap: wrap;
-      gap: 8px;
+      gap: 12px;
       justify-content: flex-start;
-      margin-top: 4px;
+      margin-top: 8px;
     }
 
     .social-link {
       display: inline-flex;
       align-items: center;
-      gap: 6px;
-      padding: 8px 14px;
-      border-radius: 999px;
+      justify-content: center;
+      gap: 8px;
+      padding: 14px 18px;
+      border-radius: 14px;
       background: rgba(255,255,255,0.04);
-      border: 1px solid rgba(255,255,255,0.08);
+      border: 1.5px solid rgba(255,255,255,0.08);
       color: var(--text);
       text-decoration: none;
-      font-size: 12px;
-      font-family: 'Space Mono', monospace;
-      letter-spacing: 0.5px;
-      transition: all 0.15s;
+      font-size: 13px;
+      font-weight: 600;
+      font-family: 'DM Sans', sans-serif;
+      letter-spacing: 0.3px;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      position: relative;
+      overflow: hidden;
+    }
+    .social-link::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: rgba(255,255,255,0.08);
+      opacity: 0;
+      transition: opacity 0.25s;
+      pointer-events: none;
     }
     .social-link:hover {
       background: rgba(255,255,255,0.08);
-      border-color: var(--accent);
-      color: var(--accent);
+      border-color: rgba(255,255,255,0.15);
+      transform: translateY(-3px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.3);
     }
+    .social-link:hover::before {
+      opacity: 1;
+    }
+
+    .social-link.twitter { border-color: rgba(29, 155, 240, 0.3); color: #1DA1F2; }
+    .social-link.twitter:hover { background: rgba(29, 155, 240, 0.1); box-shadow: 0 8px 24px rgba(29, 155, 240, 0.2); }
+
+    .social-link.github { border-color: rgba(255,255,255, 0.1); }
+    .social-link.github:hover { background: rgba(88, 166, 255, 0.12); color: #58a6ff; box-shadow: 0 8px 24px rgba(88, 166, 255, 0.15); }
+
+    .social-link.youtube { border-color: rgba(255, 68, 68, 0.3); color: #FF4444; }
+    .social-link.youtube:hover { background: rgba(255, 68, 68, 0.1); box-shadow: 0 8px 24px rgba(255, 68, 68, 0.2); }
+
+    .social-link.instagram { border-color: rgba(225, 48, 108, 0.3); color: #E13084; }
+    .social-link.instagram:hover { background: rgba(225, 48, 108, 0.1); box-shadow: 0 8px 24px rgba(225, 48, 108, 0.2); }
+
+    .social-link.twitch { border-color: rgba(145, 71, 255, 0.3); color: #9146FF; }
+    .social-link.twitch:hover { background: rgba(145, 71, 255, 0.1); box-shadow: 0 8px 24px rgba(145, 71, 255, 0.2); }
+
+    .social-link.tiktok { border-color: rgba(0, 0, 0, 0.3); color: #000; }
+    @media (prefers-color-scheme: dark) {
+      .social-link.tiktok { color: #FFF; }
+      .social-link.tiktok:hover { background: rgba(150, 150, 150, 0.1); }
+    }
+
+    .social-link.linkedin { border-color: rgba(0, 119, 181, 0.3); color: #0077B5; }
+    .social-link.linkedin:hover { background: rgba(0, 119, 181, 0.1); box-shadow: 0 8px 24px rgba(0, 119, 181, 0.2); }
+
+    .social-link.website { border-color: rgba(var(--accent-rgb, 88, 101, 242), 0.3); }
+    .social-link.website:hover { background: rgba(var(--accent-rgb, 88, 101, 242), 0.1); }
 
     /* ── Music player ── */
     .music-player {
@@ -446,14 +503,102 @@
     .loading {
       display: flex;
       flex-direction: column;
-      align-items: center;
-      gap: 16px;
-      padding: 60px 0;
-      color: var(--muted);
-      font-family: 'Space Mono', monospace;
-      font-size: 12px;
-      letter-spacing: 1px;
+      gap: 24px;
+      padding: 40px 0;
+      animation: fadeIn 0.4s ease;
     }
+
+    .skeleton-banner {
+      width: 100%;
+      height: 170px;
+      background: linear-gradient(90deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.06) 100%);
+      background-size: 200% 100%;
+      animation: skeleton-loading 1.5s infinite;
+      border-radius: 0;
+    }
+
+    .skeleton-avatar-wrap {
+      padding: 0 26px;
+      margin-top: -52px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .skeleton-avatar {
+      width: 106px;
+      height: 106px;
+      border-radius: 28px;
+      background: linear-gradient(90deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.06) 100%);
+      background-size: 200% 100%;
+      animation: skeleton-loading 1.5s infinite;
+      border: 4px solid rgba(9,9,13,0.92);
+    }
+
+    .skeleton-body {
+      padding: 18px 26px 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .skeleton-text {
+      height: 16px;
+      border-radius: 8px;
+      background: linear-gradient(90deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.06) 100%);
+      background-size: 200% 100%;
+      animation: skeleton-loading 1.5s infinite;
+    }
+
+    .skeleton-title {
+      height: 28px;
+      width: 70%;
+      border-radius: 12px;
+      background: linear-gradient(90deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.12) 50%, rgba(255,255,255,0.08) 100%);
+      background-size: 200% 100%;
+      animation: skeleton-loading 1.5s infinite;
+    }
+
+    .skeleton-chips {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .skeleton-chip {
+      height: 24px;
+      width: 90px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.06) 100%);
+      background-size: 200% 100%;
+      animation: skeleton-loading 1.5s infinite;
+    }
+
+    .skeleton-socials {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+
+    .skeleton-social {
+      height: 44px;
+      width: 110px;
+      border-radius: 14px;
+      background: linear-gradient(90deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.06) 100%);
+      background-size: 200% 100%;
+      animation: skeleton-loading 1.5s infinite;
+    }
+
+    @keyframes skeleton-loading {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
     .loading-dot {
       width: 8px;
       height: 8px;
@@ -600,9 +745,24 @@
 
 <div class="page">
   <div class="card" id="card">
-    <div class="loading">
-      <div class="loading-dot"></div>
-      LOADING PROFILE...
+    <div class="skeleton-banner"></div>
+    <div class="skeleton-avatar-wrap">
+      <div class="skeleton-avatar"></div>
+    </div>
+    <div class="skeleton-body">
+      <div class="skeleton-title"></div>
+      <div class="skeleton-text" style="width: 50%;"></div>
+      <div class="skeleton-chips">
+        <div class="skeleton-chip"></div>
+        <div class="skeleton-chip"></div>
+        <div class="skeleton-chip"></div>
+      </div>
+      <div style="margin-top: 12px;"></div>
+      <div class="skeleton-socials">
+        <div class="skeleton-social"></div>
+        <div class="skeleton-social"></div>
+        <div class="skeleton-social"></div>
+      </div>
     </div>
   </div>
   <div class="profile-footer">
@@ -612,14 +772,25 @@
 
 <script>
 const SOCIAL_ICONS = {
-  twitter: 'X',
-  github: 'GH',
-  youtube: 'YT',
-  website: 'WEB',
-  twitch: 'TW',
-  instagram: 'IG',
-  tiktok: 'TT',
+  twitter: '𝕏',
+  github: '⚙️',
+  youtube: '▶️',
+  website: '🌐',
+  twitch: '📺',
+  instagram: '📷',
+  tiktok: '🎵',
   linkedin: 'in',
+};
+
+const SOCIAL_NAMES = {
+  twitter: 'Twitter',
+  github: 'GitHub',
+  youtube: 'YouTube',
+  website: 'Website',
+  twitch: 'Twitch',
+  instagram: 'Instagram',
+  tiktok: 'TikTok',
+  linkedin: 'LinkedIn',
 };
 
 const API_BASE = 'https://api.cordfol.org/api';
@@ -808,8 +979,9 @@ async function renderProfile() {
     <div class="divider"></div>
     <div class="socials">
       ${Object.entries(socialLinks).filter(([,v]) => v).map(([k, v]) => `
-        <a href="${v}" target="_blank" rel="noopener noreferrer" class="social-link">
-          ${SOCIAL_ICONS[k] || 'LINK'} ${k.charAt(0).toUpperCase() + k.slice(1)}
+        <a href="${v}" target="_blank" rel="noopener noreferrer" class="social-link ${k}" title="${SOCIAL_NAMES[k] || 'Link'}">
+          <span>${SOCIAL_ICONS[k] || '🔗'}</span>
+          <span>${SOCIAL_NAMES[k] || 'Link'}</span>
         </a>
       `).join('')}
     </div>
