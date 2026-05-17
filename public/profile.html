@@ -841,44 +841,11 @@ async function renderProfile() {
       </div>
       ${rolesHtml}
       ${socialsHtml}
-      <div id="spotifySection"></div>
     </div>
   `;
-
-  // Load Spotify if enabled
-  if (p.spotifyEnabled) {
-    fetchSpotifyNowPlaying(p.discordId);
-  }
 }
 
-async function fetchSpotifyNowPlaying(discordId) {
-  try {
-    const res = await fetch(`${API_BASE}/spotify/now-playing/${discordId}`);
-    if (!res.ok) {
-      console.log('[spotify] Not connected or no active track');
-      return;
-    }
-
-    const data = await res.json();
-    const spotifySection = document.getElementById('spotifySection');
-    
-    if (data.isPlaying && data.track) {
-      const progress = ((data.track.progress || 0) / (data.track.duration || 1)) * 100;
-      spotifySection.innerHTML = `
-        <div class="spotify-section">
-          <div class="spotify-icon">♪</div>
-          <div class="spotify-track-info">
-            <div class="spotify-track-title">${data.track.name}</div>
-            <div class="spotify-track-artist">${data.track.artist}</div>
-            <div class="spotify-progress"><div class="spotify-progress-bar" style="width:${progress}%"></div></div>
-          </div>
-        </div>
-      `;
-    }
-  } catch (err) {
-    console.error('[spotify] Error fetching now playing:', err);
-  }
-}
+renderProfile();
 </script>
 </body>
 </html>
