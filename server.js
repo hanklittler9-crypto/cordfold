@@ -12,8 +12,9 @@ const path         = require('path');
 const cors         = require('cors');
 const cookieParser = require('cookie-parser');
 
-const authRouter             = require('./discord');
+const authRouter              = require('./discord');
 const { router: verifyRouter } = require('./scan');
+const { router: adminRouter }  = require('./admin');
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
@@ -573,6 +574,13 @@ app.get('/dashboard', (req, res) => {
   }
   res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
 });
+
+// ── Admin Panel ───────────────────────────────────────────────────────────────
+app.get('/admin', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'admin.html'));
+});
+
+app.use('/api/admin', adminRouter);
 
 // ── Public Profile Page ───────────────────────────────────────────────────────
 app.get('/:slug', (req, res) => {

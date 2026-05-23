@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Panel — Cordfol.io</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --bg: #0a0a0d;
+      --surface: #12121a;
+      --surface2: #1a1a24;
+      --discord: #5865F2;
+      --neon: #00FFB2;
+      --text: #f0f0f0;
+      --muted: #888;
+      --danger: #FF3366;
+      --success: #00FFB2;
+    }
+    html, body {
+      min-height: 100vh;
+      font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+    .admin-container {
+      display: grid;
+      grid-template-columns: 240px 1fr;
+      min-height: 100vh;
+    }
+    .sidebar {
+      background: var(--surface);
+      border-right: 1px solid rgba(255, 255, 255, 0.06);
+      padding: 24px 16px;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+    }
+    .sidebar-logo {
+      font-family: 'Space Mono', monospace;
+      font-size: 12px;
+      letter-spacing: 2px;
+      margin-bottom: 32px;
+      color: var(--discord);
+    }
+    .nav-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 24px;
+    }
+    .nav-label {
+      font-size: 11px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--muted);
+      padding: 12px 0;
+      margin-top: 12px;
+      border-top: 1px solid rgba(255, 255, 255, 0.03);
+    }
+    .nav-item {
+      padding: 12px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s;
+      color: var(--muted);
+      border: none;
+      background: none;
+      text-align: left;
+      width: 100%;
+    }
+    .nav-item:hover {
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text);
+    }
+    .nav-item.active {
+      background: rgba(88, 101, 242, 0.15);
+      color: var(--discord);
+      border-left: 2px solid var(--discord);
+    }
+    .main-content {
+      padding: 32px;
+      overflow-y: auto;
+    }
+    .page-header {
+      margin-bottom: 32px;
+    }
+    .page-title {
+      font-size: 32px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    .page-sub {
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+    .card {
+      background: var(--surface);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 12px;
+      padding: 20px;
+      transition: all 0.2s;
+    }
+    .card:hover {
+      border-color: rgba(88, 101, 242, 0.2);
+      background: var(--surface2);
+    }
+    .stat-box {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+    .stat-label {
+      font-size: 12px;
+      color: var(--muted);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+    .stat-value {
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--discord);
+      margin-top: 8px;
+    }
+    .form-group {
+      margin-bottom: 20px;
+    }
+    .form-label {
+      display: block;
+      font-size: 13px;
+      font-weight: 500;
+      margin-bottom: 8px;
+      color: var(--text);
+    }
+    .form-input {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      transition: all 0.2s;
+    }
+    .form-input:focus {
+      outline: none;
+      border-color: var(--discord);
+      background: rgba(88, 101, 242, 0.1);
+    }
+    .form-textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+    .btn {
+      padding: 10px 18px;
+      border-radius: 6px;
+      font-family: 'Space Mono', monospace;
+      font-size: 12px;
+      letter-spacing: 1px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-transform: uppercase;
+    }
+    .btn-primary {
+      background: var(--discord);
+      color: white;
+    }
+    .btn-primary:hover {
+      background: #4752C4;
+      transform: translateY(-1px);
+    }
+    .btn-danger {
+      background: var(--danger);
+      color: white;
+    }
+    .btn-danger:hover {
+      background: #ff1f47;
+    }
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text);
+    }
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.12);
+    }
+    .status-badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+    .status-operational {
+      background: rgba(0, 255, 178, 0.15);
+      color: var(--success);
+    }
+    .status-degraded {
+      background: rgba(255, 184, 0, 0.15);
+      color: #FFB800;
+    }
+    .status-down {
+      background: rgba(255, 51, 102, 0.15);
+      color: var(--danger);
+    }
+    .section {
+      display: none;
+    }
+    .section.active {
+      display: block;
+    }
+    .alert {
+      padding: 12px 16px;
+      border-radius: 8px;
+      margin-bottom: 16px;
+      font-size: 13px;
+      border-left: 3px solid;
+    }
+    .alert-info {
+      background: rgba(88, 101, 242, 0.1);
+      border-color: var(--discord);
+      color: #9db2ff;
+    }
+    .alert-success {
+      background: rgba(0, 255, 178, 0.1);
+      border-color: var(--success);
+      color: var(--success);
+    }
+    .alert-error {
+      background: rgba(255, 51, 102, 0.1);
+      border-color: var(--danger);
+      color: #ff8ca8;
+    }
+    .table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 16px;
+    }
+    .table th {
+      text-align: left;
+      padding: 12px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      font-size: 12px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--muted);
+      font-weight: 500;
+    }
+    .table td {
+      padding: 12px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    }
+    .loading {
+      text-align: center;
+      padding: 24px;
+      color: var(--muted);
+    }
+    @media (max-width: 768px) {
+      .admin-container {
+        grid-template-columns: 1fr;
+      }
+      .sidebar {
+        height: auto;
+        position: static;
+        border-right: none;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      }
+      .main-content {
+        padding: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="admin-container">
+    <div class="sidebar">
+      <div class="sidebar-logo">CORDFOL ADMIN</div>
+      
+      <div class="nav-group">
+        <button class="nav-item active" data-section="dashboard">📊 Dashboard</button>
+        <button class="nav-item" data-section="config">⚙️ Configuration</button>
+        <button class="nav-item" data-section="status">🟢 Status</button>
+        <button class="nav-item" data-section="announcement">📢 Announcements</button>
+      </div>
+
+      <div class="nav-label">Settings</div>
+      <div class="nav-group">
+        <button class="nav-item" data-section="maintenance">🔧 Maintenance Mode</button>
+        <button class="nav-item" onclick="logout()">🚪 Logout</button>
+      </div>
+    </div>
+
+    <div class="main-content">
+      <!-- Dashboard Section -->
+      <div class="section active" id="dashboard">
+        <div class="page-header">
+          <h1 class="page-title">Dashboard</h1>
+          <p class="page-sub">System overview and statistics</p>
+        </div>
+        
+        <div id="alert-container"></div>
+        
+        <div class="grid-2">
+          <div class="card">
+            <div class="stat-box">
+              <div>
+                <div class="stat-label">Total Users</div>
+                <div class="stat-value" id="stat-users">-</div>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="stat-box">
+              <div>
+                <div class="stat-label">Verified Roles</div>
+                <div class="stat-value" id="stat-roles">-</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3 style="margin-bottom: 16px;">System Status</h3>
+          <table class="table" id="status-table">
+            <thead>
+              <tr>
+                <th>Service</th>
+                <th>Status</th>
+                <th>Message</th>
+                <th>Last Updated</th>
+              </tr>
+            </thead>
+            <tbody id="status-tbody">
+              <tr><td colspan="4" class="loading">Loading...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Configuration Section -->
+      <div class="section" id="config">
+        <div class="page-header">
+          <h1 class="page-title">Configuration</h1>
+          <p class="page-sub">Manage system settings</p>
+        </div>
+        
+        <div id="config-alert"></div>
+        
+        <div class="card">
+          <form id="config-form">
+            <div class="form-group">
+              <label class="form-label">Site Name</label>
+              <input type="text" class="form-input" id="config-siteName" placeholder="Cordfol.io" />
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label">Status Page Title</label>
+              <input type="text" class="form-input" id="config-statusPageTitle" placeholder="System Status" />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Announcement (if any)</label>
+              <textarea class="form-input form-textarea" id="config-announcement" placeholder="Leave empty for no announcement"></textarea>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Save Config</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Status Section -->
+      <div class="section" id="status">
+        <div class="page-header">
+          <h1 class="page-title">System Status</h1>
+          <p class="page-sub">Record service status updates</p>
+        </div>
+
+        <div id="status-alert"></div>
+
+        <div class="card">
+          <form id="status-form">
+            <div class="form-group">
+              <label class="form-label">Service Name</label>
+              <input type="text" class="form-input" id="status-service" placeholder="e.g., API, Database, Website" required />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Status</label>
+              <select class="form-input" id="status-status" required>
+                <option value="operational">Operational</option>
+                <option value="degraded">Degraded</option>
+                <option value="down">Down</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Message</label>
+              <textarea class="form-input form-textarea" id="status-message" placeholder="Describe the status or issue"></textarea>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Record Status</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Announcement Section -->
+      <div class="section" id="announcement">
+        <div class="page-header">
+          <h1 class="page-title">Announcements</h1>
+          <p class="page-sub">Broadcast system-wide messages</p>
+        </div>
+
+        <div id="announcement-alert"></div>
+
+        <div class="card">
+          <form id="announcement-form">
+            <div class="form-group">
+              <label class="form-label">Message</label>
+              <textarea class="form-input form-textarea" id="announcement-message" placeholder="Write your announcement here" required></textarea>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Type</label>
+              <select class="form-input" id="announcement-type">
+                <option value="info">Info</option>
+                <option value="success">Success</option>
+                <option value="warning">Warning</option>
+                <option value="error">Error</option>
+              </select>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Broadcast</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Maintenance Mode Section -->
+      <div class="section" id="maintenance">
+        <div class="page-header">
+          <h1 class="page-title">Maintenance Mode</h1>
+          <p class="page-sub">Toggle system maintenance</p>
+        </div>
+
+        <div id="maintenance-alert"></div>
+
+        <div class="card">
+          <div class="form-group">
+            <label class="form-label">Status</label>
+            <p style="margin-bottom: 16px; color: var(--muted);">When enabled, users will see a maintenance page instead of the application.</p>
+          </div>
+
+          <button class="btn btn-danger" id="maintenance-toggle" onclick="toggleMaintenance()">Enable Maintenance Mode</button>
+          <p style="font-size: 12px; color: var(--muted); margin-top: 12px;">Current status: <span id="maintenance-status">Unknown</span></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = '/api/admin';
+
+    // Navigation
+    document.querySelectorAll('[data-section]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const section = btn.dataset.section;
+        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+        document.querySelectorAll('[data-section]').forEach(b => b.classList.remove('active'));
+        
+        document.getElementById(section).classList.add('active');
+        btn.classList.add('active');
+
+        // Load section-specific data
+        if (section === 'dashboard') loadDashboard();
+        if (section === 'config') loadConfig();
+        if (section === 'status') loadStatus();
+        if (section === 'maintenance') loadMaintenance();
+      });
+    });
+
+    // Alert Helper
+    function showAlert(containerId, message, type) {
+      const container = document.getElementById(containerId);
+      const alert = document.createElement('div');
+      alert.className = `alert alert-${type}`;
+      alert.textContent = message;
+      container.innerHTML = '';
+      container.appendChild(alert);
+      setTimeout(() => alert.remove(), 4000);
+    }
+
+    // Dashboard
+    async function loadDashboard() {
+      try {
+        const res = await fetch(`${API_BASE}/dashboard`);
+        const data = await res.json();
+        
+        if (!res.ok) {
+          showAlert('alert-container', 'Access denied. Admin only.', 'error');
+          return;
+        }
+
+        document.getElementById('stat-users').textContent = data.stats.totalUsers;
+        document.getElementById('stat-roles').textContent = data.stats.totalVerifiedRoles;
+
+        // Load status
+        const statusRes = await fetch(`${API_BASE}/status`);
+        const statusData = await statusRes.json();
+        
+        const tbody = document.getElementById('status-tbody');
+        tbody.innerHTML = '';
+        
+        if (statusData.services.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 24px;">No status updates yet</td></tr>';
+        } else {
+          statusData.services.forEach(svc => {
+            const row = tbody.insertRow();
+            row.innerHTML = `
+              <td><strong>${svc.name}</strong></td>
+              <td><span class="status-badge status-${svc.status}">${svc.status}</span></td>
+              <td>${svc.message || '-'}</td>
+              <td style="font-size: 12px; color: var(--muted);">${new Date(svc.lastUpdated).toLocaleString()}</td>
+            `;
+          });
+        }
+      } catch (err) {
+        console.error('Dashboard error:', err);
+        showAlert('alert-container', 'Failed to load dashboard', 'error');
+      }
+    }
+
+    // Config
+    async function loadConfig() {
+      try {
+        const res = await fetch(`${API_BASE}/config`);
+        const data = await res.json();
+
+        document.getElementById('config-siteName').value = data.siteName || 'Cordfol.io';
+        document.getElementById('config-statusPageTitle').value = data.statusPageTitle || 'System Status';
+        document.getElementById('config-announcement').value = data.announcement || '';
+      } catch (err) {
+        console.error('Config load error:', err);
+      }
+    }
+
+    document.getElementById('config-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const updates = [
+        { key: 'siteName', value: document.getElementById('config-siteName').value },
+        { key: 'statusPageTitle', value: document.getElementById('config-statusPageTitle').value },
+        { key: 'announcement', value: document.getElementById('config-announcement').value }
+      ];
+
+      try {
+        for (const update of updates) {
+          await fetch(`${API_BASE}/config`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(update)
+          });
+        }
+        showAlert('config-alert', 'Configuration saved successfully', 'success');
+      } catch (err) {
+        showAlert('config-alert', 'Failed to save configuration', 'error');
+      }
+    });
+
+    // Status Recording
+    document.getElementById('status-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      try {
+        const res = await fetch(`${API_BASE}/status`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            service: document.getElementById('status-service').value,
+            status: document.getElementById('status-status').value,
+            message: document.getElementById('status-message').value
+          })
+        });
+
+        if (res.ok) {
+          showAlert('status-alert', 'Status recorded successfully', 'success');
+          document.getElementById('status-form').reset();
+        } else {
+          showAlert('status-alert', 'Failed to record status', 'error');
+        }
+      } catch (err) {
+        showAlert('status-alert', 'Error recording status', 'error');
+      }
+    });
+
+    // Announcements
+    document.getElementById('announcement-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      try {
+        const res = await fetch(`${API_BASE}/announcement`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            message: document.getElementById('announcement-message').value,
+            type: document.getElementById('announcement-type').value
+          })
+        });
+
+        if (res.ok) {
+          showAlert('announcement-alert', 'Announcement broadcasted', 'success');
+          document.getElementById('announcement-form').reset();
+        } else {
+          showAlert('announcement-alert', 'Failed to broadcast', 'error');
+        }
+      } catch (err) {
+        showAlert('announcement-alert', 'Error broadcasting announcement', 'error');
+      }
+    });
+
+    // Maintenance Mode
+    async function loadMaintenance() {
+      try {
+        const res = await fetch(`${API_BASE}/config`);
+        const data = await res.json();
+        const isEnabled = data.maintenanceMode === 'true';
+        
+        document.getElementById('maintenance-status').textContent = isEnabled ? 'ENABLED' : 'DISABLED';
+        document.getElementById('maintenance-toggle').textContent = isEnabled ? 'Disable Maintenance Mode' : 'Enable Maintenance Mode';
+        document.getElementById('maintenance-toggle').className = isEnabled ? 'btn btn-secondary' : 'btn btn-danger';
+      } catch (err) {
+        console.error('Maintenance load error:', err);
+      }
+    }
+
+    async function toggleMaintenance() {
+      try {
+        const res = await fetch(`${API_BASE}/config`);
+        const data = await res.json();
+        const currentState = data.maintenanceMode === 'true';
+
+        await fetch(`${API_BASE}/maintenance`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ enabled: !currentState })
+        });
+
+        showAlert('maintenance-alert', `Maintenance mode ${!currentState ? 'enabled' : 'disabled'}`, 'success');
+        loadMaintenance();
+      } catch (err) {
+        showAlert('maintenance-alert', 'Failed to toggle maintenance mode', 'error');
+      }
+    }
+
+    // Logout
+    function logout() {
+      window.location.href = '/';
+    }
+
+    // Initial load
+    loadDashboard();
+  </script>
+</body>
+</html>
