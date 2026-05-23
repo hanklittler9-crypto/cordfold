@@ -575,16 +575,21 @@ app.get('/dashboard', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
 });
 
-// ── Admin Panel ───────────────────────────────────────────────────────────────
+// ── Admin Panel ────────────────────────────────────────────────────────────────
 app.get('/admin', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'admin.html'));
+});
+
+// ── Status Page ────────────────────────────────────────────────────────────────
+app.get('/status', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'status.html'));
 });
 
 app.use('/api/admin', adminRouter);
 
 // ── Public Profile Page ───────────────────────────────────────────────────────
 app.get('/:slug', (req, res) => {
-  const reserved = ['api', 'dashboard', 'login', 'logout', 'static'];
+  const reserved = ['api', 'dashboard', 'login', 'logout', 'static', 'status', 'admin'];
   if (reserved.includes(req.params.slug)) {
     return res.status(404).send('Not found');
   }
