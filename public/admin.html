@@ -905,7 +905,7 @@
       background: var(--discord);
       color: white;
     }
-    .btn-primary:hover {
+    .btn-primary:hover:not(:disabled) {
       background: #4752C4;
       transform: translateY(-1px);
     }
@@ -913,14 +913,15 @@
       background: var(--danger);
       color: white;
     }
-    .btn-danger:hover {
+    .btn-danger:hover:not(:disabled) {
       background: #ff1f47;
+      transform: translateY(-1px);
     }
     .btn-secondary {
       background: rgba(255, 255, 255, 0.08);
       color: var(--text);
     }
-    .btn-secondary:hover {
+    .btn-secondary:hover:not(:disabled) {
       background: rgba(255, 255, 255, 0.12);
     }
     .status-badge {

@@ -102,7 +102,10 @@ body::after{content:'';position:fixed;inset:0;opacity:0.04;pointer-events:none;b
 .field{display:flex;flex-direction:column;gap:5px;margin-bottom:14px;}
 .field-label{font-size:11px;font-weight:500;color:var(--muted2);text-transform:uppercase;letter-spacing:0.5px;}
 .field-input{height:40px;background:rgba(255,255,255,0.035);border:1px solid var(--border);border-radius:12px;padding:0 12px;font-size:13px;color:var(--text);font-family:'DM Sans',sans-serif;transition:border-color 0.15s, background 0.15s;outline:none;}
-.field-input:focus{border-color:rgba(88,101,242,0.5);background:rgba(255,255,255,0.05);}
+.field-input:focus{border-color:var(--discord);background:rgba(88,101,242,0.08);box-shadow:0 0 0 3px rgba(88,101,242,0.1);}
+.field-input:disabled{opacity:0.6;cursor:not-allowed;}
+.field-input.error{border-color:var(--hot);background:rgba(255,51,102,0.06);}
+.field-input.error:focus{box-shadow:0 0 0 3px rgba(255,51,102,0.1);}
 .field-input.monospace{font-family:'Space Mono',monospace;font-size:12px;}
 textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
 .field-prefix-wrap{display:flex;}
@@ -111,13 +114,18 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
 .field-hint{font-size:11px;color:var(--neon);margin-top:2px;}
 .field-hint.err{color:var(--hot);}
 .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
-.btn{height:38px;padding:0 18px;border-radius:12px;cursor:pointer;font-family:'Space Mono',monospace;font-size:11px;letter-spacing:1px;border:none;transition:all 0.15s;display:inline-flex;align-items:center;gap:7px;}
+.btn{height:38px;padding:0 18px;border-radius:12px;cursor:pointer;font-family:'Space Mono',monospace;font-size:11px;letter-spacing:1px;border:none;transition:all 0.15s;display:inline-flex;align-items:center;gap:7px;position:relative;}
+.btn:focus-visible{outline:2px solid var(--discord);outline-offset:2px;}
+.btn:disabled{opacity:0.5;cursor:not-allowed;transform:none !important;}
+.btn.loading{pointer-events:none;opacity:0.8;}
+.btn.loading::after{content:'';width:12px;height:12px;border:2px solid rgba(255,255,255,0.3);border-top-color:currentColor;border-radius:50%;animation:spin 0.6s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
 .btn-primary{background:var(--discord);color:white;}
-.btn-primary:hover{background:var(--discord-dim);transform:translateY(-1px);}
+.btn-primary:hover:not(:disabled){background:var(--discord-dim);transform:translateY(-1px);}
 .btn-ghost{background:transparent;color:var(--muted2);border:1px solid var(--border);}
-.btn-ghost:hover{border-color:rgba(255,255,255,0.2);color:var(--text);}
+.btn-ghost:hover:not(:disabled){border-color:rgba(255,255,255,0.2);color:var(--text);}
 .btn-danger{background:rgba(255,51,102,0.1);color:var(--hot);border:1px solid rgba(255,51,102,0.2);}
-.btn-danger:hover{background:rgba(255,51,102,0.2);}
+.btn-danger:hover:not(:disabled){background:rgba(255,51,102,0.2);}
 .btn-row{display:flex;gap:10px;margin-top:4px;}
 .btn-row.right{justify-content:flex-end;}
 .scan-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
@@ -172,9 +180,12 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
 .lp-music::before{content:'';width:7px;height:7px;border-radius:50%;background:currentColor;box-shadow:0 0 14px rgba(0,255,178,0.55);}
 .social-badge{display:inline-flex;align-items:center;gap:5px;padding:6px 10px;border-radius:999px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);font-size:10px;color:var(--muted2);text-decoration:none;transition:all 0.15s;font-family:'Space Mono',monospace;}
 .social-badge:hover{background:rgba(255,255,255,0.08);border-color:var(--discord);color:var(--discord);}
-.toast{position:fixed;bottom:24px;right:24px;background:rgba(17,19,26,0.96);border:1px solid var(--border);border-radius:16px;padding:12px 18px;font-size:13px;z-index:999;display:flex;align-items:center;gap:10px;transform:translateY(80px);opacity:0;transition:all 0.25s;box-shadow:0 18px 42px rgba(0,0,0,0.42);backdrop-filter:blur(16px);}
+.toast{position:fixed;bottom:24px;right:24px;background:rgba(17,19,26,0.96);border:1px solid var(--border);border-radius:16px;padding:14px 18px;font-size:13px;z-index:999;display:flex;align-items:center;gap:10px;transform:translateY(120px);opacity:0;transition:all 0.3s cubic-bezier(0.34,1.56,0.64,1);box-shadow:0 18px 42px rgba(0,0,0,0.42);backdrop-filter:blur(16px);max-width:360px;}
 .toast.show{transform:translateY(0);opacity:1;}
-.toast-icon{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:1px;color:var(--muted2);}
+.toast.success{border-left:3px solid var(--neon);}
+.toast.error{border-left:3px solid var(--hot);}
+.toast.info{border-left:3px solid var(--discord);}
+.toast-icon{font-family:'Space Mono',monospace;font-size:14px;letter-spacing:1px;flex-shrink:0;}
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:500;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.2s;}
 .modal-overlay.open{opacity:1;pointer-events:all;}
 .modal{background:linear-gradient(180deg,rgba(17,19,26,0.98),rgba(13,15,22,0.94));border:1px solid var(--border);border-radius:18px;padding:28px;width:360px;transform:scale(0.95);transition:transform 0.2s;box-shadow:var(--shadow);}
@@ -203,7 +214,7 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
 .bot-panel-title.green{color:var(--neon);}
 .bot-panel-copy{font-size:12px;color:var(--muted2);line-height:1.7;}
 .hint-text{font-size:13px;color:var(--muted2);margin-bottom:16px;line-height:1.7;}
-.empty-state{padding:14px;border-radius:14px;border:1px dashed rgba(255,255,255,0.12);background:rgba(255,255,255,0.02);color:var(--muted2);font-size:13px;line-height:1.6;}
+.empty-state{padding:32px 24px;border-radius:14px;border:1px dashed rgba(255,255,255,0.12);background:rgba(255,255,255,0.02);color:var(--muted2);font-size:13px;line-height:1.6;text-align:center;}
 @media (max-width: 1100px){
   .profile-layout{grid-template-columns:1fr;}
 }
@@ -262,7 +273,7 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
   </div>
   <div class="btn-row">
     <button class="btn btn-primary" onclick="switchTab('status');">Creator Status</button>
-    <button class="btn btn-ghost" onclick="window.location.href='https://cordfol.org/admin'">Open Admin Portal</button>
+    <button class="btn btn-ghost" onclick="window.location.href='/admin'">Open Admin Portal</button>
   </div>
 </div>
 
@@ -659,7 +670,7 @@ function openSignOutModal() {
 async function triggerScan(btn) {
   const defaultLabel = btn.dataset.defaultLabel || btn.textContent;
   btn.dataset.defaultLabel = defaultLabel;
-  btn.textContent = 'Scanning...';
+  btn.classList.add('loading');
   btn.disabled = true;
   try {
     const sid = window._authSid;
@@ -670,13 +681,12 @@ async function triggerScan(btn) {
       if (res.status === 429 && data.retryAfter) throw new Error(`Please wait ${data.retryAfter}s before scanning again.`);
       throw new Error(data.error || 'Failed to start scan.');
     }
-    btn.textContent = 'Scan started';
-    showToast('SYNC', 'Guild re-scan started.');
+    showToast('SYNC', 'Guild re-scan started.', 'success');
     loadRoles();
   } catch (err) {
-    showToast('ERR', err.message || 'Failed to start scan.');
+    showToast('ERR', err.message || 'Failed to start scan.', 'error');
   } finally {
-    setTimeout(() => { btn.textContent = defaultLabel; btn.disabled = false; }, 2500);
+    setTimeout(() => { btn.textContent = defaultLabel; btn.disabled = false; btn.classList.remove('loading'); }, 2500);
   }
 }
 
@@ -784,13 +794,22 @@ async function copyBotInviteLink() {
 }
 
 let toastTimer;
-function showToast(icon, msg) {
+function showToast(icon, msg, type = 'info') {
   const t = document.getElementById('toast');
-  document.getElementById('toast-icon').textContent = icon;
+  const iconMap = { 'OK': '✓', 'ERR': '✕', 'THEME': '🎨', 'SYNC': '↻', 'LINK': '📋', 'CLAIM': '🎁', 'STATUS': '⭐' };
+  const typeMap = { 'success': 'success', 'error': 'error', 'info': 'info' };
+  
+  document.getElementById('toast-icon').textContent = iconMap[icon] || icon;
   document.getElementById('toast-msg').textContent = msg;
+  
+  t.classList.remove('success', 'error', 'info');
+  if (icon === 'ERR') t.classList.add('error');
+  else if (icon === 'OK' || icon === 'CLAIM' || icon === 'STATUS') t.classList.add('success');
+  else t.classList.add(type);
+  
   t.classList.add('show');
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 4000);
 }
 
 function normalizeUser(rawUser) {
@@ -941,6 +960,10 @@ async function loadProfile(user) {
 }
 
 async function saveProfile() {
+  const savBtn = document.querySelector('[onclick="saveProfile()"]');
+  savBtn.classList.add('loading');
+  savBtn.disabled = true;
+  
   const displayName = document.getElementById('displayName').value;
   const slug = document.getElementById('slug').value;
   const bio = document.getElementById('bioText').value;
@@ -979,10 +1002,13 @@ async function saveProfile() {
       }
       return;
     }
-    showToast('OK', '✓ Profile saved successfully!');
+    showToast('OK', 'Profile saved successfully!', 'success');
     checkSession();
   } catch (err) { 
-    showToast('ERR', 'Failed to save profile!'); 
+    showToast('ERR', 'Failed to save profile!', 'error'); 
+  } finally {
+    savBtn.classList.remove('loading');
+    savBtn.disabled = false;
   }
 }
 
