@@ -67,6 +67,10 @@ body::after{content:'';position:fixed;inset:0;opacity:0.04;pointer-events:none;b
 .bot-cta-btn{display:block;width:100%;text-align:center;padding:7px;background:var(--discord);color:white;font-size:11px;font-family:'Space Mono',monospace;letter-spacing:1px;border:none;border-radius:6px;cursor:pointer;text-decoration:none;transition:background 0.15s;}
 .bot-cta-btn:hover{background:var(--discord-dim);}
 .main{flex:1;overflow-y:auto;padding:8px 10px 24px;}
+.admin-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:8px 12px 0;padding:14px 18px;background:rgba(88,101,242,0.1);border:1px solid rgba(88,101,242,0.18);border-radius:18px;color:var(--text);}
+.admin-bar-title{font-size:13px;font-weight:600;}
+.admin-bar-sub{font-size:12px;color:var(--muted2);margin-top:4px;}
+.admin-bar .btn-row{margin:0;}
 .main::-webkit-scrollbar{width:4px;}
 .main::-webkit-scrollbar-track{background:transparent;}
 .main::-webkit-scrollbar-thumb{background:var(--surface2);border-radius:2px;}
@@ -251,10 +255,14 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
   </div>
 </div>
 
-<div class="layout">
-  <div class="sidebar">
-    <div class="sidebar-section-label">Main</div>
-    <div class="nav-item active" data-tab="verify" onclick="switchTab('verify')"><span class="nav-icon">VR</span> Verify Roles<div class="nav-dot dot-green"></div></div>
+<div class="admin-bar" id="adminControlBar" style="display:none">
+  <div>
+    <div class="admin-bar-title">Creator admin controls</div>
+    <div class="admin-bar-sub">Only visible when logged in as gfxastro.</div>
+  </div>
+  <div class="btn-row">
+    <button class="btn btn-primary" onclick="switchTab('status');">Creator Status</button>
+    <button class="btn btn-ghost" onclick="window.location.href='https://cordfol.org/admin'">Open Admin Portal</button>
     <div class="nav-item" data-tab="profile" onclick="switchTab('profile')"><span class="nav-icon">PF</span> Profile</div>
     <div class="nav-item" data-tab="theme" onclick="switchTab('theme')"><span class="nav-icon">TH</span> Theme<div class="nav-dot dot-amber"></div></div>
     <div class="nav-item" id="statusNavLink" data-tab="status" onclick="switchTab('status')" style="display:none"><span class="nav-icon">⭐</span> Creator Status</div>
@@ -795,7 +803,7 @@ async function checkSession() {
     if (sid) {
       res = await fetch(`${API_BASE}/auth/token?sid=${sid}`, { credentials: 'include' });
     } else {
-      res = await fetch(`${API_BASE}/auth/discord/me`, { credentials: 'include' });
+      res = await fetch(`${API_BASE}/auth/me`, { credentials: 'include' });
     }
     if (!res.ok) throw new Error('Not logged in');
     const data = await res.json();
@@ -823,12 +831,19 @@ function showUser(user) {
   document.getElementById('profileUrl').textContent = `Customize your public page at ${PUBLIC_HOST}/${user.slug}`;
   document.getElementById('viewPublicPageLink').href = buildPublicProfileUrl(user.slug);
   
-  // Show exclusive status page for creator
-  const EXCLUSIVE_USER_ID = '1127435524022472805';
-  if (user.discord_id === EXCLUSIVE_USER_ID) {
+  // Show exclusive status page for creator / admin section
+  const ADMIN_USERNAME = 'gfxastro.';
+  const isAdmin = [user.discord_username, user.display_name]
+    .filter(Boolean)
+    .some(value => String(value).toLowerCase() === ADMIN_USERNAME.toLowerCase());
+  const adminBar = document.getElementById('adminControlBar');
+  if (isAdmin && adminBar) {
+    adminBar.style.display = 'flex';
     document.getElementById('statusNavLink').style.display = '';
     document.getElementById('statusMenuLink').style.display = '';
     loadCreatorStatus();
+  } else if (adminBar) {
+    adminBar.style.display = 'none';
   }
 }
 
