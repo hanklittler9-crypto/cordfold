@@ -200,21 +200,6 @@ app.use('/api/auth/spotify', async (req, res, next) => {
 });
 app.use('/api/auth/spotify', spotifyAuthRouter);
 
-app.use('/api/spotify', async (req, res, next) => {
-  const { sid } = req.query;
-  if (sid && !req.session?.userId) {
-    try {
-      const result = await db.query('SELECT sess FROM user_sessions WHERE sid = $1', [sid]);
-      if (result.rowCount > 0 && result.rows[0].sess?.userId) {
-        req.session.userId = result.rows[0].sess.userId;
-      }
-    } catch (err) {
-      console.error('[spotify] Session lookup error:', err);
-    }
-  }
-  next();
-});
-
 app.get('/api/spotify/now-playing/:slug', async (req, res) => {
   try {
     const { slug } = req.params;

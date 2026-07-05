@@ -170,6 +170,22 @@ function createSpotifyRouter(db) {
     return false;
   }
 
+  /** Auth via cookie session or ?sid= without touching express-session (avoids cookie churn). */
+  async function getAuthedUserId(req) {
+    if (req.session?.userId) return req.session.userId;
+    const sid = req.query.sid;
+    if (!sid) return null;
+    try {
+      const result = await db.query('SELECT sess FROM user_sessions WHERE sid = $1', [sid]);
+      if (result.rowCount > 0 && result.rows[0].sess?.userId) {
+        return result.rows[0].sess.userId;
+      }
+    } catch (err) {
+      console.error('[spotify] sid auth error:', err.message);
+    }
+    return null;
+  }
+
   authRouter.get('/login', (req, res) => {
     if (!SPOTIFY_CLIENT_ID || !SPOTIFY_CLIENT_SECRET) {
       return res.status(503).send('Spotify is not configured on this server.');
@@ -271,7 +287,9 @@ function createSpotifyRouter(db) {
 
       req.session.save((err) => {
         if (err) console.error('[spotify] session save after connect:', err);
-        res.redirect(`${DASHBOARD_URL}?spotify=connected`);
+        const sid = req.sessionID || savedSid || '';
+        const qs = sid ? `?spotify=connected&sid=${encodeURIComponent(sid)}` : '?spotify=connected';
+        res.redirect(`${DASHBOARD_URL}${qs}`);
       });
     } catch (err) {
       console.error('[spotify] Callback error:', err);
@@ -281,7 +299,7 @@ function createSpotifyRouter(db) {
 
   apiRouter.get('/status', async (req, res) => {
     try {
-      const userId = req.session?.userId;
+      const userId = await getAuthedUserId(req);
       if (!userId) return res.status(401).json({ error: 'Not authenticated' });
 
       const user = await getUserTokens(userId);
@@ -313,7 +331,7 @@ function createSpotifyRouter(db) {
 
   apiRouter.post('/disconnect', async (req, res) => {
     try {
-      const userId = req.session?.userId;
+      const userId = await getAuthedUserId(req);
       if (!userId) return res.status(401).json({ error: 'Not authenticated' });
 
       await db.query(`
@@ -335,7 +353,7 @@ function createSpotifyRouter(db) {
 
   apiRouter.post('/settings', async (req, res) => {
     try {
-      const userId = req.session?.userId;
+      const userId = await getAuthedUserId(req);
       if (!userId) return res.status(401).json({ error: 'Not authenticated' });
 
       const { isPublic } = req.body;

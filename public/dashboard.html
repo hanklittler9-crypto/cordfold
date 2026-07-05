@@ -721,10 +721,25 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
 <div class="toast" id="toast"><span class="toast-icon" id="toast-icon">OK</span><span id="toast-msg">Saved!</span></div>
 
 <script>
+const AUTH_SID_KEY='cordfol_auth_sid';
+function persistAuthSid(sid){
+  if(!sid) return;
+  window._authSid=sid;
+  try{ sessionStorage.setItem(AUTH_SID_KEY,sid); }catch{}
+}
+function restoreAuthSid(){
+  if(window._authSid) return window._authSid;
+  try{
+    const stored=sessionStorage.getItem(AUTH_SID_KEY);
+    if(stored){ window._authSid=stored; return stored; }
+  }catch{}
+  return '';
+}
 (function(){
   const params=new URLSearchParams(window.location.search);
   const sid=params.get('sid'),claim=params.get('claim');
-  if(sid) window._authSid=sid;
+  if(sid) persistAuthSid(sid);
+  else restoreAuthSid();
   if(claim) window._claimSlug=claim;
   if(sid||claim) window.history.replaceState({},'','/dashboard.html');
 })();
@@ -965,7 +980,7 @@ function updateEmailState(){
 function sendVerifyEmail(){
   const email=document.getElementById('emailInput').value.trim();
   if(!email||!email.includes('@')){showToast('ERR','Enter a valid email first.','error');return;}
-  const sid=window._authSid;
+  const sid=restoreAuthSid();
   const url=sid?`${API_BASE}/profile/verify-email?sid=${sid}`:`${API_BASE}/profile/verify-email`;
   fetch(url,{
     method:'POST',
@@ -1054,7 +1069,7 @@ function openSignOutModal(){closeMenu();document.getElementById('signOutModal').
 async function triggerScan(btn){
   btn.classList.add('loading');btn.disabled=true;
   try{
-    const sid=window._authSid;
+    const sid=restoreAuthSid();
     const url=sid?`${API_BASE}/verify/scan?sid=${sid}`:`${API_BASE}/verify/scan`;
     const res=await fetch(url,{method:'POST',credentials:'include'});
     const data=await res.json().catch(()=>({}));
@@ -1161,7 +1176,7 @@ function applyPendingClaimSlug(){
 
 async function checkSession(){
   try{
-    const sid=window._authSid;
+    const sid=restoreAuthSid();
     const res=sid?await fetch(`${API_BASE}/auth/token?sid=${sid}`,{credentials:'include'}):await fetch(`${API_BASE}/auth/me`,{credentials:'include'});
     if(!res.ok)throw new Error('Not logged in');
     const data=await res.json();
@@ -1196,7 +1211,7 @@ async function loadRoles(){
   const roleList=document.getElementById('roleList');const roleCount=document.getElementById('roleCount');const scanStatus=document.getElementById('scanStatus');
   roleList.innerHTML='<div class="empty-state">Loading...</div>';
   try{
-    const sid=window._authSid;
+    const sid=restoreAuthSid();
     const url=sid?`${API_BASE}/verify/roles?sid=${sid}`:`${API_BASE}/verify/roles`;
     const res=await fetch(url,{credentials:'include'});
     if(!res.ok)throw new Error('No roles');
@@ -1219,7 +1234,7 @@ async function loadRoles(){
 
 async function toggleRoleVisibility(roleId,isPublic,toggleEl){
   try{
-    const sid=window._authSid;
+    const sid=restoreAuthSid();
     const url=sid?`${API_BASE}/verify/roles/${roleId}?sid=${sid}`:`${API_BASE}/verify/roles/${roleId}`;
     const res=await fetch(url,{method:'PATCH',headers:{'Content-Type':'application/json'},credentials:'include',body:JSON.stringify({isPublic})});
     if(!res.ok)throw new Error('Failed to update role visibility.');
@@ -1333,7 +1348,7 @@ async function saveProfile(){
     }
   };
   try{
-    const sid=window._authSid;const url=sid?`${API_BASE}/profile?sid=${sid}`:`${API_BASE}/profile`;
+    const sid=restoreAuthSid();const url=sid?`${API_BASE}/profile?sid=${encodeURIComponent(sid)}`:`${API_BASE}/profile`;
     const res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},credentials:'include',body:JSON.stringify(body)});
     if(!res.ok){if(res.status===409){showToast('ERR','❌ This handle is already taken!');}else{const err=await res.json().catch(()=>({error:'Failed to save'}));showToast('ERR',err.error||'Failed to save profile!');}return;}
     showToast('OK','Profile saved!','success');checkSession();
@@ -1352,13 +1367,13 @@ function handleMusicUpload(event){
 }
 
 function spotifyApiUrl(path){
-  const sid=window._authSid;
-  return sid?`${API_BASE}/spotify/${path}?sid=${sid}`:`${API_BASE}/spotify/${path}`;
+  const sid=restoreAuthSid();
+  return sid?`${API_BASE}/spotify/${path}?sid=${encodeURIComponent(sid)}`:`${API_BASE}/spotify/${path}`;
 }
 
 function connectSpotify(){
-  const sid=window._authSid;
-  window.location.href=sid?`${API_BASE}/auth/spotify/login?sid=${sid}`:`${API_BASE}/auth/spotify/login`;
+  const sid=restoreAuthSid();
+  window.location.href=sid?`${API_BASE}/auth/spotify/login?sid=${encodeURIComponent(sid)}`:`${API_BASE}/auth/spotify/login`;
 }
 
 function renderSpotifyStatus(data){
@@ -1426,6 +1441,8 @@ async function toggleSpotifyPublic(){
 }
 
 function logout(){
+  try{ sessionStorage.removeItem(AUTH_SID_KEY); }catch{}
+  window._authSid='';
   fetch(`${API_BASE}/auth/discord/logout`,{method:'POST',credentials:'include'}).then(()=>{document.getElementById('signOutModal').classList.remove('open');window.location.href='/';});
 }
 
@@ -1472,13 +1489,15 @@ window.onload=()=>{
   else if(emailStatus==='invalid') showToast('ERR','Invalid verification link.','error');
   else if(emailStatus==='error') showToast('ERR','Email verification failed.','error');
   const spotifyStatus=params.get('spotify');
+  const spotifySid=params.get('sid');
+  if(spotifySid) persistAuthSid(spotifySid);
   if(spotifyStatus==='connected'){showToast('OK','Spotify connected!','success');switchTab('spotify');}
   else if(spotifyStatus==='denied') showToast('ERR','Spotify connection cancelled.','error');
   else if(spotifyStatus==='failed') showToast('ERR','Spotify connection failed.','error');
   else if(spotifyStatus==='login_required') showToast('ERR','Log in with Discord before connecting Spotify.','error');
   else if(spotifyStatus==='csrf') showToast('ERR','Spotify session expired — try connecting again.','error');
   else if(spotifyStatus==='no_code') showToast('ERR','Spotify did not return a code. Try again.','error');
-  if(emailStatus||spotifyStatus) window.history.replaceState({},'','/dashboard.html');
+  if(emailStatus||spotifyStatus||spotifySid) window.history.replaceState({},'','/dashboard.html');
 };
 </script>
 </body>
