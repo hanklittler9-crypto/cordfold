@@ -314,6 +314,7 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
     <div class="sidebar-section-label">Main</div>
     <div class="nav-item active" data-tab="verify" onclick="switchTab('verify')"><span class="nav-icon">VR</span> Verify Roles<div class="nav-dot dot-green"></div></div>
     <div class="nav-item" data-tab="profile" onclick="switchTab('profile')"><span class="nav-icon">PF</span> Profile</div>
+    <div class="nav-item" data-tab="spotify" onclick="switchTab('spotify')"><span class="nav-icon">SP</span> Spotify<div class="nav-dot dot-green" id="spotifyNavDot" style="display:none"></div></div>
     <div class="nav-item" data-tab="theme" onclick="switchTab('theme')"><span class="nav-icon">TH</span> Theme<div class="nav-dot dot-amber"></div></div>
     <div class="nav-item" id="statusNavLink" data-tab="status" onclick="switchTab('status')" style="display:none"><span class="nav-icon">⭐</span> Creator Status</div>
     <div class="nav-item" data-tab="analytics" onclick="switchTab('analytics')"><span class="nav-icon">AN</span> Analytics</div>
@@ -515,32 +516,6 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
             </div>
           </div>
 
-          <!-- SPOTIFY -->
-          <div class="card">
-            <div class="card-title">Spotify<span class="card-subtitle" id="spotifyStatusLabel">Not connected</span></div>
-            <div class="hint-text" style="margin-bottom:14px">Connect Spotify to show what you're listening to on your public profile. Visitors see your live track — you must log in with Spotify first.</div>
-            <div id="spotifyDisconnected">
-              <button class="btn btn-primary" type="button" onclick="connectSpotify()">Connect with Spotify</button>
-            </div>
-            <div id="spotifyConnected" style="display:none">
-              <div class="fx-card active" style="margin-bottom:14px;cursor:default" id="spotifyNowPlayingCard">
-                <div>
-                  <div class="fx-label" id="spotifyTrackName">Nothing playing</div>
-                  <div class="fx-sub" id="spotifyTrackArtist">Connect to see live playback</div>
-                </div>
-                <div style="width:44px;height:44px;border-radius:8px;overflow:hidden;background:rgba(255,255,255,0.06);flex-shrink:0" id="spotifyAlbumArt"></div>
-              </div>
-              <div class="fx-card" style="margin-bottom:14px;cursor:default">
-                <div><div class="fx-label">Show on public profile</div><div class="fx-sub">Display now playing on cordfol.org/yourname</div></div>
-                <div class="toggle on" id="spotifyPublicToggle" onclick="toggleSpotifyPublic()"></div>
-              </div>
-              <div class="btn-row">
-                <button class="btn btn-ghost" type="button" onclick="refreshSpotifyStatus()">Refresh</button>
-                <button class="btn btn-danger" type="button" onclick="disconnectSpotify()">Disconnect</button>
-              </div>
-            </div>
-          </div>
-
           <div class="btn-row right">
             <button class="btn btn-ghost" onclick="loadProfile()">Discard</button>
             <button class="btn btn-primary" onclick="saveProfile()">Save Changes</button>
@@ -573,6 +548,55 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
               <div class="helper-item"><span>Trust layer</span><strong>OAuth + Bot</strong></div>
               <div class="helper-item"><span>Email</span><strong id="previewEmailState">Not set</strong></div>
             </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SPOTIFY TAB -->
+    <div class="tab" id="tab-spotify">
+      <div class="page-title">Spotify Integration</div>
+      <div class="page-sub">Connect your Spotify account to show what you're listening to on your public Cordfol profile. You log in with Spotify once — visitors only see your live track.</div>
+      <div class="profile-layout">
+        <div>
+          <div class="card">
+            <div class="card-title">Connect Spotify<span class="card-subtitle" id="spotifyStatusLabel">Not connected</span></div>
+            <div class="hint-text" style="margin-bottom:14px">After connecting, play something in Spotify (desktop, mobile, or web). Your profile will show the track, artist, and album art in real time.</div>
+            <div id="spotifyDisconnected">
+              <button class="btn btn-primary" type="button" onclick="connectSpotify()" style="background:#1DB954;border-color:#1DB954">Connect with Spotify</button>
+            </div>
+            <div id="spotifyConnected" style="display:none">
+              <div class="fx-card active" style="margin-bottom:14px;cursor:default" id="spotifyNowPlayingCard">
+                <div>
+                  <div class="fx-label" id="spotifyTrackName">Nothing playing</div>
+                  <div class="fx-sub" id="spotifyTrackArtist">Open Spotify and play a song</div>
+                </div>
+                <div style="width:44px;height:44px;border-radius:8px;overflow:hidden;background:rgba(255,255,255,0.06);flex-shrink:0" id="spotifyAlbumArt"></div>
+              </div>
+              <div class="fx-card" style="margin-bottom:14px;cursor:default">
+                <div><div class="fx-label">Show on public profile</div><div class="fx-sub">Display now playing on cordfol.org/yourname</div></div>
+                <div class="toggle on" id="spotifyPublicToggle" onclick="toggleSpotifyPublic()"></div>
+              </div>
+              <div class="btn-row">
+                <button class="btn btn-ghost" type="button" onclick="refreshSpotifyStatus()">Refresh</button>
+                <button class="btn btn-danger" type="button" onclick="disconnectSpotify()">Disconnect</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="helper-stack">
+          <div class="card helper-card">
+            <div class="preview-title">HOW IT WORKS</div>
+            <div class="helper-list">
+              <div class="helper-item"><span>Step 1</span><strong>Connect Spotify</strong></div>
+              <div class="helper-item"><span>Step 2</span><strong>Play a song</strong></div>
+              <div class="helper-item"><span>Step 3</span><strong>Visitors see it live</strong></div>
+            </div>
+          </div>
+          <div class="card helper-card">
+            <div class="preview-title">PROFILE PREVIEW</div>
+            <div class="helper-copy" style="margin-top:10px">When connected, your public page shows a green Spotify widget with album art, track name, and artist — updates every 30 seconds.</div>
+            <div class="lp-music" id="previewSpotifyTab" style="display:none;margin-top:14px">Listening on Spotify</div>
           </div>
         </div>
       </div>
@@ -1007,6 +1031,7 @@ function switchTab(tab){
   const navEl=document.querySelector('[data-tab="'+tab+'"]');
   if(navEl) navEl.classList.add('active');
   if(tab==='analytics') initChart();
+  if(tab==='spotify') refreshSpotifyStatus();
 }
 
 function toggleUserMenu(){
@@ -1341,20 +1366,20 @@ function renderSpotifyStatus(data){
   document.getElementById('spotifyDisconnected').style.display=connected?'none':'block';
   document.getElementById('spotifyConnected').style.display=connected?'block':'none';
   document.getElementById('spotifyStatusLabel').textContent=connected?'Connected':'Not connected';
+  const navDot=document.getElementById('spotifyNavDot');
+  if(navDot) navDot.style.display=connected?'block':'none';
   const toggle=document.getElementById('spotifyPublicToggle');
   if(toggle) toggle.classList.toggle('on',!!data?.public);
   const preview=document.getElementById('previewSpotify');
-  if(preview){
-    if(connected&&data.public&&data.nowPlaying?.playing&&data.nowPlaying.track){
-      preview.style.display='inline-flex';
-      preview.textContent=`${data.nowPlaying.track.name} · ${data.nowPlaying.track.artist}`;
-    } else if(connected&&data.public){
-      preview.style.display='inline-flex';
-      preview.textContent='Spotify connected';
-    } else {
-      preview.style.display='none';
-    }
-  }
+  const previewTab=document.getElementById('previewSpotifyTab');
+  const previewText=connected&&data.public&&data.nowPlaying?.playing&&data.nowPlaying.track
+    ? `${data.nowPlaying.track.name} · ${data.nowPlaying.track.artist}`
+    : (connected&&data.public ? 'Spotify connected' : null);
+  [preview,previewTab].forEach(el=>{
+    if(!el) return;
+    if(previewText){el.style.display='inline-flex';el.textContent=previewText;}
+    else el.style.display='none';
+  });
   if(!connected) return;
   const track=data.nowPlaying?.track;
   document.getElementById('spotifyTrackName').textContent=track?.name||(data.nowPlaying?.playing===false?'Nothing playing right now':'Waiting for playback...');
@@ -1442,7 +1467,7 @@ window.onload=()=>{
   else if(emailStatus==='invalid') showToast('ERR','Invalid verification link.','error');
   else if(emailStatus==='error') showToast('ERR','Email verification failed.','error');
   const spotifyStatus=params.get('spotify');
-  if(spotifyStatus==='connected') showToast('OK','Spotify connected!','success');
+  if(spotifyStatus==='connected'){showToast('OK','Spotify connected!','success');switchTab('spotify');}
   else if(spotifyStatus==='denied') showToast('ERR','Spotify connection cancelled.','error');
   else if(spotifyStatus==='failed') showToast('ERR','Spotify connection failed.','error');
   else if(spotifyStatus==='login_required') showToast('ERR','Log in with Discord before connecting Spotify.','error');
