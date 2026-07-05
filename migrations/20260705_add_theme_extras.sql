@@ -1,0 +1,8 @@
+-- Extended theme settings from dashboard profile builder
+ALTER TABLE themes ADD COLUMN IF NOT EXISTS bg_type VARCHAR(20) DEFAULT 'solid';
+ALTER TABLE themes ADD COLUMN IF NOT EXISTS bg_value TEXT;
+ALTER TABLE themes ADD COLUMN IF NOT EXISTS layout VARCHAR(20) DEFAULT 'centered';
+ALTER TABLE themes ADD COLUMN IF NOT EXISTS font_family VARCHAR(80) DEFAULT 'DM Sans';
+ALTER TABLE themes ADD COLUMN IF NOT EXISTS card_opacity DOUBLE PRECISION DEFAULT 0.92;
+ALTER TABLE themes ADD COLUMN IF NOT EXISTS particles_enabled BOOLEAN DEFAULT false;
+ALTER TABLE themes ADD COLUMN IF NOT EXISTS bg_blur_enabled BOOLEAN DEFAULT false;

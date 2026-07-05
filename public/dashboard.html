@@ -1167,6 +1167,7 @@ async function loadProfile(user){
   try{
     const res=await fetch(`${API_BASE}/profile/${user.slug}`);if(!res.ok)throw new Error('No profile');
     const data=await res.json();
+    const th=data.theme||{};
     document.getElementById('displayName').value=data.profile.displayName||'';
     document.getElementById('slug').value=data.profile.slug||'';
     document.getElementById('bioText').value=data.profile.bio||'';
@@ -1177,12 +1178,68 @@ async function loadProfile(user){
     document.getElementById('tiktokInput').value=data.profile.socialLinks?.tiktok||'';
     document.getElementById('instagramInput').value=data.profile.socialLinks?.instagram||'';
     document.getElementById('emailInput').value=data.profile.email||'';
-    document.getElementById('accentColorInput').value=data.theme?.accentColor||'#5865F2';
-    document.getElementById('textColorInput').value=data.theme?.textColor||'#ffffff';
-    document.getElementById('cardColorInput').value=data.theme?.cardColor||'#111111';
-    document.getElementById('musicUrlInput').value=data.theme?.musicUrl||'';
+    document.getElementById('accentColorInput').value=th.accentColor||'#5865F2';
+    document.getElementById('textColorInput').value=th.textColor||'#ffffff';
+    document.getElementById('cardColorInput').value=th.cardColor||'#111111';
+    document.getElementById('cardOpacityInput').value=th.cardOpacity!=null?Math.round(Number(th.cardOpacity)* (Number(th.cardOpacity)<=1?100:1)):92;
+    document.getElementById('musicUrlInput').value=th.musicUrl||'';
+    if(document.getElementById('musicAutoplayInput')) document.getElementById('musicAutoplayInput').checked=!!th.musicAutoplay;
+
+    if(data.profile.bannerUrl){
+      currentBannerData={type:isVideoUrl(data.profile.bannerUrl)?'video':'image',value:data.profile.bannerUrl};
+      updateBannerPreviewBox(data.profile.bannerUrl);
+    } else {
+      currentBannerData={type:'gradient',value:''};
+      updateBannerPreviewBox('');
+    }
+
+    const bgType=th.bgType||'solid';
+    currentBgType=bgType;
+    currentBgData={type:bgType,value:th.bgValue||''};
+    document.querySelectorAll('.bg-type-btn').forEach((btn,i)=>{
+      const types=['gradient','solid','gif','video'];
+      btn.classList.toggle('active',types[i]===bgType);
+    });
+    document.querySelectorAll('.bg-panel').forEach(p=>p.classList.remove('active'));
+    const bgPanel=document.getElementById('bg-panel-'+bgType);
+    if(bgPanel) bgPanel.classList.add('active');
+    if(bgType==='solid'&&th.bgValue) document.getElementById('backgroundColorInput').value=th.bgValue;
+    if(bgType==='gif'&&th.bgValue) document.getElementById('gifUrlInput').value=th.bgValue;
+    if(bgType==='video'&&th.bgValue) document.getElementById('videoUrlInput').value=th.bgValue;
+
+    currentLayout=th.layout||'centered';
+    document.querySelectorAll('.layout-btn').forEach(btn=>{
+      btn.classList.toggle('selected',btn.querySelector('.layout-name')?.textContent.toLowerCase().includes(currentLayout==='left'?'left':currentLayout));
+    });
+    currentFont=th.font||'DM Sans';
+    document.querySelectorAll('.font-btn').forEach(btn=>{
+      btn.classList.toggle('selected',btn.textContent.includes(currentFont==='Space Mono'?'MONO':currentFont==='Bebas Neue'?'BEBAS':'DM Sans'));
+    });
+
+    activeFx={
+      music:!!th.musicUrl,
+      anim:!!th.animatedBg,
+      particles:!!th.particles,
+      glassmorphism:!!(th.glassmorphism||th.glassEnabled),
+      blur:!!th.bgBlur,
+      cursor:false
+    };
+    Object.keys(activeFx).forEach(key=>{
+      const card=document.getElementById('fx-'+key);
+      const toggle=document.getElementById('fx-toggle-'+key);
+      if(card&&toggle){
+        card.classList.toggle('active',activeFx[key]);
+        toggle.classList.toggle('on',activeFx[key]);
+      }
+    });
+    document.getElementById('music-section').style.display=activeFx.music?'block':'none';
+
     updateEmailState();updatePreview();
   }catch{/* leave blank */}
+}
+
+function isVideoUrl(url){
+  return /\.(mp4|webm|ogg)(\?|$)/i.test(url)||String(url||'').startsWith('data:video');
 }
 
 async function saveProfile(){
@@ -1202,7 +1259,8 @@ async function saveProfile(){
       cardColor:document.getElementById('cardColorInput').value,cardOpacity:document.getElementById('cardOpacityInput').value,
       musicUrl:document.getElementById('musicUrlInput').value,musicAutoplay:document.getElementById('musicAutoplayInput')?.checked||false,
       animatedBg:activeFx.anim,glassmorphism:activeFx.glassmorphism,particles:activeFx.particles,
-      bgType:currentBgType,bgValue:currentBgData.value,layout:currentLayout,font:currentFont,
+      bgBlur:activeFx.blur,
+      bgType:currentBgType,bgValue:currentBgData.value||document.getElementById('backgroundColorInput')?.value||'',layout:currentLayout,font:currentFont,
     }
   };
   try{

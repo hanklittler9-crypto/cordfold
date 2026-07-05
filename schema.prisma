@@ -157,6 +157,15 @@ model Theme {
   musicUrl        String?  @map("music_url")
   musicAutoplay   Boolean  @default(false) @map("music_autoplay")
 
+  // Profile builder extras
+  bgType          String   @default("solid") @map("bg_type")
+  bgValue         String?  @map("bg_value")
+  layout          String   @default("centered")
+  fontFamily      String   @default("DM Sans") @map("font_family")
+  cardOpacity     Float    @default(0.92) @map("card_opacity")
+  particlesEnabled Boolean @default(false) @map("particles_enabled")
+  bgBlurEnabled   Boolean  @default(false) @map("bg_blur_enabled")
+
   users           User[]
   createdAt       DateTime @default(now()) @map("created_at")
 

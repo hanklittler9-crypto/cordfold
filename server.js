@@ -195,7 +195,9 @@ app.get('/api/profile/:slug', async (req, res) => {
         u.avatar_hash, u.avatar_url, u.banner_url, u.social_links, u.plan,
         t.background_color, t.accent_color, t.text_color, t.card_color,
         t.glass_enabled, t.glass_blur, t.glass_opacity, t.animated_bg,
-        t.music_url, t.music_autoplay, t.custom_css
+        t.music_url, t.music_autoplay, t.custom_css,
+        t.bg_type, t.bg_value, t.layout, t.font_family,
+        t.card_opacity, t.particles_enabled, t.bg_blur_enabled
       FROM users u
       LEFT JOIN themes t ON t.id = u.theme_id
       WHERE u.slug = $1
@@ -251,13 +253,21 @@ app.get('/api/profile/:slug', async (req, res) => {
         accentColor:     user.accent_color     || '#5865F2',
         textColor:       user.text_color       || '#ffffff',
         cardColor:       user.card_color       || '#111111',
+        cardOpacity:     user.card_opacity     != null ? user.card_opacity : 0.92,
         glassEnabled:    user.glass_enabled    || false,
+        glassmorphism:   user.glass_enabled    || false,
         glassBlur:       user.glass_blur       || 12,
         glassOpacity:    user.glass_opacity    || 0.15,
         animatedBg:      user.animated_bg      || false,
         musicUrl:        user.music_url        || null,
         musicAutoplay:   user.music_autoplay   || false,
         customCss:       user.custom_css       || null,
+        bgType:          user.bg_type          || 'solid',
+        bgValue:         user.bg_value         || null,
+        layout:          user.layout           || 'centered',
+        font:            user.font_family      || 'DM Sans',
+        particles:       user.particles_enabled || false,
+        bgBlur:          user.bg_blur_enabled  || false,
       },
       roles: rolesResult.rows.map(r => ({
         guildId:       r.guild_id,
@@ -325,18 +335,31 @@ app.post('/api/profile', async (req, res) => {
       WHERE u.id = $1
     `, [userId]);
 
+    const bgType = theme.bgType || 'solid';
+    const bgValue = theme.bgValue || null;
+    const backgroundColor = bgType === 'solid' && bgValue
+      ? bgValue
+      : (bgType === 'gradient' && bgValue ? bgValue : (theme.backgroundColor || '#0d0d0d'));
+
     const themeFields = [
-      theme.backgroundColor || '#0d0d0d',
+      backgroundColor,
       theme.accentColor || '#5865F2',
       theme.textColor || '#ffffff',
       theme.cardColor || '#111111',
-      theme.glassEnabled ? true : false,
+      theme.glassmorphism || theme.glassEnabled ? true : false,
       Number(theme.glassBlur || 12),
       Number(theme.glassOpacity || 0.15),
       theme.animatedBg ? true : false,
       theme.musicUrl || null,
       theme.musicAutoplay ? true : false,
       theme.customCss || null,
+      bgType,
+      bgValue,
+      theme.layout || 'centered',
+      theme.font || 'DM Sans',
+      theme.cardOpacity != null ? Number(theme.cardOpacity) / (Number(theme.cardOpacity) > 1 ? 100 : 1) : 0.92,
+      theme.particles ? true : false,
+      theme.bgBlur ? true : false,
     ];
 
     if (themeRow.rowCount > 0 && !themeRow.rows[0].is_preset) {
@@ -352,8 +375,15 @@ app.post('/api/profile', async (req, res) => {
           animated_bg      = $8,
           music_url        = $9,
           music_autoplay   = $10,
-          custom_css       = $11
-        WHERE id = $12
+          custom_css       = $11,
+          bg_type          = $12,
+          bg_value         = $13,
+          layout           = $14,
+          font_family      = $15,
+          card_opacity     = $16,
+          particles_enabled = $17,
+          bg_blur_enabled  = $18
+        WHERE id = $19
       `, [...themeFields, themeRow.rows[0].id]);
     } else {
       const insertTheme = await db.query(`
@@ -361,12 +391,16 @@ app.post('/api/profile', async (req, res) => {
           id, name, is_default, is_preset, is_pro,
           background_color, accent_color, text_color, card_color,
           glass_enabled, glass_blur, glass_opacity, animated_bg,
-          music_url, music_autoplay, custom_css
+          music_url, music_autoplay, custom_css,
+          bg_type, bg_value, layout, font_family, card_opacity,
+          particles_enabled, bg_blur_enabled
         ) VALUES (
           gen_random_uuid(), $1, false, false, false,
           $2, $3, $4, $5,
           $6, $7, $8, $9,
-          $10, $11, $12
+          $10, $11, $12,
+          $13, $14, $15, $16, $17,
+          $18, $19
         ) RETURNING id
       `, [
         `Custom theme for user ${userId}`,

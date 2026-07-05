@@ -113,6 +113,64 @@
       }
     }
 
+    /* ── Layout variants ── */
+    .page.layout-centered { align-items: center; }
+    .page.layout-left { align-items: flex-start; padding-left: clamp(16px, 6vw, 72px); }
+    .page.layout-card { align-items: center; }
+    .page.layout-card .card {
+      max-width: 680px;
+      box-shadow: 0 40px 100px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.05);
+    }
+
+    /* ── Background media ── */
+    .bg-media {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      overflow: hidden;
+    }
+    .bg-media img,
+    .bg-media video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .bg-blur-layer {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      pointer-events: none;
+    }
+
+    /* ── Particles ── */
+    .particles {
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+      pointer-events: none;
+      overflow: hidden;
+    }
+    .particle {
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.35);
+      animation: particleFloat linear infinite;
+    }
+    @keyframes particleFloat {
+      0% { transform: translateY(110vh) scale(0); opacity: 0; }
+      10% { opacity: 1; }
+      90% { opacity: 0.6; }
+      100% { transform: translateY(-10vh) scale(1); opacity: 0; }
+    }
+
+    /* ── Card glass ── */
+    .card.glass {
+      background: rgba(var(--card-rgb, 17,17,17), var(--card-alpha, 0.92));
+    }
+
     /* ── Banner ── */
     .banner {
       width: 100%;
@@ -120,11 +178,14 @@
       background: linear-gradient(135deg, var(--accent), var(--accent2) 48%, var(--neon) 100%);
       position: relative;
       flex-shrink: 0;
+      overflow: hidden;
     }
-    .banner img {
+    .banner img,
+    .banner video {
       width: 100%;
       height: 100%;
       object-fit: cover;
+      display: block;
     }
 
     /* ── Avatar ── */
@@ -866,9 +927,12 @@
 <body>
 
 <div class="bg-animated" id="bgEl"></div>
+<div class="bg-media" id="bgMedia"></div>
+<div class="bg-blur-layer" id="bgBlurLayer" style="display:none"></div>
+<div class="particles" id="particlesEl" style="display:none"></div>
 <div class="noise"></div>
 
-<div class="page">
+<div class="page layout-centered">
   <div class="card" id="card">
     <div class="skeleton-banner"></div>
     <div class="skeleton-avatar-wrap">
@@ -939,6 +1003,155 @@ const CLAIM_COOKIE_NAME = 'cordfol_claim_slug';
 
 let audio = null;
 let isPlaying = false;
+
+function escapeHtml(str) {
+  return String(str || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function hexToRgb(hex) {
+  const clean = String(hex || '#111111').replace('#', '');
+  if (clean.length !== 6) return '17,17,17';
+  return [
+    parseInt(clean.slice(0, 2), 16),
+    parseInt(clean.slice(2, 4), 16),
+    parseInt(clean.slice(4, 6), 16),
+  ].join(',');
+}
+
+function isVideoUrl(url) {
+  return /\.(mp4|webm|ogg)(\?|$)/i.test(url) || String(url || '').startsWith('data:video');
+}
+
+function isGradientValue(value) {
+  return String(value || '').includes('gradient(');
+}
+
+function buildSocialUrl(platform, value) {
+  if (!value || !String(value).trim()) return null;
+  const v = String(value).trim();
+  if (/^https?:\/\//i.test(v)) return v;
+  const handle = v.replace(/^@/, '');
+  const map = {
+    twitter: `https://x.com/${handle}`,
+    github: `https://github.com/${handle}`,
+    youtube: `https://youtube.com/@${handle}`,
+    tiktok: `https://tiktok.com/@${handle}`,
+    instagram: `https://instagram.com/${handle}`,
+  };
+  if (map[platform]) return map[platform];
+  if (platform === 'website') return v.includes('.') ? (v.startsWith('http') ? v : `https://${v}`) : null;
+  return null;
+}
+
+function applyFont(fontName) {
+  const fontMap = {
+    'DM Sans': "'DM Sans', sans-serif",
+    'Space Mono': "'Space Mono', monospace",
+    'Bebas Neue': "'Bebas Neue', sans-serif",
+  };
+  document.body.style.fontFamily = fontMap[fontName] || fontMap['DM Sans'];
+}
+
+function applyLayout(layout) {
+  const page = document.querySelector('.page');
+  page.classList.remove('layout-centered', 'layout-left', 'layout-card');
+  page.classList.add(`layout-${layout || 'centered'}`);
+}
+
+function applyBackground(theme) {
+  const bgEl = document.getElementById('bgEl');
+  const bgMedia = document.getElementById('bgMedia');
+  const bgBlur = document.getElementById('bgBlurLayer');
+  bgMedia.innerHTML = '';
+
+  const bgType = theme.bgType || 'solid';
+  const bgValue = theme.bgValue || theme.backgroundColor || '#0d0d0d';
+  const accent = theme.accentColor || '#5865F2';
+
+  if (theme.animatedBg) {
+    bgEl.style.background = `radial-gradient(circle at top left, ${accent} 0%, transparent 60%), radial-gradient(circle at bottom right, ${theme.textColor || '#00FFB2'} 0%, transparent 55%)`;
+  } else if (bgType === 'gif' || bgType === 'video') {
+    bgEl.style.background = '#09090d';
+    const media = document.createElement(bgType === 'video' || isVideoUrl(bgValue) ? 'video' : 'img');
+    media.src = bgValue;
+    if (media.tagName === 'VIDEO') {
+      media.autoplay = true;
+      media.muted = true;
+      media.loop = true;
+      media.playsInline = true;
+    }
+    bgMedia.appendChild(media);
+  } else if (bgType === 'gradient' || isGradientValue(bgValue) || isGradientValue(theme.backgroundColor)) {
+    bgEl.style.background = bgValue || theme.backgroundColor;
+  } else {
+    bgEl.style.background = bgValue || theme.backgroundColor || '#0d0d0d';
+  }
+
+  bgBlur.style.display = theme.bgBlur ? 'block' : 'none';
+}
+
+function applyCardTheme(theme) {
+  const card = document.getElementById('card');
+  const cardColor = theme.cardColor || '#111111';
+  const cardOpacity = theme.cardOpacity != null
+    ? (Number(theme.cardOpacity) > 1 ? Number(theme.cardOpacity) / 100 : Number(theme.cardOpacity))
+    : 0.92;
+  const glassOn = theme.glassmorphism || theme.glassEnabled;
+
+  document.documentElement.style.setProperty('--card-rgb', hexToRgb(cardColor));
+  document.documentElement.style.setProperty('--card-alpha', String(cardOpacity));
+
+  if (glassOn) {
+    card.classList.add('glass');
+    card.style.backdropFilter = `blur(${theme.glassBlur || 18}px)`;
+    card.style.webkitBackdropFilter = `blur(${theme.glassBlur || 18}px)`;
+  } else {
+    card.classList.remove('glass');
+    const rgb = hexToRgb(cardColor);
+    card.style.background = `linear-gradient(180deg, rgba(${rgb},${cardOpacity}), rgba(${rgb},${Math.max(cardOpacity - 0.08, 0.5)}))`;
+    card.style.backdropFilter = '';
+  }
+}
+
+function initParticles(enabled, accent) {
+  const el = document.getElementById('particlesEl');
+  el.innerHTML = '';
+  if (!enabled) {
+    el.style.display = 'none';
+    return;
+  }
+  el.style.display = 'block';
+  for (let i = 0; i < 28; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    const size = 2 + Math.random() * 4;
+    p.style.width = `${size}px`;
+    p.style.height = `${size}px`;
+    p.style.left = `${Math.random() * 100}%`;
+    p.style.background = accent || 'rgba(255,255,255,0.35)';
+    p.style.animationDuration = `${8 + Math.random() * 14}s`;
+    p.style.animationDelay = `${Math.random() * 10}s`;
+    el.appendChild(p);
+  }
+}
+
+function buildBannerHtml(bannerUrl, accentColor) {
+  const accent = accentColor || '#5865F2';
+  if (!bannerUrl) {
+    return `<div class="banner" style="background:linear-gradient(135deg, ${accent} 0%, #7C3AED 100%)"></div>`;
+  }
+  if (isGradientValue(bannerUrl)) {
+    return `<div class="banner" style="background:${bannerUrl}"></div>`;
+  }
+  if (isVideoUrl(bannerUrl)) {
+    return `<div class="banner"><video autoplay muted loop playsinline src="${escapeHtml(bannerUrl)}"></video></div>`;
+  }
+  return `<div class="banner"><img src="${escapeHtml(bannerUrl)}" alt="banner"/></div>`;
+}
 
 function sanitizeSlug(value) {
   return String(value || '')
@@ -1074,11 +1287,13 @@ async function renderProfile() {
   root.style.setProperty('--accent', t.accentColor || '#5865F2');
   root.style.setProperty('--text', t.textColor || '#f0f0f0');
   root.style.setProperty('--muted', t.textColor ? 'rgba(255,255,255,0.65)' : '#888');
-  if (t.animatedBg) {
-    document.getElementById('bgEl').style.background = `radial-gradient(circle at top left, ${t.accentColor || '#5865F2'} 0%, transparent 60%), radial-gradient(circle at bottom right, ${t.textColor || '#00FFB2'} 0%, transparent 55%)`;
-  } else {
-    document.getElementById('bgEl').style.background = t.backgroundColor || '#0d0d0d';
-  }
+  root.style.setProperty('--accent-rgb', hexToRgb(t.accentColor || '#5865F2'));
+
+  applyFont(t.font || 'DM Sans');
+  applyLayout(t.layout || 'centered');
+  applyBackground(t);
+  applyCardTheme(t);
+  initParticles(t.particles, t.accentColor);
   document.title = `${p.displayName} — Cordfol`;
 
   // Custom CSS
@@ -1146,21 +1361,25 @@ async function renderProfile() {
             ${!r.guildIconHash ? '🏰' : ''}
           </div>
           <div class="role-info">
-            <div class="role-name">${r.roleName || r.roleId}</div>
-            <div class="role-server">${r.guildName || 'Unknown Server'}</div>
+            <div class="role-name">${escapeHtml(r.roleName || r.roleId)}</div>
+            <div class="role-server">${escapeHtml(r.guildName || 'Unknown Server')}</div>
           </div>
-          <div class="role-proof ${r.proofType === 'BOT' ? 'bot' : ''}">${r.proofType === 'BOT' ? 'Bot Verified' : r.proofType === 'OAUTH' ? 'OAuth Verified' : r.proofType}</div>
+          <div class="role-proof ${r.proofType === 'BOT' ? 'bot' : ''}">${r.proofType === 'BOT' ? 'Bot Verified' : r.proofType === 'OAUTH' ? 'OAuth Verified' : escapeHtml(r.proofType)}</div>
         </div>
       `).join('')}
     </div>
   ` : '';
 
   // Socials HTML
-  const socialsHtml = Object.entries(socialLinks).filter(([,v]) => v).length ? `
+  const socialEntries = Object.entries(socialLinks)
+    .map(([k, v]) => [k, buildSocialUrl(k, v)])
+    .filter(([, url]) => url);
+
+  const socialsHtml = socialEntries.length ? `
     <div class="divider"></div>
     <div class="socials">
-      ${Object.entries(socialLinks).filter(([,v]) => v).map(([k, v]) => `
-        <a href="${v}" target="_blank" rel="noopener noreferrer" class="social-link ${k}" title="${SOCIAL_NAMES[k] || 'Link'}">
+      ${socialEntries.map(([k, url]) => `
+        <a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer" class="social-link ${k}" title="${SOCIAL_NAMES[k] || 'Link'}">
           <span>${SOCIAL_ICONS[k] || '🔗'}</span>
           <span>${SOCIAL_NAMES[k] || 'Link'}</span>
         </a>
@@ -1168,28 +1387,25 @@ async function renderProfile() {
     </div>
   ` : '';
 
-  // Banner
-  const bannerHtml = p.bannerUrl
-    ? `<div class="banner"><img src="${p.bannerUrl}" alt="banner"/></div>`
-    : `<div class="banner" style="background:linear-gradient(135deg, ${t.accentColor || '#5865F2'} 0%, #7C3AED 100%)"></div>`;
+  const bannerHtml = buildBannerHtml(p.bannerUrl, t.accentColor);
 
   document.getElementById('card').innerHTML = `
     ${bannerHtml}
     <div class="avatar-wrap">
-      <img class="avatar" src="${p.avatarUrl || ''}" alt="avatar" onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'"/>
+      <img class="avatar" src="${escapeHtml(p.avatarUrl || '')}" alt="avatar" onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'"/>
     </div>
     <div class="card-body">
       <div class="profile-header">
         <div class="profile-heading">
           <div class="profile-kicker">Verified Discord profile</div>
           <div class="profile-name">
-            ${p.displayName}
+            ${escapeHtml(p.displayName)}
             ${p.discordId === EXCLUSIVE_USER_ID ? '<div class="verified-crown" title="Cordfol Creator">👑</div>' : ''}
           </div>
-          <div class="profile-tag">cordfol.org/${p.slug}</div>
+          <div class="profile-tag">cordfol.org/${escapeHtml(p.slug)}</div>
         </div>
       </div>
-      ${p.bio ? `<div class="profile-bio">${p.bio}</div>` : ''}
+      ${p.bio ? `<div class="profile-bio">${escapeHtml(p.bio)}</div>` : ''}
       <div class="profile-summary">
         <div class="summary-chip"><strong>${activeRoleCount}</strong> Active roles</div>
         <div class="summary-chip"><strong>${botVerifiedCount}</strong> Bot proof</div>
