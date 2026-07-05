@@ -118,6 +118,29 @@ function createSpotifyRouter(db) {
   const authRouter = express.Router();
   const apiRouter = express.Router();
 
+  const oauthCookieOpts = {
+    httpOnly: true,
+    secure: true,
+    sameSite: 'none',
+    maxAge: 10 * 60 * 1000,
+    path: '/',
+  };
+
+  async function restoreSessionFromSid(req, sid) {
+    if (req.session?.userId) return true;
+    if (!sid) return false;
+    try {
+      const result = await db.query('SELECT sess FROM user_sessions WHERE sid = $1', [sid]);
+      if (result.rowCount > 0 && result.rows[0].sess?.userId) {
+        req.session.userId = result.rows[0].sess.userId;
+        return true;
+      }
+    } catch (err) {
+      console.error('[spotify] session restore error:', err.message);
+    }
+    return false;
+  }
+
   authRouter.get('/login', (req, res) => {
     if (!SPOTIFY_CLIENT_ID || !SPOTIFY_CLIENT_SECRET) {
       return res.status(503).send('Spotify is not configured on this server.');
@@ -127,12 +150,8 @@ function createSpotifyRouter(db) {
     }
 
     const state = crypto.randomBytes(16).toString('hex');
-    res.cookie('spotify_oauth_state', state, {
-      httpOnly: true,
-      secure: true,
-      sameSite: 'none',
-      maxAge: 10 * 60 * 1000,
-    });
+    res.cookie('spotify_oauth_state', state, oauthCookieOpts);
+    res.cookie('spotify_oauth_sid', req.sessionID, oauthCookieOpts);
 
     const authUrl = new URL('https://accounts.spotify.com/authorize');
     authUrl.searchParams.set('client_id', SPOTIFY_CLIENT_ID);
@@ -140,7 +159,14 @@ function createSpotifyRouter(db) {
     authUrl.searchParams.set('redirect_uri', SPOTIFY_REDIRECT_URI);
     authUrl.searchParams.set('scope', SCOPES.join(' '));
     authUrl.searchParams.set('state', state);
-    res.redirect(authUrl.toString());
+
+    req.session.save((err) => {
+      if (err) {
+        console.error('[spotify] session save before redirect:', err);
+        return res.redirect(`${DASHBOARD_URL}?spotify=failed`);
+      }
+      res.redirect(authUrl.toString());
+    });
   });
 
   authRouter.get('/callback', async (req, res) => {
@@ -151,8 +177,12 @@ function createSpotifyRouter(db) {
     }
 
     const savedState = req.cookies?.spotify_oauth_state;
-    res.clearCookie('spotify_oauth_state');
+    const savedSid = req.cookies?.spotify_oauth_sid;
+    res.clearCookie('spotify_oauth_state', { path: '/' });
+    res.clearCookie('spotify_oauth_sid', { path: '/' });
+
     if (!state || !savedState || state !== savedState) {
+      console.error('[spotify] CSRF state mismatch');
       return res.redirect(`${DASHBOARD_URL}?spotify=csrf`);
     }
 
@@ -160,8 +190,11 @@ function createSpotifyRouter(db) {
       return res.redirect(`${DASHBOARD_URL}?spotify=no_code`);
     }
 
+    await restoreSessionFromSid(req, savedSid);
+
     const userId = req.session?.userId;
     if (!userId) {
+      console.error('[spotify] No session on callback');
       return res.redirect(`${DASHBOARD_URL}?spotify=login_required`);
     }
 
@@ -179,7 +212,10 @@ function createSpotifyRouter(db) {
       });
 
       const tokenData = await tokenRes.json();
-      if (!tokenData.access_token) throw new Error('No access token');
+      if (!tokenData.access_token) {
+        console.error('[spotify] token exchange failed:', tokenData);
+        throw new Error(tokenData.error_description || tokenData.error || 'No access token');
+      }
 
       const expiresAt = new Date(Date.now() + (tokenData.expires_in || 3600) * 1000);
 
@@ -199,7 +235,10 @@ function createSpotifyRouter(db) {
         userId,
       ]);
 
-      res.redirect(`${DASHBOARD_URL}?spotify=connected`);
+      req.session.save((err) => {
+        if (err) console.error('[spotify] session save after connect:', err);
+        res.redirect(`${DASHBOARD_URL}?spotify=connected`);
+      });
     } catch (err) {
       console.error('[spotify] Callback error:', err);
       res.redirect(`${DASHBOARD_URL}?spotify=failed`);

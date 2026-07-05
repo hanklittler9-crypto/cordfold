@@ -1446,6 +1446,8 @@ window.onload=()=>{
   else if(spotifyStatus==='denied') showToast('ERR','Spotify connection cancelled.','error');
   else if(spotifyStatus==='failed') showToast('ERR','Spotify connection failed.','error');
   else if(spotifyStatus==='login_required') showToast('ERR','Log in with Discord before connecting Spotify.','error');
+  else if(spotifyStatus==='csrf') showToast('ERR','Spotify session expired — try connecting again.','error');
+  else if(spotifyStatus==='no_code') showToast('ERR','Spotify did not return a code. Try again.','error');
   if(emailStatus||spotifyStatus) window.history.replaceState({},'','/dashboard.html');
 };
 </script>

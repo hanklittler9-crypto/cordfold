@@ -36,8 +36,14 @@
       background: var(--bg);
       overflow: hidden;
     }
-    .bg-animated::before {
+    .bg-animated::before,
+    .bg-animated::after {
+      content: none;
+      display: none;
+    }
+    .bg-animated.show-orbs::before {
       content: '';
+      display: block;
       position: absolute;
       width: 600px;
       height: 600px;
@@ -47,8 +53,9 @@
       opacity: 0.15;
       animation: drift1 12s ease-in-out infinite alternate;
     }
-    .bg-animated::after {
+    .bg-animated.show-orbs::after {
       content: '';
+      display: block;
       position: absolute;
       width: 500px;
       height: 500px;
@@ -126,7 +133,7 @@
     .bg-media {
       position: fixed;
       inset: 0;
-      z-index: 0;
+      z-index: 1;
       pointer-events: none;
       overflow: hidden;
     }
@@ -1131,19 +1138,27 @@ function applyLayout(layout) {
   page.classList.add(`layout-${layout || 'centered'}`);
 }
 
+function isGifUrl(url) {
+  return /\.gif(\?|$)/i.test(url) || String(url || '').startsWith('data:image/gif');
+}
+
 function applyBackground(theme) {
   const bgEl = document.getElementById('bgEl');
   const bgMedia = document.getElementById('bgMedia');
   const bgBlur = document.getElementById('bgBlurLayer');
   bgMedia.innerHTML = '';
+  bgEl.classList.remove('show-orbs');
 
-  const bgType = theme.bgType || 'solid';
-  const bgValue = theme.bgValue || theme.backgroundColor || '#0d0d0d';
+  let bgType = theme.bgType || 'solid';
+  const bgValue = theme.bgValue || '';
   const accent = theme.accentColor || '#5865F2';
 
-  if (theme.animatedBg) {
-    bgEl.style.background = `radial-gradient(circle at top left, ${accent} 0%, transparent 60%), radial-gradient(circle at bottom right, ${theme.textColor || '#00FFB2'} 0%, transparent 55%)`;
-  } else if (bgType === 'gif' || bgType === 'video') {
+  if ((bgType === 'solid' || bgType === 'gradient') && bgValue) {
+    if (isVideoUrl(bgValue)) bgType = 'video';
+    else if (isGifUrl(bgValue)) bgType = 'gif';
+  }
+
+  if (bgType === 'gif' || bgType === 'video') {
     bgEl.style.background = '#09090d';
     const media = document.createElement(bgType === 'video' || isVideoUrl(bgValue) ? 'video' : 'img');
     media.src = bgValue;
@@ -1156,8 +1171,10 @@ function applyBackground(theme) {
     bgMedia.appendChild(media);
   } else if (bgType === 'gradient' || isGradientValue(bgValue) || isGradientValue(theme.backgroundColor)) {
     bgEl.style.background = bgValue || theme.backgroundColor;
+    if (theme.animatedBg) bgEl.classList.add('show-orbs');
   } else {
     bgEl.style.background = bgValue || theme.backgroundColor || '#0d0d0d';
+    if (theme.animatedBg) bgEl.classList.add('show-orbs');
   }
 
   bgBlur.style.display = theme.bgBlur ? 'block' : 'none';

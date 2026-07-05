@@ -187,6 +187,10 @@ app.use('/api/auth/spotify', async (req, res, next) => {
       const result = await db.query('SELECT sess FROM user_sessions WHERE sid = $1', [sid]);
       if (result.rowCount > 0 && result.rows[0].sess?.userId) {
         req.session.userId = result.rows[0].sess.userId;
+        return req.session.save((err) => {
+          if (err) console.error('[spotify] Session save error:', err);
+          next();
+        });
       }
     } catch (err) {
       console.error('[spotify] Session lookup error:', err);
@@ -412,9 +416,10 @@ app.post('/api/profile', async (req, res) => {
 
     const bgType = theme.bgType || 'solid';
     const bgValue = theme.bgValue || null;
-    const backgroundColor = bgType === 'solid' && bgValue
-      ? bgValue
-      : (bgType === 'gradient' && bgValue ? bgValue : (theme.backgroundColor || '#0d0d0d'));
+    let backgroundColor = theme.backgroundColor || '#0d0d0d';
+    if (bgType === 'solid' && bgValue) backgroundColor = bgValue;
+    else if (bgType === 'gradient' && bgValue) backgroundColor = bgValue;
+    else if (bgType === 'gif' || bgType === 'video') backgroundColor = '#09090d';
 
     const themeFields = [
       backgroundColor,
