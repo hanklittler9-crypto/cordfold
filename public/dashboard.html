@@ -9,25 +9,15 @@
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
 :root{
-  --bg:#09090d;
-  --surface:#11131a;
-  --surface2:#171922;
-  --surface3:#1d2130;
-  --border:rgba(255,255,255,0.08);
-  --discord:#5865F2;
-  --discord-dim:#4752C4;
-  --accent2:#7c5cff;
-  --neon:#00FFB2;
-  --hot:#FF3366;
-  --amber:#FFB800;
-  --text:#F5F7FB;
-  --muted:#555;
-  --muted2:rgba(245,247,251,0.55);
+  --bg:#09090d;--surface:#11131a;--surface2:#171922;--surface3:#1d2130;
+  --border:rgba(255,255,255,0.08);--discord:#5865F2;--discord-dim:#4752C4;
+  --accent2:#7c5cff;--neon:#00FFB2;--hot:#FF3366;--amber:#FFB800;
+  --text:#F5F7FB;--muted:#555;--muted2:rgba(245,247,251,0.55);
   --shadow:0 24px 70px rgba(0,0,0,0.35);
 }
 html,body{height:100%;overflow:hidden;}
 body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);display:flex;flex-direction:column;position:relative;}
-body::before{content:'';position:fixed;inset:0;background:radial-gradient(circle at top left, rgba(88,101,242,0.16), transparent 30%),radial-gradient(circle at bottom right, rgba(0,255,178,0.08), transparent 34%);pointer-events:none;}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(circle at top left,rgba(88,101,242,0.16),transparent 30%),radial-gradient(circle at bottom right,rgba(0,255,178,0.08),transparent 34%);pointer-events:none;}
 body::after{content:'';position:fixed;inset:0;opacity:0.04;pointer-events:none;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");}
 .topbar{height:60px;min-height:60px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 22px;background:rgba(17,19,26,0.82);backdrop-filter:blur(18px);position:relative;z-index:50;flex-shrink:0;}
 .topbar-logo{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;color:var(--text);text-decoration:none;}
@@ -56,7 +46,7 @@ body::after{content:'';position:fixed;inset:0;opacity:0.04;pointer-events:none;b
 .sidebar-section-label{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;padding:8px 16px 4px;}
 .nav-item{display:flex;align-items:center;gap:9px;padding:10px 14px;font-size:13px;color:var(--muted2);cursor:pointer;border-radius:14px;border:1px solid transparent;transition:all 0.15s;user-select:none;margin:2px 6px;}
 .nav-item:hover{background:rgba(255,255,255,0.03);color:var(--text);border-color:rgba(255,255,255,0.04);}
-.nav-item.active{background:linear-gradient(135deg,rgba(88,101,242,0.14),rgba(124,92,255,0.08));color:var(--text);border-color:rgba(88,101,242,0.22);font-weight:500;box-shadow:inset 0 1px 0 rgba(255,255,255,0.04);}
+.nav-item.active{background:linear-gradient(135deg,rgba(88,101,242,0.14),rgba(124,92,255,0.08));color:var(--text);border-color:rgba(88,101,242,0.22);font-weight:500;}
 .nav-dot{width:6px;height:6px;border-radius:50%;margin-left:auto;flex-shrink:0;}
 .dot-green{background:var(--neon);}
 .dot-amber{background:var(--amber);}
@@ -67,7 +57,7 @@ body::after{content:'';position:fixed;inset:0;opacity:0.04;pointer-events:none;b
 .bot-cta-btn{display:block;width:100%;text-align:center;padding:7px;background:var(--discord);color:white;font-size:11px;font-family:'Space Mono',monospace;letter-spacing:1px;border:none;border-radius:6px;cursor:pointer;text-decoration:none;transition:background 0.15s;}
 .bot-cta-btn:hover{background:var(--discord-dim);}
 .main{flex:1;overflow-y:auto;padding:8px 10px 24px;}
-.admin-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:8px 12px 0;padding:14px 18px;background:rgba(88,101,242,0.1);border:1px solid rgba(88,101,242,0.18);border-radius:18px;color:var(--text);}
+.admin-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:8px 12px 0;padding:14px 18px;background:rgba(88,101,242,0.1);border:1px solid rgba(88,101,242,0.18);border-radius:18px;}
 .admin-bar-title{font-size:13px;font-weight:600;}
 .admin-bar-sub{font-size:12px;color:var(--muted2);margin-top:4px;}
 .admin-bar .btn-row{margin:0;}
@@ -101,11 +91,10 @@ body::after{content:'';position:fixed;inset:0;opacity:0.04;pointer-events:none;b
 .toggle.on::after{left:17px;}
 .field{display:flex;flex-direction:column;gap:5px;margin-bottom:14px;}
 .field-label{font-size:11px;font-weight:500;color:var(--muted2);text-transform:uppercase;letter-spacing:0.5px;}
-.field-input{height:40px;background:rgba(255,255,255,0.035);border:1px solid var(--border);border-radius:12px;padding:0 12px;font-size:13px;color:var(--text);font-family:'DM Sans',sans-serif;transition:border-color 0.15s, background 0.15s;outline:none;}
+.field-input{height:40px;background:rgba(255,255,255,0.035);border:1px solid var(--border);border-radius:12px;padding:0 12px;font-size:13px;color:var(--text);font-family:'DM Sans',sans-serif;transition:border-color 0.15s,background 0.15s;outline:none;}
 .field-input:focus{border-color:var(--discord);background:rgba(88,101,242,0.08);box-shadow:0 0 0 3px rgba(88,101,242,0.1);}
 .field-input:disabled{opacity:0.6;cursor:not-allowed;}
 .field-input.error{border-color:var(--hot);background:rgba(255,51,102,0.06);}
-.field-input.error:focus{box-shadow:0 0 0 3px rgba(255,51,102,0.1);}
 .field-input.monospace{font-family:'Space Mono',monospace;font-size:12px;}
 textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
 .field-prefix-wrap{display:flex;}
@@ -114,9 +103,9 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
 .field-hint{font-size:11px;color:var(--neon);margin-top:2px;}
 .field-hint.err{color:var(--hot);}
 .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;}
 .btn{height:38px;padding:0 18px;border-radius:12px;cursor:pointer;font-family:'Space Mono',monospace;font-size:11px;letter-spacing:1px;border:none;transition:all 0.15s;display:inline-flex;align-items:center;gap:7px;position:relative;}
-.btn:focus-visible{outline:2px solid var(--discord);outline-offset:2px;}
-.btn:disabled{opacity:0.5;cursor:not-allowed;transform:none !important;}
+.btn:disabled{opacity:0.5;cursor:not-allowed;}
 .btn.loading{pointer-events:none;opacity:0.8;}
 .btn.loading::after{content:'';width:12px;height:12px;border:2px solid rgba(255,255,255,0.3);border-top-color:currentColor;border-radius:50%;animation:spin 0.6s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg);}}
@@ -132,6 +121,63 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
 .scan-status{font-family:'Space Mono',monospace;font-size:10px;color:var(--muted2);display:flex;align-items:center;gap:6px;}
 .scan-dot{width:6px;height:6px;border-radius:50%;background:var(--neon);animation:pulse 2s infinite;}
 @keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.3;}}
+
+/* ── MEDIA PICKER ── */
+.media-picker-trigger{display:flex;gap:10px;align-items:stretch;}
+.media-preview-box{width:100%;height:100px;border-radius:12px;border:1px dashed rgba(255,255,255,0.15);background:rgba(255,255,255,0.03);display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative;margin-bottom:10px;cursor:pointer;transition:border-color 0.2s;}
+.media-preview-box:hover{border-color:var(--discord);}
+.media-preview-box video,.media-preview-box img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:11px;}
+.media-preview-label{font-size:11px;color:var(--muted2);text-align:center;pointer-events:none;}
+.media-tabs{display:flex;gap:2px;margin-bottom:16px;background:rgba(255,255,255,0.04);border-radius:10px;padding:3px;}
+.media-tab{flex:1;padding:8px;text-align:center;font-size:11px;font-family:'Space Mono',monospace;letter-spacing:0.5px;border-radius:8px;cursor:pointer;color:var(--muted2);transition:all 0.15s;border:none;background:transparent;}
+.media-tab.active{background:var(--discord);color:white;}
+.media-tab-panel{display:none;}
+.media-tab-panel.active{display:block;}
+.drop-zone{border:2px dashed rgba(255,255,255,0.12);border-radius:14px;padding:28px;text-align:center;cursor:pointer;transition:all 0.2s;background:rgba(255,255,255,0.02);}
+.drop-zone:hover,.drop-zone.dragover{border-color:var(--discord);background:rgba(88,101,242,0.06);}
+.drop-zone-icon{font-size:28px;margin-bottom:8px;}
+.drop-zone-text{font-size:12px;color:var(--muted2);line-height:1.6;}
+.drop-zone input[type=file]{display:none;}
+.preset-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
+.preset-tile{height:56px;border-radius:10px;cursor:pointer;border:2px solid transparent;transition:all 0.15s;position:relative;overflow:hidden;}
+.preset-tile:hover,.preset-tile.selected{border-color:var(--discord);transform:translateY(-2px);}
+.preset-tile-label{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.55);font-size:8px;font-family:'Space Mono',monospace;letter-spacing:0.5px;text-align:center;padding:3px;color:rgba(255,255,255,0.8);}
+
+/* ── BG TYPE SELECTOR ── */
+.bg-type-row{display:flex;gap:8px;margin-bottom:16px;}
+.bg-type-btn{flex:1;padding:10px 8px;border:1px solid var(--border);border-radius:12px;cursor:pointer;text-align:center;font-size:11px;font-family:'Space Mono',monospace;letter-spacing:0.5px;color:var(--muted2);background:rgba(255,255,255,0.02);transition:all 0.15s;}
+.bg-type-btn:hover,.bg-type-btn.active{border-color:var(--discord);color:var(--discord);background:rgba(88,101,242,0.08);}
+.bg-type-btn .bg-type-icon{display:block;font-size:16px;margin-bottom:4px;}
+.bg-panel{display:none;}
+.bg-panel.active{display:block;}
+.gradient-presets{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:12px;}
+.grad-chip{height:40px;border-radius:10px;cursor:pointer;border:2px solid transparent;transition:all 0.15s;}
+.grad-chip:hover,.grad-chip.selected{border-color:var(--text);transform:scale(1.06);}
+
+/* ── FONT PICKER ── */
+.font-options{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.font-btn{padding:10px 8px;border:1px solid var(--border);border-radius:12px;cursor:pointer;text-align:center;font-size:13px;color:var(--muted2);background:rgba(255,255,255,0.02);transition:all 0.15s;}
+.font-btn:hover,.font-btn.selected{border-color:var(--discord);color:var(--text);background:rgba(88,101,242,0.08);}
+
+/* ── LAYOUT PRESETS ── */
+.layout-options{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+.layout-btn{padding:14px 8px;border:1px solid var(--border);border-radius:14px;cursor:pointer;text-align:center;color:var(--muted2);background:rgba(255,255,255,0.02);transition:all 0.15s;}
+.layout-btn:hover,.layout-btn.selected{border-color:var(--discord);background:rgba(88,101,242,0.08);}
+.layout-btn .layout-icon{font-size:20px;margin-bottom:6px;}
+.layout-btn .layout-name{font-size:11px;font-family:'Space Mono',monospace;letter-spacing:0.5px;}
+
+/* ── EFFECT TOGGLES ── */
+.fx-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.fx-card{padding:14px;border:1px solid var(--border);border-radius:14px;display:flex;align-items:center;justify-content:space-between;gap:10px;background:rgba(255,255,255,0.02);}
+.fx-card.active{border-color:rgba(88,101,242,0.3);background:rgba(88,101,242,0.05);}
+.fx-label{font-size:12px;font-weight:500;}
+.fx-sub{font-size:10px;color:var(--muted2);margin-top:2px;}
+
+/* ── EMAIL SECTION ── */
+.email-notice{font-size:11px;color:var(--muted2);margin-top:6px;line-height:1.6;}
+.email-verified{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-family:'Space Mono',monospace;color:var(--neon);margin-top:4px;}
+
+/* ── THEME & PREVIEW ── */
 .theme-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
 .theme-card{border:1.5px solid var(--border);border-radius:16px;padding:14px;cursor:pointer;transition:all 0.15s;background:rgba(255,255,255,0.02);}
 .theme-card:hover{border-color:rgba(255,255,255,0.15);}
@@ -140,6 +186,7 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
 .theme-name{font-size:12px;font-weight:500;margin-bottom:2px;}
 .theme-tag{font-size:9px;font-family:'Space Mono',monospace;letter-spacing:0.5px;padding:2px 6px;border-radius:4px;display:inline-block;}
 .tag-free{background:rgba(0,255,178,0.1);color:var(--neon);}
+.tag-pro{background:rgba(255,184,0,0.1);color:var(--amber);}
 .chart-area{height:100px;display:flex;align-items:flex-end;gap:6px;margin-bottom:6px;}
 .bar{flex:1;border-radius:3px 3px 0 0;background:var(--discord);opacity:0.6;transition:opacity 0.15s;cursor:default;min-height:4px;}
 .bar:hover{opacity:1;}
@@ -157,13 +204,11 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
 .ref-bar-wrap{flex:1;height:5px;border-radius:3px;background:var(--surface2);}
 .ref-bar-fill{height:100%;border-radius:3px;background:var(--discord);}
 .ref-pct{font-size:11px;color:var(--text);width:32px;text-align:right;font-family:'Space Mono',monospace;}
-.live-preview{background:linear-gradient(180deg,rgba(10,10,14,0.98),rgba(17,19,26,0.92));border-radius:20px;display:flex;flex-direction:column;align-items:stretch;gap:0;border:1px solid rgba(255,255,255,0.07);transition:transform 0.3s ease, box-shadow 0.3s ease;box-shadow:inset 0 1px 0 rgba(255,255,255,0.04);overflow:hidden;min-height:340px;}
-.live-preview.preview-animated{animation:previewDrift 8s ease-in-out infinite alternate;}
-@keyframes previewDrift{from{transform:translateY(0);}to{transform:translateY(-4px) translateX(4px);}}
-.lp-banner{height:92px;background:linear-gradient(135deg,var(--discord),var(--accent2) 55%,rgba(0,255,178,0.7));position:relative;}
-.lp-banner::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(9,9,13,0) 0%, rgba(9,9,13,0.3) 100%);}
+.live-preview{background:linear-gradient(180deg,rgba(10,10,14,0.98),rgba(17,19,26,0.92));border-radius:20px;display:flex;flex-direction:column;border:1px solid rgba(255,255,255,0.07);box-shadow:inset 0 1px 0 rgba(255,255,255,0.04);overflow:hidden;min-height:340px;}
+.lp-banner{height:92px;background:linear-gradient(135deg,var(--discord),var(--accent2) 55%,rgba(0,255,178,0.7));position:relative;overflow:hidden;}
+.lp-banner video,.lp-banner img.lp-banner-media{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
 .lp-avatar-wrap{padding:0 18px;margin-top:-32px;position:relative;z-index:1;}
-.lp-avatar{width:64px;height:64px;border-radius:20px;background:linear-gradient(135deg,var(--discord),#7C3AED);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:500;color:white;border:3px solid rgba(9,9,13,0.95);box-shadow:0 12px 28px rgba(0,0,0,0.32);}
+.lp-avatar{width:64px;height:64px;border-radius:20px;background:linear-gradient(135deg,var(--discord),#7C3AED);display:flex;align-items:center;justify-content:center;font-size:22px;color:white;border:3px solid rgba(9,9,13,0.95);box-shadow:0 12px 28px rgba(0,0,0,0.32);}
 .lp-body{padding:10px 18px 18px;display:flex;flex-direction:column;gap:10px;}
 .lp-kicker{display:inline-flex;align-items:center;gap:6px;padding:5px 9px;border-radius:999px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);font-family:'Space Mono',monospace;font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--muted2);width:max-content;}
 .lp-kicker::before{content:'';width:7px;height:7px;border-radius:50%;background:var(--neon);box-shadow:0 0 14px rgba(0,255,178,0.6);}
@@ -177,7 +222,7 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
 .lp-role{font-size:10px;padding:5px 9px;border-radius:999px;border:1px solid rgba(255,255,255,0.08);color:rgba(245,247,251,0.74);display:flex;align-items:center;gap:5px;background:rgba(255,255,255,0.03);}
 .lp-dot{width:5px;height:5px;border-radius:50%;background:var(--neon);}
 .lp-music{font-size:10px;color:var(--neon);margin-top:4px;display:inline-flex;align-items:center;gap:6px;font-family:'Space Mono',monospace;letter-spacing:0.7px;text-transform:uppercase;}
-.lp-music::before{content:'';width:7px;height:7px;border-radius:50%;background:currentColor;box-shadow:0 0 14px rgba(0,255,178,0.55);}
+.lp-music::before{content:'';width:7px;height:7px;border-radius:50%;background:currentColor;}
 .social-badge{display:inline-flex;align-items:center;gap:5px;padding:6px 10px;border-radius:999px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);font-size:10px;color:var(--muted2);text-decoration:none;transition:all 0.15s;font-family:'Space Mono',monospace;}
 .social-badge:hover{background:rgba(255,255,255,0.08);border-color:var(--discord);color:var(--discord);}
 .toast{position:fixed;bottom:24px;right:24px;background:rgba(17,19,26,0.96);border:1px solid var(--border);border-radius:16px;padding:14px 18px;font-size:13px;z-index:999;display:flex;align-items:center;gap:10px;transform:translateY(120px);opacity:0;transition:all 0.3s cubic-bezier(0.34,1.56,0.64,1);box-shadow:0 18px 42px rgba(0,0,0,0.42);backdrop-filter:blur(16px);max-width:360px;}
@@ -185,16 +230,17 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
 .toast.success{border-left:3px solid var(--neon);}
 .toast.error{border-left:3px solid var(--hot);}
 .toast.info{border-left:3px solid var(--discord);}
-.toast-icon{font-family:'Space Mono',monospace;font-size:14px;letter-spacing:1px;flex-shrink:0;}
+.toast-icon{font-family:'Space Mono',monospace;font-size:14px;flex-shrink:0;}
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:500;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.2s;}
 .modal-overlay.open{opacity:1;pointer-events:all;}
 .modal{background:linear-gradient(180deg,rgba(17,19,26,0.98),rgba(13,15,22,0.94));border:1px solid var(--border);border-radius:18px;padding:28px;width:360px;transform:scale(0.95);transition:transform 0.2s;box-shadow:var(--shadow);}
 .modal-overlay.open .modal{transform:scale(1);}
+.modal.wide{width:520px;}
 .modal-title{font-size:16px;font-weight:500;margin-bottom:8px;}
 .modal-desc{font-size:13px;color:var(--muted2);line-height:1.6;margin-bottom:24px;}
 .modal-actions{display:flex;gap:10px;justify-content:flex-end;}
 .notif-dot{width:7px;height:7px;border-radius:50%;background:var(--hot);margin-left:auto;flex-shrink:0;}
-.profile-layout{display:grid;grid-template-columns:minmax(0,1fr) 260px;gap:18px;}
+.profile-layout{display:grid;grid-template-columns:minmax(0,1fr) 270px;gap:18px;}
 .preview-card{padding:14px;}
 .preview-title{font-size:11px;font-family:'Space Mono',monospace;letter-spacing:1px;color:var(--muted2);}
 .split-panels{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
@@ -215,26 +261,12 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
 .bot-panel-copy{font-size:12px;color:var(--muted2);line-height:1.7;}
 .hint-text{font-size:13px;color:var(--muted2);margin-bottom:16px;line-height:1.7;}
 .empty-state{padding:32px 24px;border-radius:14px;border:1px dashed rgba(255,255,255,0.12);background:rgba(255,255,255,0.02);color:var(--muted2);font-size:13px;line-height:1.6;text-align:center;}
-@media (max-width: 1100px){
-  .profile-layout{grid-template-columns:1fr;}
-}
-@media (max-width: 860px){
-  html,body{overflow:auto;}
-  .layout{flex-direction:column;padding:10px;}
-  .sidebar{width:100%;min-width:0;border-radius:18px;}
-  .main{padding:4px 0 20px;}
-  .grid-2,.metrics,.split-panels,.bot-compare{grid-template-columns:1fr;}
-}
-@media (max-width: 640px){
-  .topbar{padding:0 14px;}
-  .topbar-right{gap:8px;}
-  .plan-badge{display:none;}
-  .sidebar{padding:12px 8px;}
-  .main .tab{padding:0 2px;}
-  .card{padding:18px;}
-  .theme-grid{grid-template-columns:1fr 1fr;}
-  .btn-row{flex-wrap:wrap;}
-}
+.section-divider{display:flex;align-items:center;gap:12px;margin:20px 0 16px;}
+.section-divider span{font-size:10px;font-family:'Space Mono',monospace;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);white-space:nowrap;}
+.section-divider::before,.section-divider::after{content:'';flex:1;height:1px;background:var(--border);}
+@media (max-width:1100px){.profile-layout{grid-template-columns:1fr;}}
+@media (max-width:860px){html,body{overflow:auto;}.layout{flex-direction:column;padding:10px;}.sidebar{width:100%;min-width:0;border-radius:18px;}.main{padding:4px 0 20px;}.grid-2,.grid-3,.metrics,.split-panels,.bot-compare,.fx-grid,.layout-options{grid-template-columns:1fr;}}
+@media (max-width:640px){.topbar{padding:0 14px;}.plan-badge{display:none;}.card{padding:18px;}.theme-grid{grid-template-columns:1fr 1fr;}.btn-row{flex-wrap:wrap;}.preset-grid{grid-template-columns:repeat(3,1fr);}.gradient-presets{grid-template-columns:repeat(3,1fr);}}
 </style>
 </head>
 <body>
@@ -298,6 +330,7 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
 
   <div class="main">
 
+    <!-- VERIFY TAB -->
     <div class="tab active" id="tab-verify">
       <div class="page-title">Verified Role History</div>
       <div class="page-sub">These roles are confirmed via Discord's API. Toggle visibility on your public profile. Roles re-verify every 24h automatically.</div>
@@ -310,18 +343,18 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
         <div class="role-list" id="roleList"></div>
       </div>
       <div class="card helper-card">
-        <div class="helper-copy">
-          <strong>How verification works:</strong>
-          Roles are verified using your Discord OAuth token. Servers with our bot installed get additional bot-level proof. You cannot add roles manually — this is what makes your profile trustworthy.
-        </div>
+        <div class="helper-copy"><strong>How verification works:</strong> Roles are verified using your Discord OAuth token. Servers with our bot installed get additional bot-level proof. You cannot add roles manually — this is what makes your profile trustworthy.</div>
       </div>
     </div>
 
+    <!-- PROFILE TAB -->
     <div class="tab" id="tab-profile">
       <div class="page-title">Profile Builder</div>
       <div class="page-sub" id="profileUrl">Customize your public page at cordfol.org/...</div>
       <div class="profile-layout">
         <div>
+
+          <!-- IDENTITY -->
           <div class="card">
             <div class="card-title">Identity</div>
             <div class="field"><div class="field-label">Display Name</div><input class="field-input" id="displayName" value="" oninput="updatePreview()"/></div>
@@ -330,56 +363,178 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
               <div class="field-prefix-wrap"><div class="field-pre" id="profileHostLabel">cordfol.org/</div><input class="field-input monospace" id="slug" value="" oninput="checkSlug(this)"/></div>
               <div class="field-hint" id="slug-hint">Checking...</div>
             </div>
-            <div class="field" style="margin-bottom:0"><div class="field-label">Bio</div><textarea class="field-input" id="bioText" oninput="updatePreview()"></textarea></div>
+            <div class="field"><div class="field-label">Bio</div><textarea class="field-input" id="bioText" oninput="updatePreview()"></textarea></div>
+            
+            <div class="section-divider"><span>Contact & Login</span></div>
+            <div class="field">
+              <div class="field-label">Email Address</div>
+              <input class="field-input" id="emailInput" type="email" placeholder="you@email.com" oninput="updateEmailState()"/>
+              <div class="email-notice">Used for account recovery and optional email login. We'll never share your email. <span class="email-verified" id="emailVerifiedBadge" style="display:none">✓ Verified</span></div>
+            </div>
+            <div class="btn-row" id="emailBtnRow" style="display:none">
+              <button class="btn btn-ghost" onclick="sendVerifyEmail()">Send Verification Email</button>
+            </div>
           </div>
+
+          <!-- SOCIAL LINKS -->
           <div class="card">
             <div class="card-title">Social Links</div>
             <div class="grid-2">
-              <div class="field"><div class="field-label">Twitter / X</div><input class="field-input" id="twitterInput"/></div>
-              <div class="field"><div class="field-label">GitHub</div><input class="field-input" id="githubInput"/></div>
-              <div class="field"><div class="field-label">YouTube</div><input class="field-input" id="youtubeInput"/></div>
-              <div class="field"><div class="field-label">Website</div><input class="field-input" id="websiteInput"/></div>
+              <div class="field"><div class="field-label">Twitter / X</div><input class="field-input" id="twitterInput" placeholder="@handle"/></div>
+              <div class="field"><div class="field-label">GitHub</div><input class="field-input" id="githubInput" placeholder="username"/></div>
+              <div class="field"><div class="field-label">YouTube</div><input class="field-input" id="youtubeInput" placeholder="@channel"/></div>
+              <div class="field"><div class="field-label">Website</div><input class="field-input" id="websiteInput" placeholder="https://..."/></div>
+              <div class="field"><div class="field-label">TikTok</div><input class="field-input" id="tiktokInput" placeholder="@handle"/></div>
+              <div class="field"><div class="field-label">Instagram</div><input class="field-input" id="instagramInput" placeholder="@handle"/></div>
             </div>
           </div>
+
+          <!-- BANNER PICKER -->
           <div class="card">
-            <div class="card-title">Theme & Media</div>
-            <div class="field"><div class="field-label">Banner URL</div><input class="field-input" id="bannerUrlInput" oninput="updatePreview()"/></div>
-            <div class="grid-2">
-              <div class="field"><div class="field-label">Background</div><input class="field-input" type="color" id="backgroundColorInput" value="#0d0d0d" onchange="updatePreview()"/></div>
-              <div class="field"><div class="field-label">Accent</div><input class="field-input" type="color" id="accentColorInput" value="#5865F2" onchange="updatePreview()"/></div>
+            <div class="card-title">Profile Banner</div>
+            <div class="media-preview-box" id="bannerPreviewBox" onclick="openMediaPicker('banner')">
+              <div class="media-preview-label">🖼️ Click to choose banner<br><span style="font-size:10px;opacity:0.6">Image · GIF · Video · Preset</span></div>
             </div>
-            <div class="grid-2">
-              <div class="field"><div class="field-label">Text</div><input class="field-input" type="color" id="textColorInput" value="#ffffff" onchange="updatePreview()"/></div>
-              <div class="field"><div class="field-label">Card</div><input class="field-input" type="color" id="cardColorInput" value="#111111" onchange="updatePreview()"/></div>
-            </div>
-            <div class="field"><div class="field-label">Music / Sound URL</div><input class="field-input" id="musicUrlInput" oninput="updatePreview()"/><div class="field-hint">Direct link to audio file (mp3, wav, ogg, m4a). YouTube/Spotify links won't work.</div></div>
-            <div class="field"><div class="field-label">Or upload an MP3</div><input class="field-input" type="file" id="musicFileInput" accept=".mp3,.wav,.ogg,.m4a" onchange="handleMusicUpload(event)"/><div class="field-hint" id="uploadStatus"></div></div>
-            <div class="grid-2">
-              <div class="field"><label class="field-label"><input type="checkbox" id="musicAutoplayInput" onchange="updatePreview()"/> Autoplay music</label></div>
-              <div class="field"><label class="field-label"><input type="checkbox" id="animatedBgInput" onchange="updatePreview()"/> Animated background</label></div>
+            <div class="btn-row">
+              <button class="btn btn-ghost" onclick="openMediaPicker('banner')">Change Banner</button>
+              <button class="btn btn-danger" onclick="clearBanner()">Clear</button>
             </div>
           </div>
+
+          <!-- BACKGROUND -->
+          <div class="card">
+            <div class="card-title">Profile Background</div>
+            <div class="bg-type-row">
+              <button class="bg-type-btn active" onclick="setBgType('gradient',this)"><span class="bg-type-icon">🎨</span>Gradient</button>
+              <button class="bg-type-btn" onclick="setBgType('solid',this)"><span class="bg-type-icon">⬛</span>Solid</button>
+              <button class="bg-type-btn" onclick="setBgType('gif',this)"><span class="bg-type-icon">🎞️</span>GIF</button>
+              <button class="bg-type-btn" onclick="setBgType('video',this)"><span class="bg-type-icon">📹</span>Video</button>
+            </div>
+
+            <div class="bg-panel active" id="bg-panel-gradient">
+              <div class="field-label" style="margin-bottom:10px">Preset Gradients</div>
+              <div class="gradient-presets" id="gradientPresets"></div>
+              <div class="grid-2" style="margin-top:12px">
+                <div class="field"><div class="field-label">From</div><input type="color" class="field-input" id="gradFrom" value="#0d0d0d" onchange="updateCustomGradient()"/></div>
+                <div class="field"><div class="field-label">To</div><input type="color" class="field-input" id="gradTo" value="#1a1a2e" onchange="updateCustomGradient()"/></div>
+              </div>
+            </div>
+
+            <div class="bg-panel" id="bg-panel-solid">
+              <div class="field"><div class="field-label">Background Color</div><input type="color" class="field-input" id="backgroundColorInput" value="#0d0d0d" onchange="updatePreview()"/></div>
+            </div>
+
+            <div class="bg-panel" id="bg-panel-gif">
+              <div class="drop-zone" onclick="document.getElementById('gifUpload').click()" ondragover="event.preventDefault();this.classList.add('dragover')" ondragleave="this.classList.remove('dragover')" ondrop="handleBgDrop(event,'gif')">
+                <div class="drop-zone-icon">🎞️</div>
+                <div class="drop-zone-text">Drop a GIF here or click to browse<br><span style="font-size:10px;opacity:0.6">Max 8MB · Will loop automatically</span></div>
+                <input type="file" id="gifUpload" accept=".gif" onchange="handleBgUpload(event,'gif')"/>
+              </div>
+              <div class="field" style="margin-top:12px"><div class="field-label">Or paste GIF URL</div><input class="field-input" id="gifUrlInput" placeholder="https://...gif" oninput="updatePreview()"/></div>
+            </div>
+
+            <div class="bg-panel" id="bg-panel-video">
+              <div class="drop-zone" onclick="document.getElementById('videoUpload').click()" ondragover="event.preventDefault();this.classList.add('dragover')" ondragleave="this.classList.remove('dragover')" ondrop="handleBgDrop(event,'video')">
+                <div class="drop-zone-icon">📹</div>
+                <div class="drop-zone-text">Drop a video here or click to browse<br><span style="font-size:10px;opacity:0.6">MP4 · WebM · Max 20MB · Plays muted, looping</span></div>
+                <input type="file" id="videoUpload" accept=".mp4,.webm,.ogg" onchange="handleBgUpload(event,'video')"/>
+              </div>
+              <div class="field" style="margin-top:12px"><div class="field-label">Or paste video URL</div><input class="field-input" id="videoUrlInput" placeholder="https://...mp4" oninput="updatePreview()"/></div>
+            </div>
+          </div>
+
+          <!-- LAYOUT & FONT -->
+          <div class="card">
+            <div class="card-title">Layout & Typography</div>
+            <div class="field-label" style="margin-bottom:10px">Profile Layout</div>
+            <div class="layout-options" style="margin-bottom:18px">
+              <div class="layout-btn selected" onclick="setLayout('centered',this)"><div class="layout-icon">⊡</div><div class="layout-name">Centered</div></div>
+              <div class="layout-btn" onclick="setLayout('left',this)"><div class="layout-icon">▤</div><div class="layout-name">Left Align</div></div>
+              <div class="layout-btn" onclick="setLayout('card',this)"><div class="layout-icon">◫</div><div class="layout-name">Card Stack</div></div>
+            </div>
+            <div class="field-label" style="margin-bottom:10px">Font</div>
+            <div class="font-options" style="margin-bottom:18px">
+              <div class="font-btn selected" style="font-family:'DM Sans',sans-serif" onclick="setFont('DM Sans',this)">DM Sans<br><span style="font-size:10px;opacity:0.5">Clean</span></div>
+              <div class="font-btn" style="font-family:'Space Mono',monospace" onclick="setFont('Space Mono',this)">MONO<br><span style="font-size:10px;opacity:0.5">Technical</span></div>
+              <div class="font-btn" style="font-family:'Bebas Neue',sans-serif;font-size:16px" onclick="setFont('Bebas Neue',this)">BEBAS<br><span style="font-size:10px;opacity:0.5;font-family:'DM Sans'">Bold</span></div>
+            </div>
+            <div class="grid-2">
+              <div class="field">
+                <div class="field-label">Accent Color</div>
+                <input class="field-input" type="color" id="accentColorInput" value="#5865F2" onchange="updatePreview()"/>
+              </div>
+              <div class="field">
+                <div class="field-label">Text Color</div>
+                <input class="field-input" type="color" id="textColorInput" value="#ffffff" onchange="updatePreview()"/>
+              </div>
+              <div class="field">
+                <div class="field-label">Card Color</div>
+                <input class="field-input" type="color" id="cardColorInput" value="#111111" onchange="updatePreview()"/>
+              </div>
+              <div class="field">
+                <div class="field-label">Card Opacity %</div>
+                <input class="field-input" type="number" id="cardOpacityInput" value="92" min="20" max="100" oninput="updatePreview()"/>
+              </div>
+            </div>
+          </div>
+
+          <!-- EFFECTS -->
+          <div class="card">
+            <div class="card-title">Effects & Features</div>
+            <div class="fx-grid">
+              <div class="fx-card" id="fx-music" onclick="toggleFx('music')">
+                <div><div class="fx-label">🎵 Background Music</div><div class="fx-sub">Auto-plays when profile loads</div></div>
+                <div class="toggle" id="fx-toggle-music"></div>
+              </div>
+              <div class="fx-card" id="fx-anim" onclick="toggleFx('anim')">
+                <div><div class="fx-label">✨ Animated BG</div><div class="fx-sub">Subtle movement on background</div></div>
+                <div class="toggle" id="fx-toggle-anim"></div>
+              </div>
+              <div class="fx-card" id="fx-particles" onclick="toggleFx('particles')">
+                <div><div class="fx-label">🌌 Particle Effect</div><div class="fx-sub">Floating particles overlay</div></div>
+                <div class="toggle" id="fx-toggle-particles"></div>
+              </div>
+              <div class="fx-card" id="fx-glassmorphism" onclick="toggleFx('glassmorphism')">
+                <div><div class="fx-label">🪟 Glassmorphism</div><div class="fx-sub">Frosted glass card style</div></div>
+                <div class="toggle" id="fx-toggle-glassmorphism"></div>
+              </div>
+              <div class="fx-card" id="fx-blur" onclick="toggleFx('blur')">
+                <div><div class="fx-label">💧 Background Blur</div><div class="fx-sub">Blur the BG behind cards</div></div>
+                <div class="toggle" id="fx-toggle-blur"></div>
+              </div>
+              <div class="fx-card" id="fx-cursor" onclick="toggleFx('cursor')">
+                <div><div class="fx-label">🖱️ Custom Cursor</div><div class="fx-sub">Glow trail on cursor</div></div>
+                <div class="toggle" id="fx-toggle-cursor"></div>
+              </div>
+            </div>
+            <div id="music-section" style="display:none;margin-top:16px">
+              <div class="section-divider"><span>Music Source</span></div>
+              <div class="field"><div class="field-label">Music URL</div><input class="field-input" id="musicUrlInput" placeholder="Direct MP3/WAV/OGG URL" oninput="updatePreview()"/><div class="field-hint">Direct audio file URL. No YouTube or Spotify.</div></div>
+              <div class="field"><div class="field-label">Or Upload MP3</div><input class="field-input" type="file" id="musicFileInput" accept=".mp3,.wav,.ogg,.m4a" onchange="handleMusicUpload(event)"/><div class="field-hint" id="uploadStatus"></div></div>
+              <div class="field"><label class="field-label"><input type="checkbox" id="musicAutoplayInput"/> Autoplay (muted until interaction)</label></div>
+            </div>
+          </div>
+
           <div class="btn-row right">
             <button class="btn btn-ghost" onclick="loadProfile()">Discard</button>
             <button class="btn btn-primary" onclick="saveProfile()">Save Changes</button>
           </div>
         </div>
+
+        <!-- SIDEBAR PREVIEW -->
         <div class="helper-stack">
           <div class="card preview-card">
             <div class="preview-title">LIVE PREVIEW</div>
             <div class="live-preview" id="livePreview">
-              <div class="lp-banner"></div>
-              <div class="lp-avatar-wrap"><div class="lp-avatar">A</div></div>
+              <div class="lp-banner" id="previewBanner"></div>
+              <div class="lp-avatar-wrap"><div class="lp-avatar" id="previewAvatar">A</div></div>
               <div class="lp-body">
                 <div class="lp-kicker">Verified profile</div>
-                <div class="lp-name">User</div>
-                <div class="lp-tag">cordfol.org/yourname</div>
-                <div class="lp-bio">Your bio here.</div>
-                <div class="lp-summary">
-                  <div class="lp-stat"><strong>2</strong> Roles</div>
-                  <div class="lp-stat"><strong>1</strong> Bot Proof</div>
-                </div>
-                <div class="lp-roles"><div class="lp-role"><div class="lp-dot"></div>Head Mod</div><div class="lp-role"><div class="lp-dot"></div>Dev</div></div>
+                <div class="lp-name" id="previewName">User</div>
+                <div class="lp-tag" id="previewTag">cordfol.org/yourname</div>
+                <div class="lp-bio" id="previewBio">Your bio here.</div>
+                <div class="lp-summary"><div class="lp-stat"><strong>2</strong> Roles</div><div class="lp-stat"><strong>1</strong> Bot Proof</div></div>
+                <div class="lp-roles" id="lp-roles"><div class="lp-role"><div class="lp-dot"></div>Head Mod</div><div class="lp-role"><div class="lp-dot"></div>Dev</div></div>
               </div>
             </div>
           </div>
@@ -387,104 +542,55 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
             <div class="preview-title">PROFILE SIGNALS</div>
             <div class="helper-list">
               <div class="helper-item"><span>Handle status</span><strong id="previewHandleState">Ready to claim</strong></div>
-              <div class="helper-item"><span>Profile style</span><strong id="previewThemeState">Clean glass</strong></div>
+              <div class="helper-item"><span>Layout</span><strong id="previewLayoutState">Centered</strong></div>
               <div class="helper-item"><span>Trust layer</span><strong>OAuth + Bot</strong></div>
+              <div class="helper-item"><span>Email</span><strong id="previewEmailState">Not set</strong></div>
             </div>
           </div>
         </div>
       </div>
     </div>
 
+    <!-- THEME TAB -->
     <div class="tab" id="tab-theme">
       <div class="page-title">Theme & Appearance</div>
-      <div class="page-sub">Choose how your public profile looks.</div>
+      <div class="page-sub">Choose how your public profile looks. More themes coming soon.</div>
       <div class="card">
         <div class="card-title">Choose a theme</div>
         <div class="theme-grid">
-          <div class="theme-card selected" onclick="selectTheme(this,'Void')">
-            <div class="theme-preview" style="background:#0d0d0d"><div style="width:100%;height:10px;border-radius:5px;background:#5865F2;opacity:0.9"></div></div>
-            <div class="theme-name">Void</div><span class="theme-tag tag-free">FREE</span>
-          </div>
-          <div class="theme-card" onclick="selectTheme(this,'Abyss')">
-            <div class="theme-preview" style="background:#0f172a"><div style="width:100%;height:10px;border-radius:5px;background:#38bdf8;opacity:0.9"></div></div>
-            <div class="theme-name">Abyss</div><span class="theme-tag tag-free">FREE</span>
-          </div>
-          <div class="theme-card" onclick="selectTheme(this,'Nebula')">
-            <div class="theme-preview" style="background:#1a0a2e"><div style="width:100%;height:10px;border-radius:5px;background:#a855f7;opacity:0.9"></div></div>
-            <div class="theme-name">Nebula</div><span class="theme-tag tag-free">FREE</span>
-          </div>
-          <div class="theme-card" onclick="selectTheme(this,'Glass')">
-            <div class="theme-preview" style="background:linear-gradient(135deg,#0d0d0d,#1a1a2e)"><div style="width:55%;height:32px;border-radius:7px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12)"></div></div>
-            <div class="theme-name">Glass</div><span class="theme-tag tag-free">FREE</span>
-          </div>
-          <div class="theme-card" onclick="selectTheme(this,'Prismatic')">
-            <div class="theme-preview" style="background:linear-gradient(135deg,#050510,#0a0520)"><div style="width:55%;height:32px;border-radius:7px;background:rgba(88,101,242,0.12);border:1px solid rgba(88,101,242,0.25)"></div></div>
-            <div class="theme-name">Prismatic</div><span class="theme-tag tag-free">FREE</span>
-          </div>
-          <div class="theme-card" onclick="selectTheme(this,'Ember')">
-            <div class="theme-preview" style="background:#0a0a0a"><div style="width:55%;height:32px;border-radius:7px;background:rgba(255,184,0,0.1);border:1px solid rgba(255,184,0,0.25)"></div></div>
-            <div class="theme-name">Ember</div><span class="theme-tag tag-free">FREE</span>
-          </div>
+          <div class="theme-card selected" onclick="selectTheme(this,'Void')"><div class="theme-preview" style="background:#0d0d0d"><div style="width:100%;height:10px;border-radius:5px;background:#5865F2;opacity:0.9"></div></div><div class="theme-name">Void</div><span class="theme-tag tag-free">FREE</span></div>
+          <div class="theme-card" onclick="selectTheme(this,'Abyss')"><div class="theme-preview" style="background:#0f172a"><div style="width:100%;height:10px;border-radius:5px;background:#38bdf8;opacity:0.9"></div></div><div class="theme-name">Abyss</div><span class="theme-tag tag-free">FREE</span></div>
+          <div class="theme-card" onclick="selectTheme(this,'Nebula')"><div class="theme-preview" style="background:#1a0a2e"><div style="width:100%;height:10px;border-radius:5px;background:#a855f7;opacity:0.9"></div></div><div class="theme-name">Nebula</div><span class="theme-tag tag-free">FREE</span></div>
+          <div class="theme-card" onclick="selectTheme(this,'Glass')"><div class="theme-preview" style="background:linear-gradient(135deg,#0d0d0d,#1a1a2e)"><div style="width:55%;height:32px;border-radius:7px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12)"></div></div><div class="theme-name">Glass</div><span class="theme-tag tag-free">FREE</span></div>
+          <div class="theme-card" onclick="selectTheme(this,'Prismatic')"><div class="theme-preview" style="background:linear-gradient(135deg,#050510,#0a0520)"><div style="width:55%;height:32px;border-radius:7px;background:rgba(88,101,242,0.12);border:1px solid rgba(88,101,242,0.25)"></div></div><div class="theme-name">Prismatic</div><span class="theme-tag tag-free">FREE</span></div>
+          <div class="theme-card" onclick="selectTheme(this,'Ember')"><div class="theme-preview" style="background:#0a0a0a"><div style="width:55%;height:32px;border-radius:7px;background:rgba(255,184,0,0.1);border:1px solid rgba(255,184,0,0.25)"></div></div><div class="theme-name">Ember</div><span class="theme-tag tag-free">FREE</span></div>
+          <div class="theme-card" onclick="selectTheme(this,'Aurora')"><div class="theme-preview" style="background:linear-gradient(135deg,#001a1a,#001224)"><div style="width:100%;height:100%;background:linear-gradient(135deg,rgba(0,255,178,0.2),rgba(88,101,242,0.2))"></div></div><div class="theme-name">Aurora</div><span class="theme-tag tag-pro">PRO</span></div>
+          <div class="theme-card" onclick="selectTheme(this,'Crimson')"><div class="theme-preview" style="background:#0f0007"><div style="width:100%;height:100%;background:linear-gradient(135deg,rgba(255,51,102,0.2),rgba(255,0,60,0.05))"></div></div><div class="theme-name">Crimson</div><span class="theme-tag tag-pro">PRO</span></div>
+          <div class="theme-card" onclick="selectTheme(this,'Gold')"><div class="theme-preview" style="background:#0a0800"><div style="width:100%;height:100%;background:linear-gradient(135deg,rgba(255,184,0,0.25),rgba(255,120,0,0.1))"></div></div><div class="theme-name">Gold</div><span class="theme-tag tag-pro">PRO</span></div>
         </div>
-      </div>
-      <div class="card">
-        <div class="card-title">Accent Color</div>
-        <div class="grid-2">
-          <div class="field"><div class="field-label">Primary Accent</div><input type="color" value="#5865F2" style="width:100%;height:36px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);cursor:pointer;padding:2px;"/></div>
-          <div class="field"><div class="field-label">Card Background</div><input type="color" value="#111111" style="width:100%;height:36px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);cursor:pointer;padding:2px;"/></div>
-        </div>
-        <div class="btn-row right" style="margin-top:0"><button class="btn btn-primary" onclick="showToast('THEME','Theme saved!')">Save Theme</button></div>
       </div>
     </div>
 
+    <!-- STATUS TAB -->
     <div class="tab" id="tab-status" style="display:none;">
       <div class="page-title">⭐ Creator Status</div>
-      <div class="page-sub">An exclusive feature. Showcase your current projects, what you're working on, and links to your work.</div>
+      <div class="page-sub">An exclusive feature. Showcase your current projects and what you're working on.</div>
       <div class="profile-layout">
         <div>
-          <div class="card">
-            <div class="card-title">Status Title</div>
-            <div class="field"><input class="field-input" type="text" id="statusTitle" placeholder="e.g., Building amazing things" maxlength="255" oninput="updateStatusPreview()"/></div>
-          </div>
-          <div class="card">
-            <div class="card-title">Description</div>
-            <div class="field"><textarea class="field-input" id="statusDescription" placeholder="Tell the world what you're working on..." style="min-height:100px;height:auto;" oninput="updateStatusPreview()"></textarea></div>
-          </div>
-          <div class="card">
-            <div class="card-title">Status Links</div>
-            <div id="statusLinksList" style="margin-bottom:14px;display:flex;flex-direction:column;gap:8px;"></div>
-            <button class="btn btn-ghost" onclick="addStatusLink()">+ Add Link</button>
-          </div>
-          <div class="card">
-            <div class="card-title">Visibility</div>
-            <div style="display:flex;flex-direction:column;gap:10px;">
-              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;"><input type="radio" name="statusVisibility" value="private" checked onchange="updateStatusPreview()"/> <span style="font-size:13px;">Private (Only you can see)</span></label>
-              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;"><input type="radio" name="statusVisibility" value="public" onchange="updateStatusPreview()"/> <span style="font-size:13px;">Public (Share with everyone)</span></label>
-            </div>
-          </div>
+          <div class="card"><div class="card-title">Status Title</div><div class="field"><input class="field-input" type="text" id="statusTitle" placeholder="e.g., Building amazing things" maxlength="255" oninput="updateStatusPreview()"/></div></div>
+          <div class="card"><div class="card-title">Description</div><div class="field"><textarea class="field-input" id="statusDescription" placeholder="Tell the world what you're working on..." style="min-height:100px;height:auto;" oninput="updateStatusPreview()"></textarea></div></div>
+          <div class="card"><div class="card-title">Status Links</div><div id="statusLinksList" style="margin-bottom:14px;display:flex;flex-direction:column;gap:8px;"></div><button class="btn btn-ghost" onclick="addStatusLink()">+ Add Link</button></div>
+          <div class="card"><div class="card-title">Visibility</div><div style="display:flex;flex-direction:column;gap:10px;"><label style="display:flex;align-items:center;gap:8px;cursor:pointer;"><input type="radio" name="statusVisibility" value="private" checked onchange="updateStatusPreview()"/> <span style="font-size:13px;">Private (Only you can see)</span></label><label style="display:flex;align-items:center;gap:8px;cursor:pointer;"><input type="radio" name="statusVisibility" value="public" onchange="updateStatusPreview()"/> <span style="font-size:13px;">Public (Share with everyone)</span></label></div></div>
           <div class="btn-row right"><button class="btn btn-primary" onclick="saveCreatorStatus()">Save Creator Status</button></div>
         </div>
         <div class="helper-stack">
-          <div class="card preview-card">
-            <div class="preview-title">LIVE PREVIEW</div>
-            <div style="background:linear-gradient(135deg,rgba(88,101,242,0.1),rgba(124,92,255,0.06));border-radius:12px;padding:16px;margin-top:10px;border:1px solid rgba(88,101,242,0.15);">
-              <div style="font-size:14px;font-weight:500;margin-bottom:8px;color:var(--text);" id="previewStatusTitle">Building amazing things</div>
-              <div style="font-size:12px;color:var(--muted2);line-height:1.6;margin-bottom:12px;" id="previewStatusDesc">Cordfol.io - Discord Identity, Verified.</div>
-              <div id="previewStatusLinks" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
-            </div>
-          </div>
-          <div class="card helper-card">
-            <div class="preview-title">TIPS</div>
-            <div class="helper-list">
-              <div class="helper-item"><span>Max title</span><strong style="color:var(--neon);">255 chars</strong></div>
-              <div class="helper-item"><span>Visibility</span><strong id="previewVisibility" style="color:var(--discord);">Private</strong></div>
-              <div class="helper-item"><span>Links</span><strong id="linkCount" style="color:var(--neon);">0</strong></div>
-            </div>
-          </div>
+          <div class="card preview-card"><div class="preview-title">LIVE PREVIEW</div><div style="background:linear-gradient(135deg,rgba(88,101,242,0.1),rgba(124,92,255,0.06));border-radius:12px;padding:16px;margin-top:10px;border:1px solid rgba(88,101,242,0.15);"><div style="font-size:14px;font-weight:500;margin-bottom:8px;" id="previewStatusTitle">Building amazing things</div><div style="font-size:12px;color:var(--muted2);line-height:1.6;margin-bottom:12px;" id="previewStatusDesc">Cordfol.io - Discord Identity, Verified.</div><div id="previewStatusLinks" style="display:flex;flex-wrap:wrap;gap:6px;"></div></div></div>
+          <div class="card helper-card"><div class="preview-title">TIPS</div><div class="helper-list"><div class="helper-item"><span>Max title</span><strong style="color:var(--neon);">255 chars</strong></div><div class="helper-item"><span>Visibility</span><strong id="previewVisibility" style="color:var(--discord);">Private</strong></div><div class="helper-item"><span>Links</span><strong id="linkCount" style="color:var(--neon);">0</strong></div></div></div>
         </div>
       </div>
     </div>
 
+    <!-- ANALYTICS TAB -->
     <div class="tab" id="tab-analytics">
       <div class="page-title">Profile Analytics</div>
       <div class="page-sub">How your public profile is performing. Data updates every hour.</div>
@@ -493,77 +599,70 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
         <div class="metric"><div class="metric-label">Role Clicks</div><div class="metric-val" id="cnt-roles">0</div><div class="metric-delta">+6% this week</div></div>
         <div class="metric"><div class="metric-label">Link Clicks</div><div class="metric-val" id="cnt-links">0</div><div class="metric-delta neg">-2% this week</div></div>
       </div>
-      <div class="card">
-        <div class="card-title">Views — last 7 days</div>
-        <div class="chart-area" id="chart"></div>
-        <div class="bar-days" id="chartDays"></div>
-      </div>
+      <div class="card"><div class="card-title">Views — last 7 days</div><div class="chart-area" id="chart"></div><div class="bar-days" id="chartDays"></div></div>
       <div class="split-panels">
-        <div class="card">
-          <div class="card-title">Top referrers</div>
-          <div class="ref-list">
-            <div class="ref-row"><div class="ref-label">Discord DMs</div><div class="ref-bar-wrap"><div class="ref-bar-fill" style="width:68%"></div></div><div class="ref-pct">68%</div></div>
-            <div class="ref-row"><div class="ref-label">Direct link</div><div class="ref-bar-wrap"><div class="ref-bar-fill" style="width:19%"></div></div><div class="ref-pct">19%</div></div>
-            <div class="ref-row"><div class="ref-label">Twitter / X</div><div class="ref-bar-wrap"><div class="ref-bar-fill" style="width:13%"></div></div><div class="ref-pct">13%</div></div>
-          </div>
-        </div>
-        <div class="card">
-          <div class="card-title">Most clicked roles</div>
-          <div class="ref-list">
-            <div class="ref-row"><div class="ref-label">Head Mod</div><div class="ref-bar-wrap"><div class="ref-bar-fill" style="width:72%"></div></div><div class="ref-pct">72%</div></div>
-            <div class="ref-row"><div class="ref-label">Developer</div><div class="ref-bar-wrap"><div class="ref-bar-fill" style="width:52%"></div></div><div class="ref-pct">52%</div></div>
-            <div class="ref-row"><div class="ref-label">Admin</div><div class="ref-bar-wrap"><div class="ref-bar-fill" style="width:28%"></div></div><div class="ref-pct">28%</div></div>
-          </div>
-        </div>
+        <div class="card"><div class="card-title">Top referrers</div><div class="ref-list"><div class="ref-row"><div class="ref-label">Discord DMs</div><div class="ref-bar-wrap"><div class="ref-bar-fill" style="width:68%"></div></div><div class="ref-pct">68%</div></div><div class="ref-row"><div class="ref-label">Direct link</div><div class="ref-bar-wrap"><div class="ref-bar-fill" style="width:19%"></div></div><div class="ref-pct">19%</div></div><div class="ref-row"><div class="ref-label">Twitter / X</div><div class="ref-bar-wrap"><div class="ref-bar-fill" style="width:13%"></div></div><div class="ref-pct">13%</div></div></div></div>
+        <div class="card"><div class="card-title">Most clicked roles</div><div class="ref-list"><div class="ref-row"><div class="ref-label">Head Mod</div><div class="ref-bar-wrap"><div class="ref-bar-fill" style="width:72%"></div></div><div class="ref-pct">72%</div></div><div class="ref-row"><div class="ref-label">Developer</div><div class="ref-bar-wrap"><div class="ref-bar-fill" style="width:52%"></div></div><div class="ref-pct">52%</div></div><div class="ref-row"><div class="ref-label">Admin</div><div class="ref-bar-wrap"><div class="ref-bar-fill" style="width:28%"></div></div><div class="ref-pct">28%</div></div></div></div>
       </div>
     </div>
 
+    <!-- BOT TAB -->
     <div class="tab" id="tab-bot">
       <div class="page-title">Bot Setup</div>
       <div class="page-sub">The Cordfol bot enables enhanced server-side role verification. Add it to any server you manage.</div>
-      <div class="card" style="border-color:rgba(255,184,0,0.2)">
-        <div class="card-title">How the dual-bot architecture works</div>
-        <div class="bot-compare">
-          <div class="bot-panel blue">
-            <div class="bot-panel-title blue">User OAuth Bot</div>
-            <div class="bot-panel-copy">Used when <strong>you log in</strong>. Reads your own guild membership and roles.</div>
-          </div>
-          <div class="bot-panel green">
-            <div class="bot-panel-title green">Server Bot</div>
-            <div class="bot-panel-copy">Sits in your server and confirms roles with bot-level proof.</div>
-          </div>
-        </div>
-      </div>
-      <div class="card">
-        <div class="card-title">Add the bot to a server</div>
-        <div class="hint-text">You must have <strong style="color:var(--text)">Manage Server</strong> permission in the target Discord server.</div>
-        <div class="field"><div class="field-label">Server ID (optional)</div><input id="botGuildId" class="field-input monospace" placeholder="e.g. 1234567890123456789"/></div>
-        <div class="btn-row">
-          <button class="btn btn-primary" onclick="addBotToServer()">Add Bot to Server</button>
-          <button class="btn btn-ghost" onclick="copyBotInviteLink()">Copy Invite Link</button>
-        </div>
-      </div>
+      <div class="card" style="border-color:rgba(255,184,0,0.2)"><div class="card-title">How the dual-bot architecture works</div><div class="bot-compare"><div class="bot-panel blue"><div class="bot-panel-title blue">User OAuth Bot</div><div class="bot-panel-copy">Used when <strong>you log in</strong>. Reads your own guild membership and roles.</div></div><div class="bot-panel green"><div class="bot-panel-title green">Server Bot</div><div class="bot-panel-copy">Sits in your server and confirms roles with bot-level proof.</div></div></div></div>
+      <div class="card"><div class="card-title">Add the bot to a server</div><div class="hint-text">You must have <strong style="color:var(--text)">Manage Server</strong> permission in the target Discord server.</div><div class="field"><div class="field-label">Server ID (optional)</div><input id="botGuildId" class="field-input monospace" placeholder="e.g. 1234567890123456789"/></div><div class="btn-row"><button class="btn btn-primary" onclick="addBotToServer()">Add Bot to Server</button><button class="btn btn-ghost" onclick="copyBotInviteLink()">Copy Invite Link</button></div></div>
     </div>
 
+    <!-- SERVERS TAB -->
     <div class="tab" id="tab-servers">
       <div class="page-title">My Discord Servers</div>
       <div class="page-sub">All servers from your last guild scan.</div>
-      <div class="card">
-        <div class="card-title">Scanned servers</div>
-        <div class="role-list" id="serverList"><div class="empty-state">Loading servers...</div></div>
-      </div>
+      <div class="card"><div class="card-title">Scanned servers</div><div class="role-list" id="serverList"><div class="empty-state">Loading servers...</div></div></div>
     </div>
 
   </div>
 </div>
 
+<!-- SIGN OUT MODAL -->
 <div class="modal-overlay" id="signOutModal" onclick="closeSignOutModal(event)">
   <div class="modal">
     <div class="modal-title">Sign out of Cordfol.io?</div>
     <div class="modal-desc">Signing out will stop automatic role re-verification until you log back in. Your roles won't be deleted.</div>
-    <div class="modal-actions">
-      <button class="btn btn-ghost" onclick="closeSignOutModal()">Cancel</button>
-      <button class="btn btn-danger" onclick="logout()">Yes, sign out</button>
+    <div class="modal-actions"><button class="btn btn-ghost" onclick="closeSignOutModal()">Cancel</button><button class="btn btn-danger" onclick="logout()">Yes, sign out</button></div>
+  </div>
+</div>
+
+<!-- MEDIA PICKER MODAL -->
+<div class="modal-overlay" id="mediaPickerModal" onclick="closeMediaPicker(event)">
+  <div class="modal wide">
+    <div class="modal-title" id="mediaPickerTitle">Choose Banner</div>
+    <div class="media-tabs">
+      <button class="media-tab active" onclick="switchMediaTab('url',this)">URL</button>
+      <button class="media-tab" onclick="switchMediaTab('upload',this)">Upload</button>
+      <button class="media-tab" onclick="switchMediaTab('presets',this)">Presets</button>
+    </div>
+
+    <div class="media-tab-panel active" id="media-panel-url">
+      <div class="field"><div class="field-label">Image / GIF / Video URL</div><input class="field-input" id="mediaUrlInput" placeholder="https://..."/></div>
+    </div>
+
+    <div class="media-tab-panel" id="media-panel-upload">
+      <div class="drop-zone" onclick="document.getElementById('mediaFileInput').click()" ondragover="event.preventDefault();this.classList.add('dragover')" ondragleave="this.classList.remove('dragover')" ondrop="handleMediaDrop(event)">
+        <div class="drop-zone-icon">📁</div>
+        <div class="drop-zone-text">Drop image, GIF, or video here<br><span style="font-size:10px;opacity:0.6">PNG · JPG · GIF · MP4 · WebM · Max 15MB</span></div>
+        <input type="file" id="mediaFileInput" accept="image/*,.gif,video/mp4,video/webm" onchange="handleMediaUpload(event)"/>
+      </div>
+      <div class="field-hint" id="mediaUploadStatus" style="margin-top:10px;text-align:center"></div>
+    </div>
+
+    <div class="media-tab-panel" id="media-panel-presets">
+      <div class="preset-grid" id="bannerPresetGrid"></div>
+    </div>
+
+    <div class="modal-actions" style="margin-top:20px">
+      <button class="btn btn-ghost" onclick="document.getElementById('mediaPickerModal').classList.remove('open')">Cancel</button>
+      <button class="btn btn-primary" onclick="applyMediaPicker()">Apply</button>
     </div>
   </div>
 </div>
@@ -571,710 +670,600 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
 <div class="toast" id="toast"><span class="toast-icon" id="toast-icon">OK</span><span id="toast-msg">Saved!</span></div>
 
 <script>
-(function() {
-  const params = new URLSearchParams(window.location.search);
-  const sid = params.get('sid');
-  const claim = params.get('claim');
-  if (sid) window._authSid = sid;
-  if (claim) window._claimSlug = claim;
-  if (sid || claim) window.history.replaceState({}, '', '/dashboard.html');
+(function(){
+  const params=new URLSearchParams(window.location.search);
+  const sid=params.get('sid'),claim=params.get('claim');
+  if(sid) window._authSid=sid;
+  if(claim) window._claimSlug=claim;
+  if(sid||claim) window.history.replaceState({},'','/dashboard.html');
 })();
 
-const API_BASE = 'https://api.cordfol.org/api';
-const OAUTH_LOGIN_URL = 'https://api.cordfol.org/api/auth/discord';
-const PUBLIC_BASE_URL = 'https://cordfol.org';
-const PUBLIC_HOST = 'cordfol.org';
-const CLAIM_COOKIE_NAME = 'cordfol_claim_slug';
-const DISCORD_BOT_CLIENT_ID = '1491214572231721071';
-const DISCORD_BOT_PERMISSIONS = '0';
+const API_BASE='https://api.cordfol.org/api';
+const OAUTH_LOGIN_URL='https://api.cordfol.org/api/auth/discord';
+const PUBLIC_BASE_URL='https://cordfol.org';
+const PUBLIC_HOST='cordfol.org';
+const CLAIM_COOKIE_NAME='cordfol_claim_slug';
+const DISCORD_BOT_CLIENT_ID='1491214572231721071';
+const DISCORD_BOT_PERMISSIONS='0';
 
-function buildPublicProfileUrl(slug = '') {
-  const cleanSlug = String(slug || '').replace(/^\/+|\/+$/g, '');
-  return cleanSlug ? `${PUBLIC_BASE_URL}/${cleanSlug}` : PUBLIC_BASE_URL;
-}
+// ── State ──
+let currentBgType='gradient';
+let currentBannerData={type:'gradient',value:''};
+let currentBgData={type:'gradient',value:''};
+let activeFx={music:false,anim:false,particles:false,glassmorphism:false,blur:false,cursor:false};
+let currentLayout='centered';
+let currentFont='DM Sans';
+let pendingMediaType='banner';
+let pendingMediaValue='';
 
-function goToDiscordLogin() { window.location.href = OAUTH_LOGIN_URL; }
+// ── Gradient presets ──
+const GRADIENTS=[
+  {label:'Void',v:'linear-gradient(135deg,#0d0d0d,#1a1a2e)'},
+  {label:'Discord',v:'linear-gradient(135deg,#1e2035,#3b4170)'},
+  {label:'Neon',v:'linear-gradient(135deg,#001a12,#003325)'},
+  {label:'Flame',v:'linear-gradient(135deg,#1a0500,#2e1200)'},
+  {label:'Ocean',v:'linear-gradient(135deg,#001a2e,#003a5c)'},
+  {label:'Candy',v:'linear-gradient(135deg,#1a0020,#2a0040)'},
+  {label:'Dusk',v:'linear-gradient(135deg,#0f0318,#1a0a2e)'},
+  {label:'Ember',v:'linear-gradient(135deg,#1a0a00,#251400)'},
+  {label:'Frost',v:'linear-gradient(135deg,#0a1a2e,#0a2238)'},
+  {label:'Rose',v:'linear-gradient(135deg,#1a000a,#280012)'},
+];
+const BANNER_PRESETS=[
+  {label:'Discord',v:'linear-gradient(135deg,#5865F2,#7c5cff)'},
+  {label:'Neon',v:'linear-gradient(135deg,#00FFB2,#00bfff)'},
+  {label:'Sunset',v:'linear-gradient(135deg,#FF3366,#FF8C00)'},
+  {label:'Galaxy',v:'linear-gradient(135deg,#1a0a2e,#7c5cff,#00FFB2)'},
+  {label:'Peach',v:'linear-gradient(135deg,#FF6B6B,#FFA500)'},
+  {label:'Ice',v:'linear-gradient(135deg,#87CEEB,#5865F2)'},
+  {label:'Forest',v:'linear-gradient(135deg,#1a4a1a,#00FFB2)'},
+  {label:'Crimson',v:'linear-gradient(135deg,#8B0000,#FF3366)'},
+];
 
-function sanitizeSlug(value) {
-  return String(value || '')
-    .toLowerCase()
-    .replace(/[^a-z0-9\-]/g, '')
-    .replace(/^-+|-+$/g, '')
-    .slice(0, 32);
-}
-
-function readCookie(name) {
-  const prefix = `${name}=`;
-  return document.cookie
-    .split(';')
-    .map(part => part.trim())
-    .find(part => part.startsWith(prefix))
-    ?.slice(prefix.length) || '';
-}
-
-function clearCookie(name) {
-  document.cookie = `${name}=; Max-Age=0; Path=/; Domain=.cordfol.org; Secure; SameSite=Lax`;
-}
-
-function getPendingClaimSlug() {
-  return sanitizeSlug(window._claimSlug || decodeURIComponent(readCookie(CLAIM_COOKIE_NAME) || ''));
-}
-
-function applyPendingClaimSlug() {
-  const pendingSlug = getPendingClaimSlug();
-  const slugInput = document.getElementById('slug');
-  if (!pendingSlug || !slugInput) return;
-
-  slugInput.value = pendingSlug;
-  checkSlug(slugInput);
-  updatePreview();
-  switchTab('profile');
-  document.getElementById('profileUrl').textContent = `Claim your public page at ${PUBLIC_HOST}/${pendingSlug}`;
-  document.getElementById('viewPublicPageLink').href = buildPublicProfileUrl(pendingSlug);
-  clearCookie(CLAIM_COOKIE_NAME);
-  window._claimSlug = '';
-  showToast('CLAIM', `Ready to claim ${PUBLIC_HOST}/${pendingSlug}`);
-}
-
-function switchTab(tab) {
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  document.getElementById('tab-' + tab).classList.add('active');
-  document.querySelector('[data-tab="' + tab + '"]').classList.add('active');
-  if (tab === 'analytics') initChart();
-}
-
-function toggleUserMenu() {
-  document.getElementById('userTrigger').classList.toggle('open');
-  document.getElementById('userMenu').classList.toggle('open');
-}
-
-function closeMenu() {
-  document.getElementById('userTrigger').classList.remove('open');
-  document.getElementById('userMenu').classList.remove('open');
-}
-
-document.addEventListener('click', e => { if (!e.target.closest('#userTrigger')) closeMenu(); });
-
-function closeSignOutModal(e) {
-  if (!e || e.target === document.getElementById('signOutModal')) {
-    document.getElementById('signOutModal').classList.remove('open');
-  }
-}
-
-function openSignOutModal() {
-  closeMenu();
-  document.getElementById('signOutModal').classList.add('open');
-}
-
-async function triggerScan(btn) {
-  const defaultLabel = btn.dataset.defaultLabel || btn.textContent;
-  btn.dataset.defaultLabel = defaultLabel;
-  btn.classList.add('loading');
-  btn.disabled = true;
-  try {
-    const sid = window._authSid;
-    const url = sid ? `${API_BASE}/verify/scan?sid=${sid}` : `${API_BASE}/verify/scan`;
-    const res = await fetch(url, { method: 'POST', credentials: 'include' });
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok) {
-      if (res.status === 429 && data.retryAfter) throw new Error(`Please wait ${data.retryAfter}s before scanning again.`);
-      throw new Error(data.error || 'Failed to start scan.');
-    }
-    showToast('SYNC', 'Guild re-scan started.', 'success');
-    loadRoles();
-  } catch (err) {
-    showToast('ERR', err.message || 'Failed to start scan.', 'error');
-  } finally {
-    setTimeout(() => { btn.textContent = defaultLabel; btn.disabled = false; btn.classList.remove('loading'); }, 2500);
-  }
-}
-
-const taken = ['admin', 'discord', 'cordfol', 'pro', 'verify', 'api'];
-async function checkSlug(el) {
-  const hint = document.getElementById('slug-hint');
-  const v = el.value.toLowerCase().replace(/[^a-z0-9\-]/g, '');
-  el.value = v;
-  if (!v) { hint.textContent = ''; return; }
-  
-  if (taken.includes(v)) { 
-    hint.textContent = '❌ This handle is unavailable'; 
-    hint.className = 'field-hint err'; 
-  } else {
-    // Check if profile exists for this slug
-    try {
-      const res = await fetch(`${API_BASE}/profile/${v}`);
-      if (res.ok) {
-        hint.textContent = '❌ This handle is unavailable'; 
-        hint.className = 'field-hint err';
-      } else {
-        hint.textContent = '✓ This handle is available'; 
-        hint.className = 'field-hint';
-      }
-    } catch {
-      hint.textContent = '✓ This handle is available'; 
-      hint.className = 'field-hint';
-    }
-  }
-  updatePreview();
-}
-
-function selectTheme(el, name) {
-  document.querySelectorAll('.theme-card').forEach(c => c.classList.remove('selected'));
-  el.classList.add('selected');
-  showToast('THEME', name + ' theme selected!');
-}
-
-const chartData = [142, 98, 210, 187, 245, 312, 90];
-const chartDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-let chartInited = false;
-function initChart() {
-  if (chartInited) return;
-  chartInited = true;
-  const max = Math.max(...chartData);
-  const container = document.getElementById('chart');
-  const days = document.getElementById('chartDays');
-  container.innerHTML = '';
-  days.innerHTML = '';
-  chartData.forEach((v, i) => {
-    const bar = document.createElement('div');
-    bar.className = 'bar';
-    bar.style.height = Math.round((v / max) * 100) + '%';
-    bar.title = chartDays[i] + ': ' + v + ' views';
-    container.appendChild(bar);
-    const d = document.createElement('div');
-    d.className = 'bar-day';
-    d.textContent = chartDays[i];
-    days.appendChild(d);
+function initPresets(){
+  const gc=document.getElementById('gradientPresets');
+  GRADIENTS.forEach((g,i)=>{
+    const el=document.createElement('div');
+    el.className='grad-chip'+(i===0?' selected':'');
+    el.style.background=g.v;
+    el.title=g.label;
+    el.onclick=()=>{
+      document.querySelectorAll('.grad-chip').forEach(c=>c.classList.remove('selected'));
+      el.classList.add('selected');
+      currentBgData={type:'gradient',value:g.v};
+      updatePreview();
+    };
+    gc.appendChild(el);
   });
-  animateCounterEl('cnt-views', 1284);
-  animateCounterEl('cnt-roles', 347);
-  animateCounterEl('cnt-links', 92);
+
+  const bc=document.getElementById('bannerPresetGrid');
+  BANNER_PRESETS.forEach(b=>{
+    const el=document.createElement('div');
+    el.className='preset-tile';
+    el.style.background=b.v;
+    el.innerHTML=`<div class="preset-tile-label">${b.label}</div>`;
+    el.onclick=()=>{
+      document.querySelectorAll('.preset-tile').forEach(t=>t.classList.remove('selected'));
+      el.classList.add('selected');
+      pendingMediaValue=b.v;
+    };
+    bc.appendChild(el);
+  });
 }
 
-function animateCounterEl(id, target) {
-  const el = document.getElementById(id);
-  const start = performance.now();
-  const dur = 1200;
-  function tick(now) {
-    const p = Math.min((now - start) / dur, 1);
-    const ease = 1 - Math.pow(1 - p, 3);
-    el.textContent = Math.floor(ease * target).toLocaleString();
-    if (p < 1) requestAnimationFrame(tick);
+function setBgType(type,btn){
+  currentBgType=type;
+  document.querySelectorAll('.bg-type-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.bg-panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('bg-panel-'+type).classList.add('active');
+  updatePreview();
+}
+
+function updateCustomGradient(){
+  const from=document.getElementById('gradFrom').value;
+  const to=document.getElementById('gradTo').value;
+  const v=`linear-gradient(135deg,${from},${to})`;
+  currentBgData={type:'gradient',value:v};
+  document.querySelectorAll('.grad-chip').forEach(c=>c.classList.remove('selected'));
+  updatePreview();
+}
+
+function setLayout(layout,btn){
+  currentLayout=layout;
+  document.querySelectorAll('.layout-btn').forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected');
+  document.getElementById('previewLayoutState').textContent=layout.charAt(0).toUpperCase()+layout.slice(1);
+  updatePreview();
+}
+
+function setFont(font,btn){
+  currentFont=font;
+  document.querySelectorAll('.font-btn').forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected');
+  updatePreview();
+}
+
+function toggleFx(key){
+  activeFx[key]=!activeFx[key];
+  const card=document.getElementById('fx-'+key);
+  const toggle=document.getElementById('fx-toggle-'+key);
+  card.classList.toggle('active',activeFx[key]);
+  toggle.classList.toggle('on',activeFx[key]);
+  if(key==='music'){
+    document.getElementById('music-section').style.display=activeFx[key]?'block':'none';
   }
-  requestAnimationFrame(tick);
+  updatePreview();
 }
 
-function buildBotInviteLink() {
-  const url = new URL('https://discord.com/oauth2/authorize');
-  const guildId = document.getElementById('botGuildId')?.value.trim();
-  url.searchParams.set('client_id', DISCORD_BOT_CLIENT_ID);
-  url.searchParams.set('scope', 'bot applications.commands');
-  url.searchParams.set('permissions', DISCORD_BOT_PERMISSIONS);
-  if (guildId) {
-    if (!/^\d{17,20}$/.test(guildId)) throw new Error('Please enter a valid Discord server ID.');
-    url.searchParams.set('guild_id', guildId);
-    url.searchParams.set('disable_guild_select', 'true');
-  }
-  return url.toString();
+// ── Media picker ──
+function openMediaPicker(type){
+  pendingMediaType=type;
+  pendingMediaValue='';
+  document.getElementById('mediaPickerTitle').textContent=type==='banner'?'Choose Banner':'Choose Media';
+  document.getElementById('mediaPickerModal').classList.add('open');
+  document.querySelectorAll('.media-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.media-tab-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelector('.media-tab').classList.add('active');
+  document.getElementById('media-panel-url').classList.add('active');
+  document.getElementById('mediaUrlInput').value='';
+  document.getElementById('mediaUploadStatus').textContent='';
 }
 
-function addBotToServer() {
-  try { window.location.href = buildBotInviteLink(); }
-  catch (err) { showToast('ERR', err.message); }
+function closeMediaPicker(e){
+  if(!e||e.target===document.getElementById('mediaPickerModal'))
+    document.getElementById('mediaPickerModal').classList.remove('open');
 }
 
-async function copyBotInviteLink() {
-  try {
-    await navigator.clipboard.writeText(buildBotInviteLink());
-    showToast('LINK', 'Invite link copied!');
-  } catch (err) {
-    showToast('ERR', err.message || 'Could not copy the invite link.');
-  }
+function switchMediaTab(tab,btn){
+  document.querySelectorAll('.media-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.media-tab-panel').forEach(p=>p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('media-panel-'+tab).classList.add('active');
 }
 
-let toastTimer;
-function showToast(icon, msg, type = 'info') {
-  const t = document.getElementById('toast');
-  const iconMap = { 'OK': '✓', 'ERR': '✕', 'THEME': '🎨', 'SYNC': '↻', 'LINK': '📋', 'CLAIM': '🎁', 'STATUS': '⭐' };
-  const typeMap = { 'success': 'success', 'error': 'error', 'info': 'info' };
-  
-  document.getElementById('toast-icon').textContent = iconMap[icon] || icon;
-  document.getElementById('toast-msg').textContent = msg;
-  
-  t.classList.remove('success', 'error', 'info');
-  if (icon === 'ERR') t.classList.add('error');
-  else if (icon === 'OK' || icon === 'CLAIM' || icon === 'STATUS') t.classList.add('success');
-  else t.classList.add(type);
-  
-  t.classList.add('show');
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => t.classList.remove('show'), 4000);
+function handleMediaDrop(e){
+  e.preventDefault();
+  e.currentTarget.classList.remove('dragover');
+  const file=e.dataTransfer.files[0];
+  if(file) processMediaFile(file);
 }
 
-function normalizeUser(rawUser) {
-  return {
-    discord_id: rawUser.discord_id || rawUser.discordId || '',
-    discord_username: rawUser.discord_username || rawUser.username || '',
-    display_name: rawUser.display_name || rawUser.displayName || rawUser.username || '',
-    slug: rawUser.slug || '',
-    plan: String(rawUser.plan || 'free').toLowerCase(),
-  };
+function handleMediaUpload(e){
+  const file=e.target.files[0];
+  if(file) processMediaFile(file);
 }
 
-async function checkSession() {
-  try {
-    const sid = window._authSid;
-    let res;
-    if (sid) {
-      res = await fetch(`${API_BASE}/auth/token?sid=${sid}`, { credentials: 'include' });
-    } else {
-      res = await fetch(`${API_BASE}/auth/me`, { credentials: 'include' });
-    }
-    if (!res.ok) throw new Error('Not logged in');
-    const data = await res.json();
-    if (!data.authenticated) throw new Error('Not authenticated');
-    const user = normalizeUser(data.user || data);
-    showUser(user);
-    await loadProfile(user);
-    applyPendingClaimSlug();
-    loadRoles();
-  } catch {
-    document.getElementById('loginBtn').style.display = '';
-    document.getElementById('userInfo').style.display = 'none';
-  }
-}
-
-function showUser(user) {
-  document.getElementById('loginBtn').style.display = 'none';
-  document.getElementById('userInfo').style.display = '';
-  const displayName = user.display_name || user.discord_username || 'User';
-  document.getElementById('userAvatar').textContent = displayName[0] || '?';
-  document.getElementById('userName').textContent = user.display_name || user.discord_username;
-  document.getElementById('discordName').textContent = user.discord_username;
-  document.getElementById('discordId').textContent = 'ID: ' + user.discord_id;
-  document.getElementById('planBadge').textContent = 'FREE PLAN';
-  document.getElementById('profileUrl').textContent = `Customize your public page at ${PUBLIC_HOST}/${user.slug}`;
-  document.getElementById('viewPublicPageLink').href = buildPublicProfileUrl(user.slug);
-  
-  // Show exclusive status page for creator / admin section
-  const ADMIN_USERNAME = 'gfxastro.';
-  const isAdmin = [user.discord_username, user.display_name]
-    .filter(Boolean)
-    .some(value => String(value).toLowerCase() === ADMIN_USERNAME.toLowerCase());
-  const adminBar = document.getElementById('adminControlBar');
-  if (isAdmin && adminBar) {
-    adminBar.style.display = 'flex';
-    document.getElementById('statusNavLink').style.display = '';
-    document.getElementById('statusMenuLink').style.display = '';
-    loadCreatorStatus();
-  } else if (adminBar) {
-    adminBar.style.display = 'none';
-  }
-}
-
-async function loadRoles() {
-  const roleList = document.getElementById('roleList');
-  const roleCount = document.getElementById('roleCount');
-  const scanStatus = document.getElementById('scanStatus');
-  roleList.innerHTML = '<div class="empty-state">Loading...</div>';
-  try {
-    const sid = window._authSid;
-    const url = sid ? `${API_BASE}/verify/roles?sid=${sid}` : `${API_BASE}/verify/roles`;
-    const res = await fetch(url, { credentials: 'include' });
-    if (!res.ok) throw new Error('No roles');
-    const data = await res.json();
-    const roles = data.roles || [];
-    if (!roles.length) {
-      roleList.innerHTML = '<div class="empty-state">No verified roles found yet. Try another guild scan.</div>';
-      roleCount.textContent = '0 roles';
-      scanStatus.innerHTML = '<div class="scan-dot"></div> No roles found';
-      return;
-    }
-    const activeRoles = roles.filter(role => role.is_active);
-    const latestCheck = roles.map(role => role.last_checked_at).filter(Boolean).sort().pop();
-    roleList.innerHTML = roles.map(role => `
-      <div class="role-row">
-        <div class="server-icon" style="background:rgba(88,101,242,0.15);color:#8b9fff">${role.guild_name ? role.guild_name[0].toUpperCase() : '?'}</div>
-        <div class="role-info">
-          <div class="role-name">${role.custom_label || role.role_name}</div>
-          <div class="role-meta">${role.guild_name}</div>
-        </div>
-        <div class="proof-chip"><div class="proof-dot" style="background:var(--neon)"></div>${role.proof_type}</div>
-        <div class="badge ${role.is_active ? 'badge-v' : 'badge-p'}">${role.is_active ? 'Verified' : 'Inactive'}</div>
-        <div class="toggle ${role.is_public ? 'on' : ''}" onclick="toggleRoleVisibility('${role.id}', ${role.is_public ? 'false' : 'true'}, this)"></div>
-      </div>
-    `).join('');
-    roleCount.textContent = `${activeRoles.length} active of ${roles.length} total`;
-    scanStatus.innerHTML = latestCheck
-      ? `<div class="scan-dot"></div> Last scanned ${new Date(latestCheck).toLocaleString()} · ${activeRoles.length} active roles`
-      : `<div class="scan-dot"></div> ${activeRoles.length} active roles`;
-  } catch {
-    roleList.innerHTML = '<div class="empty-state">Failed to load roles.</div>';
-    roleCount.textContent = '0 roles';
-    scanStatus.innerHTML = '<div class="scan-dot"></div> Error loading roles';
-  }
-}
-
-async function toggleRoleVisibility(roleId, isPublic, toggleEl) {
-  try {
-    const sid = window._authSid;
-    const url = sid ? `${API_BASE}/verify/roles/${roleId}?sid=${sid}` : `${API_BASE}/verify/roles/${roleId}`;
-    const res = await fetch(url, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({ isPublic })
-    });
-    if (!res.ok) throw new Error('Failed to update role visibility.');
-    toggleEl.classList.toggle('on', isPublic);
-    toggleEl.setAttribute('onclick', `toggleRoleVisibility('${roleId}', ${isPublic ? 'false' : 'true'}, this)`);
-    showToast('OK', isPublic ? 'Role is now public.' : 'Role hidden from public profile.');
-  } catch (err) {
-    showToast('ERR', err.message || 'Failed to update role visibility.');
-  }
-}
-
-async function loadProfile(user) {
-  try {
-    const res = await fetch(`${API_BASE}/profile/${user.slug}`);
-    if (!res.ok) throw new Error('No profile');
-    const data = await res.json();
-    document.getElementById('displayName').value = data.profile.displayName || '';
-    document.getElementById('slug').value = data.profile.slug || '';
-    document.getElementById('bioText').value = data.profile.bio || '';
-    document.getElementById('twitterInput').value = data.profile.socialLinks?.twitter || '';
-    document.getElementById('githubInput').value = data.profile.socialLinks?.github || '';
-    document.getElementById('youtubeInput').value = data.profile.socialLinks?.youtube || '';
-    document.getElementById('websiteInput').value = data.profile.socialLinks?.website || '';
-    document.getElementById('bannerUrlInput').value = data.profile.bannerUrl || '';
-    document.getElementById('backgroundColorInput').value = data.theme?.backgroundColor || '#0d0d0d';
-    document.getElementById('accentColorInput').value = data.theme?.accentColor || '#5865F2';
-    document.getElementById('textColorInput').value = data.theme?.textColor || '#ffffff';
-    document.getElementById('cardColorInput').value = data.theme?.cardColor || '#111111';
-    document.getElementById('musicUrlInput').value = data.theme?.musicUrl || '';
-    document.getElementById('musicAutoplayInput').checked = !!data.theme?.musicAutoplay;
-    document.getElementById('animatedBgInput').checked = !!data.theme?.animatedBg;
-    updatePreview();
-  } catch { /* leave blank */ }
-}
-
-async function saveProfile() {
-  const savBtn = document.querySelector('[onclick="saveProfile()"]');
-  savBtn.classList.add('loading');
-  savBtn.disabled = true;
-  
-  const displayName = document.getElementById('displayName').value;
-  const slug = document.getElementById('slug').value;
-  const bio = document.getElementById('bioText').value;
-  const social_links = {
-    twitter: document.getElementById('twitterInput').value,
-    github: document.getElementById('githubInput').value,
-    youtube: document.getElementById('youtubeInput').value,
-    website: document.getElementById('websiteInput').value
-  };
-  const bannerUrl = document.getElementById('bannerUrlInput').value;
-  const theme = {
-    backgroundColor: document.getElementById('backgroundColorInput').value,
-    accentColor: document.getElementById('accentColorInput').value,
-    textColor: document.getElementById('textColorInput').value,
-    cardColor: document.getElementById('cardColorInput').value,
-    musicUrl: document.getElementById('musicUrlInput').value,
-    musicAutoplay: document.getElementById('musicAutoplayInput').checked,
-    animatedBg: document.getElementById('animatedBgInput').checked,
-    customCss: null
-  };
-  try {
-    const sid = window._authSid;
-    const url = sid ? `${API_BASE}/profile?sid=${sid}` : `${API_BASE}/profile`;
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({ display_name: displayName, slug, bio, bannerUrl, social_links, theme })
-    });
-    if (!res.ok) {
-      if (res.status === 409) {
-        showToast('ERR', '❌ This handle is unavailable — already claimed!');
-      } else {
-        const error = await res.json().catch(() => ({ error: 'Failed to save' }));
-        showToast('ERR', error.error || 'Failed to save profile!');
-      }
-      return;
-    }
-    showToast('OK', 'Profile saved successfully!', 'success');
-    checkSession();
-  } catch (err) { 
-    showToast('ERR', 'Failed to save profile!', 'error'); 
-  } finally {
-    savBtn.classList.remove('loading');
-    savBtn.disabled = false;
-  }
-}
-
-function updatePreview() {
-  const preview = document.getElementById('livePreview');
-  if (!preview) return;
-  const name = document.getElementById('displayName').value || 'User';
-  const bio = document.getElementById('bioText').value || '';
-  const bannerUrl = document.getElementById('bannerUrlInput').value;
-  const backgroundColor = document.getElementById('backgroundColorInput').value;
-  const accentColor = document.getElementById('accentColorInput').value;
-  const textColor = document.getElementById('textColorInput').value;
-  const cardColor = document.getElementById('cardColorInput').value;
-  const musicUrl = document.getElementById('musicUrlInput').value;
-  const animatedBg = document.getElementById('animatedBgInput').checked;
-  const slugPreview = document.getElementById('slug').value;
-
-  preview.style.background = `linear-gradient(180deg, ${cardColor}, ${cardColor})`;
-  preview.style.color = textColor;
-  preview.style.borderColor = `${accentColor}33`;
-
-  if (animatedBg) {
-    preview.classList.add('preview-animated');
-  } else {
-    preview.classList.remove('preview-animated');
-  }
-
-  preview.innerHTML = `
-    <div class="lp-banner"></div>
-    <div class="lp-avatar-wrap"><div class="lp-avatar">${name[0] || '?'}</div></div>
-    <div class="lp-body">
-      <div class="lp-kicker">Verified profile</div>
-      <div class="lp-name">${name}</div>
-      <div class="lp-tag">${PUBLIC_HOST}/${slugPreview || 'yourname'}</div>
-      <div class="lp-bio">${bio ? `${bio.slice(0, 88)}${bio.length > 88 ? '...' : ''}` : 'Show your verified Discord history with a cleaner public profile.'}</div>
-      <div class="lp-summary">
-        <div class="lp-stat"><strong>2</strong> Roles</div>
-        <div class="lp-stat"><strong>1</strong> Bot Proof</div>
-      </div>
-      <div class="lp-roles" id="lp-roles"></div>
-      ${musicUrl ? `<div class="lp-music">Music enabled</div>` : ''}
-    </div>
-  `;
-
-  const bannerEl = preview.querySelector('.lp-banner');
-  const avatarEl = preview.querySelector('.lp-avatar');
-  const bioEl = preview.querySelector('.lp-bio');
-  const tagEl = preview.querySelector('.lp-tag');
-  bannerEl.style.background = bannerUrl
-    ? `linear-gradient(to bottom, rgba(0,0,0,0.1), rgba(0,0,0,0.34)), url('${bannerUrl}') center/cover`
-    : `linear-gradient(135deg, ${accentColor}, ${accentColor}cc 48%, rgba(0,255,178,0.72))`;
-  avatarEl.style.background = `linear-gradient(135deg, ${accentColor}, ${accentColor}cc)`;
-  avatarEl.style.color = textColor;
-  bioEl.style.color = `${textColor}aa`;
-  tagEl.style.color = `${textColor}aa`;
-  document.getElementById('previewHandleState').textContent = slugPreview ? `${PUBLIC_HOST}/${slugPreview}` : 'Needs a handle';
-  document.getElementById('previewThemeState').textContent = animatedBg ? 'Animated glow' : 'Clean glass';
-
-  if (slugPreview) {
-    fetch(`${API_BASE}/profile/${slugPreview}`)
-      .then(res => res.json())
-      .then(data => {
-        const roles = data.roles || [];
-        const el = document.getElementById('lp-roles');
-        if (el) {
-          el.innerHTML = roles.length
-            ? roles.slice(0, 4).map(r => `<div class="lp-role"><div class="lp-dot"></div>${r.roleName}</div>`).join('')
-            : '<div class="lp-role"><div class="lp-dot"></div>No verified roles yet</div>';
-        }
-      }).catch(() => {});
-  } else {
-    const el = document.getElementById('lp-roles');
-    if (el) el.innerHTML = '<div class="lp-role"><div class="lp-dot"></div>Verified roles appear here</div>';
-  }
-  return;
-
-  preview.style.background = cardColor;
-  preview.style.color = textColor;
-  preview.style.borderColor = `${accentColor}33`;
-  preview.style.backgroundImage = bannerUrl
-    ? `linear-gradient(to bottom, rgba(0,0,0,0.22), rgba(0,0,0,0.75)), url('${bannerUrl}')`
-    : 'none';
-  preview.style.backgroundSize = bannerUrl ? 'cover' : 'unset';
-  preview.style.backgroundPosition = bannerUrl ? 'center' : 'unset';
-
-  if (animatedBg) {
-    preview.classList.add('preview-animated');
-  } else {
-    preview.classList.remove('preview-animated');
-  }
-
-  preview.innerHTML = `
-    <div class="lp-avatar" style="background:${accentColor};color:${textColor};">${name[0] || '?'}</div>
-    <div class="lp-name">${name}</div>
-    <div class="lp-bio">${bio.slice(0, 60)}${bio.length > 60 ? '…' : ''}</div>
-    <div class="lp-roles" id="lp-roles"></div>
-    ${musicUrl ? `<div style="font-size:11px;color:${accentColor};margin-top:12px;display:flex;align-items:center;gap:6px;">🎵 Music enabled</div>` : ''}
-  `;
-
-  const slugVal = document.getElementById('slug').value;
-  if (slugVal) {
-    fetch(`${API_BASE}/profile/${slugVal}`)
-      .then(res => res.json())
-      .then(data => {
-        const roles = data.roles || [];
-        const el = document.getElementById('lp-roles');
-        if (el) el.innerHTML = roles.map(r => `<div class="lp-role"><div class="lp-dot"></div>${r.roleName}</div>`).join('');
-      }).catch(() => {});
-  }
-}
-
-function handleMusicUpload(event) {
-  const file = event.target.files[0];
-  if (!file) return;
-
-  const statusEl = document.getElementById('uploadStatus');
-  const maxSize = 3 * 1024 * 1024; // 3MB max (base64 encoding adds ~33%)
-
-  if (file.size > maxSize) {
-    statusEl.textContent = 'File too large (max 3MB)';
-    statusEl.style.color = 'var(--hot)';
-    return;
-  }
-
-  statusEl.textContent = 'Converting file...';
-  statusEl.style.color = 'var(--muted2)';
-
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    const dataUrl = e.target.result;
-    document.getElementById('musicUrlInput').value = dataUrl;
-    statusEl.textContent = `${file.name} ready (${(file.size / 1024 / 1024).toFixed(2)}MB)`;
-    statusEl.style.color = 'var(--neon)';
-    updatePreview();
-  };
-  reader.onerror = () => {
-    statusEl.textContent = 'Failed to read file';
-    statusEl.style.color = 'var(--hot)';
+function processMediaFile(file){
+  const max=15*1024*1024;
+  const status=document.getElementById('mediaUploadStatus');
+  if(file.size>max){status.textContent='File too large (max 15MB)';status.style.color='var(--hot)';return;}
+  status.textContent='Reading file...';status.style.color='var(--muted2)';
+  const reader=new FileReader();
+  reader.onload=e=>{
+    pendingMediaValue=e.target.result;
+    status.textContent=`${file.name} ready (${(file.size/1024/1024).toFixed(2)}MB)`;
+    status.style.color='var(--neon)';
   };
   reader.readAsDataURL(file);
 }
 
-function logout() {
-  fetch(`${API_BASE}/auth/discord/logout`, { method: 'POST', credentials: 'include' })
-    .then(() => {
-      document.getElementById('signOutModal').classList.remove('open');
-      window.location.href = '/';
-    });
-}
-
-// Creator Status functions
-async function loadCreatorStatus() {
-  try {
-    const res = await fetch(`${API_BASE}/status`, { credentials: 'include' });
-    if (res.ok) {
-      const data = await res.json();
-      document.getElementById('statusTitle').value = data.statusTitle || '';
-      document.getElementById('statusDescription').value = data.statusDescription || '';
-      
-      const list = document.getElementById('statusLinksList');
-      list.innerHTML = '';
-      (data.statusLinks || []).forEach(link => {
-        addStatusLink(link.title, link.url);
-      });
-      
-      document.querySelector(`input[name="statusVisibility"][value="${data.statusVisibility || 'private'}"]`).checked = true;
-      updateStatusPreview();
-    }
-  } catch (err) {
-    console.error('Failed to load status:', err);
+function applyMediaPicker(){
+  const urlVal=document.getElementById('mediaUrlInput').value.trim();
+  const final=pendingMediaValue||urlVal;
+  if(!final){showToast('ERR','No media selected');return;}
+  
+  if(pendingMediaType==='banner'){
+    currentBannerData={type:final.startsWith('data:')||(final.startsWith('http')&&final.match(/\.(mp4|webm)$/i))?'video':'image',value:final};
+    updateBannerPreviewBox(final);
+    updatePreview();
   }
+  document.getElementById('mediaPickerModal').classList.remove('open');
+  showToast('OK','Media applied!','success');
 }
 
-function addStatusLink(title = '', url = '') {
-  const list = document.getElementById('statusLinksList');
-  const id = Date.now();
-  const item = document.createElement('div');
-  item.style.cssText = 'display:flex;gap:8px;align-items:flex-start;';
-  item.dataset.linkId = id;
-  item.innerHTML = `
-    <div style="flex:1;display:flex;flex-direction:column;gap:5px;">
-      <label style="font-size:11px;color:var(--muted2);text-transform:uppercase;letter-spacing:0.5px;">Title</label>
-      <input type="text" placeholder="Link title" value="${title}" class="field-input status-link-title" style="font-size:12px;"/>
-    </div>
-    <div style="flex:1;display:flex;flex-direction:column;gap:5px;">
-      <label style="font-size:11px;color:var(--muted2);text-transform:uppercase;letter-spacing:0.5px;">URL</label>
-      <input type="url" placeholder="https://example.com" value="${url}" class="field-input status-link-url" style="font-size:12px;"/>
-    </div>
-    <button type="button" class="btn btn-danger" onclick="removeStatusLink(${id})" style="align-self:flex-end;margin-top:24px;padding:8px 12px;">✕ Remove</button>
-  `;
-  list.appendChild(item);
-  
-  item.querySelectorAll('input').forEach(inp => inp.addEventListener('input', updateStatusPreview));
+function updateBannerPreviewBox(val){
+  const box=document.getElementById('bannerPreviewBox');
+  if(!val){box.innerHTML='<div class="media-preview-label">🖼️ Click to choose banner<br><span style="font-size:10px;opacity:0.6">Image · GIF · Video · Preset</span></div>';return;}
+  if(val.startsWith('linear-gradient')){box.innerHTML=`<div style="position:absolute;inset:0;border-radius:11px;background:${val}"></div>`;return;}
+  if(val.match(/\.(mp4|webm)/i)||val.startsWith('data:video')){box.innerHTML=`<video autoplay muted loop playsinline src="${val}"></video>`;return;}
+  box.innerHTML=`<img src="${val}" alt="banner"/>`;
 }
 
-function removeStatusLink(id) {
-  document.querySelector(`[data-link-id="${id}"]`)?.remove();
-  updateStatusPreview();
+function clearBanner(){
+  currentBannerData={type:'gradient',value:''};
+  updateBannerPreviewBox('');
+  updatePreview();
 }
 
-function updateStatusPreview() {
-  const title = document.getElementById('statusTitle').value || 'Building amazing things';
-  const desc = document.getElementById('statusDescription').value || 'Cordfol.io - Discord Identity, Verified.';
-  const visibility = document.querySelector('input[name="statusVisibility"]:checked')?.value || 'private';
-  
-  document.getElementById('previewStatusTitle').textContent = title;
-  document.getElementById('previewStatusDesc').textContent = desc;
-  document.getElementById('previewVisibility').textContent = visibility === 'public' ? 'Public' : 'Private';
-  
-  const previewLinks = document.getElementById('previewStatusLinks');
-  previewLinks.innerHTML = '';
-  
-  let linkCount = 0;
-  document.querySelectorAll('[data-link-id]').forEach((item) => {
-    const titleInput = item.querySelector('.status-link-title');
-    const urlInput = item.querySelector('.status-link-url');
-    if (titleInput.value && urlInput.value) {
-      linkCount++;
-      const link = document.createElement('a');
-      link.href = urlInput.value;
-      link.target = '_blank';
-      link.textContent = titleInput.value;
-      link.className = 'social-badge';
-      previewLinks.appendChild(link);
-    }
-  });
-  
-  document.getElementById('linkCount').textContent = linkCount;
-}
-
-async function saveCreatorStatus() {
-  const links = [];
-  document.querySelectorAll('[data-link-id]').forEach((item, idx) => {
-    const title = item.querySelector('.status-link-title').value;
-    const url = item.querySelector('.status-link-url').value;
-    if (title && url) {
-      links.push({ title, url });
-    }
-  });
-  
-  const data = {
-    statusTitle: document.getElementById('statusTitle').value,
-    statusDescription: document.getElementById('statusDescription').value,
-    statusLinks: links,
-    statusVisibility: document.querySelector('input[name="statusVisibility"]:checked').value
+function handleBgUpload(e,type){
+  const file=e.target.files[0];
+  if(!file) return;
+  const max=type==='video'?20*1024*1024:8*1024*1024;
+  if(file.size>max){showToast('ERR',`File too large (max ${type==='video'?20:8}MB)`);return;}
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    currentBgData={type,value:ev.target.result};
+    updatePreview();
+    showToast('OK',`${type==='video'?'Video':'GIF'} background loaded!`,'success');
   };
-  
-  try {
-    const res = await fetch(`${API_BASE}/status`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify(data)
-    });
-    
-    if (!res.ok) throw new Error('Failed to save');
-    showToast('STATUS', 'Creator status saved!');
-  } catch (err) {
-    showToast('ERR', err.message || 'Failed to save creator status');
+  reader.readAsDataURL(file);
+}
+
+function handleBgDrop(e,type){
+  e.preventDefault();
+  e.currentTarget.classList.remove('dragover');
+  const file=e.dataTransfer.files[0];
+  if(file) handleBgUpload({target:{files:[file]}},type);
+}
+
+// ── Email ──
+function updateEmailState(){
+  const email=document.getElementById('emailInput').value.trim();
+  const btnRow=document.getElementById('emailBtnRow');
+  const preview=document.getElementById('previewEmailState');
+  if(email&&email.includes('@')){
+    btnRow.style.display='flex';
+    preview.textContent=email;
+  } else {
+    btnRow.style.display='none';
+    preview.textContent='Not set';
   }
 }
 
-window.onload = () => {
-  document.getElementById('profileHostLabel').textContent = `${PUBLIC_HOST}/`;
-  document.getElementById('profileUrl').textContent = `Customize your public page at ${PUBLIC_HOST}/...`;
+function sendVerifyEmail(){
+  showToast('OK','Verification email sent! Check your inbox.','success');
+}
+
+// ── Live preview ──
+function updatePreview(){
+  const name=document.getElementById('displayName').value||'User';
+  const bio=document.getElementById('bioText').value||'';
+  const slugVal=document.getElementById('slug').value;
+  const accent=document.getElementById('accentColorInput').value;
+  const textCol=document.getElementById('textColorInput').value;
+  const cardCol=document.getElementById('cardColorInput').value;
+  const cardOpacity=parseInt(document.getElementById('cardOpacityInput').value||92);
+  const musicUrl=document.getElementById('musicUrlInput')?.value;
+
+  // Banner
+  const banner=document.getElementById('previewBanner');
+  banner.innerHTML='';
+  if(currentBannerData.value){
+    if(currentBannerData.value.startsWith('linear-gradient')){
+      banner.style.background=currentBannerData.value;
+    } else if(currentBannerData.value.match(/\.(mp4|webm)/i)||currentBannerData.value.startsWith('data:video')){
+      banner.style.background='#111';
+      const v=document.createElement('video');v.autoplay=true;v.muted=true;v.loop=true;v.playsInline=true;v.src=currentBannerData.value;banner.appendChild(v);
+    } else {
+      banner.style.background='#111';
+      const img=document.createElement('img');img.className='lp-banner-media';img.src=currentBannerData.value;banner.appendChild(img);
+    }
+  } else {
+    banner.style.background=`linear-gradient(135deg,${accent},${accent}cc 48%,rgba(0,255,178,0.72))`;
+  }
+
+  // Name, bio, tag
+  document.getElementById('previewAvatar').textContent=name[0]||'?';
+  document.getElementById('previewAvatar').style.background=`linear-gradient(135deg,${accent},${accent}cc)`;
+  document.getElementById('previewName').textContent=name;
+  document.getElementById('previewTag').textContent=`${PUBLIC_HOST}/${slugVal||'yourname'}`;
+  document.getElementById('previewBio').textContent=bio.slice(0,88)+(bio.length>88?'...':'');
+  document.getElementById('previewHandleState').textContent=slugVal?`${PUBLIC_HOST}/${slugVal}`:'Needs a handle';
+
+  // Card bg
+  const hex=cardCol.replace('#','');
+  const r=parseInt(hex.substring(0,2),16),g2=parseInt(hex.substring(2,4),16),b=parseInt(hex.substring(4,6),16);
+  document.getElementById('livePreview').style.background=`rgba(${r},${g2},${b},${cardOpacity/100})`;
+  if(activeFx.glassmorphism) document.getElementById('livePreview').style.backdropFilter='blur(18px)';
+  else document.getElementById('livePreview').style.backdropFilter='none';
+}
+
+// ── Nav / tabs ──
+function switchTab(tab){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('tab-'+tab).classList.add('active');
+  const navEl=document.querySelector('[data-tab="'+tab+'"]');
+  if(navEl) navEl.classList.add('active');
+  if(tab==='analytics') initChart();
+}
+
+function toggleUserMenu(){
+  document.getElementById('userTrigger').classList.toggle('open');
+  document.getElementById('userMenu').classList.toggle('open');
+}
+function closeMenu(){
+  document.getElementById('userTrigger').classList.remove('open');
+  document.getElementById('userMenu').classList.remove('open');
+}
+document.addEventListener('click',e=>{if(!e.target.closest('#userTrigger'))closeMenu();});
+
+function closeSignOutModal(e){
+  if(!e||e.target===document.getElementById('signOutModal'))
+    document.getElementById('signOutModal').classList.remove('open');
+}
+function openSignOutModal(){closeMenu();document.getElementById('signOutModal').classList.add('open');}
+
+// ── Verify / roles ──
+async function triggerScan(btn){
+  btn.classList.add('loading');btn.disabled=true;
+  try{
+    const sid=window._authSid;
+    const url=sid?`${API_BASE}/verify/scan?sid=${sid}`:`${API_BASE}/verify/scan`;
+    const res=await fetch(url,{method:'POST',credentials:'include'});
+    const data=await res.json().catch(()=>({}));
+    if(!res.ok){if(res.status===429&&data.retryAfter)throw new Error(`Wait ${data.retryAfter}s before scanning again.`);throw new Error(data.error||'Failed to start scan.');}
+    showToast('SYNC','Guild re-scan started.','success');loadRoles();
+  }catch(err){showToast('ERR',err.message||'Failed to start scan.','error');}
+  finally{setTimeout(()=>{btn.disabled=false;btn.classList.remove('loading');},2500);}
+}
+
+const taken=['admin','discord','cordfol','pro','verify','api'];
+async function checkSlug(el){
+  const hint=document.getElementById('slug-hint');
+  const v=el.value.toLowerCase().replace(/[^a-z0-9\-]/g,'');
+  el.value=v;
+  if(!v){hint.textContent='';return;}
+  if(taken.includes(v)){hint.textContent='❌ This handle is unavailable';hint.className='field-hint err';return;}
+  try{
+    const res=await fetch(`${API_BASE}/profile/${v}`);
+    if(res.ok){hint.textContent='❌ This handle is unavailable';hint.className='field-hint err';}
+    else{hint.textContent='✓ This handle is available';hint.className='field-hint';}
+  }catch{hint.textContent='✓ This handle is available';hint.className='field-hint';}
+  updatePreview();
+}
+
+function selectTheme(el,name){
+  document.querySelectorAll('.theme-card').forEach(c=>c.classList.remove('selected'));
+  el.classList.add('selected');
+  showToast('THEME',name+' theme selected!');
+}
+
+// ── Analytics chart ──
+const chartData=[142,98,210,187,245,312,90];
+const chartDays=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+let chartInited=false;
+function initChart(){
+  if(chartInited)return;chartInited=true;
+  const max=Math.max(...chartData);
+  const container=document.getElementById('chart');
+  const days=document.getElementById('chartDays');
+  container.innerHTML='';days.innerHTML='';
+  chartData.forEach((v,i)=>{
+    const bar=document.createElement('div');bar.className='bar';
+    bar.style.height=Math.round((v/max)*100)+'%';bar.title=chartDays[i]+': '+v+' views';
+    container.appendChild(bar);
+    const d=document.createElement('div');d.className='bar-day';d.textContent=chartDays[i];days.appendChild(d);
+  });
+  animateCounterEl('cnt-views',1284);animateCounterEl('cnt-roles',347);animateCounterEl('cnt-links',92);
+}
+
+function animateCounterEl(id,target){
+  const el=document.getElementById(id);const start=performance.now();const dur=1200;
+  function tick(now){const p=Math.min((now-start)/dur,1);const ease=1-Math.pow(1-p,3);el.textContent=Math.floor(ease*target).toLocaleString();if(p<1)requestAnimationFrame(tick);}
+  requestAnimationFrame(tick);
+}
+
+// ── Bot ──
+function buildBotInviteLink(){
+  const url=new URL('https://discord.com/oauth2/authorize');
+  const guildId=document.getElementById('botGuildId')?.value.trim();
+  url.searchParams.set('client_id',DISCORD_BOT_CLIENT_ID);
+  url.searchParams.set('scope','bot applications.commands');
+  url.searchParams.set('permissions',DISCORD_BOT_PERMISSIONS);
+  if(guildId){if(!/^\d{17,20}$/.test(guildId))throw new Error('Enter a valid Discord server ID.');url.searchParams.set('guild_id',guildId);url.searchParams.set('disable_guild_select','true');}
+  return url.toString();
+}
+function addBotToServer(){try{window.location.href=buildBotInviteLink();}catch(err){showToast('ERR',err.message);}}
+async function copyBotInviteLink(){try{await navigator.clipboard.writeText(buildBotInviteLink());showToast('LINK','Invite link copied!');}catch(err){showToast('ERR',err.message||'Could not copy link.');}}
+
+// ── Toast ──
+let toastTimer;
+function showToast(icon,msg,type='info'){
+  const t=document.getElementById('toast');
+  const iconMap={'OK':'✓','ERR':'✕','THEME':'🎨','SYNC':'↻','LINK':'📋','CLAIM':'🎁','STATUS':'⭐'};
+  document.getElementById('toast-icon').textContent=iconMap[icon]||icon;
+  document.getElementById('toast-msg').textContent=msg;
+  t.classList.remove('success','error','info');
+  if(icon==='ERR')t.classList.add('error');
+  else if(['OK','CLAIM','STATUS'].includes(icon))t.classList.add('success');
+  else t.classList.add(type);
+  t.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),4000);
+}
+
+// ── Auth / session ──
+function normalizeUser(rawUser){
+  return{discord_id:rawUser.discord_id||rawUser.discordId||'',discord_username:rawUser.discord_username||rawUser.username||'',display_name:rawUser.display_name||rawUser.displayName||rawUser.username||'',slug:rawUser.slug||'',plan:String(rawUser.plan||'free').toLowerCase()};
+}
+function goToDiscordLogin(){window.location.href=OAUTH_LOGIN_URL;}
+function readCookie(name){const prefix=`${name}=`;return document.cookie.split(';').map(p=>p.trim()).find(p=>p.startsWith(prefix))?.slice(prefix.length)||'';}
+function clearCookie(name){document.cookie=`${name}=; Max-Age=0; Path=/; Domain=.cordfol.org; Secure; SameSite=Lax`;}
+function sanitizeSlug(value){return String(value||'').toLowerCase().replace(/[^a-z0-9\-]/g,'').replace(/^-+|-+$/g,'').slice(0,32);}
+function getPendingClaimSlug(){return sanitizeSlug(window._claimSlug||decodeURIComponent(readCookie(CLAIM_COOKIE_NAME)||''));}
+function buildPublicProfileUrl(slug=''){const s=String(slug||'').replace(/^\/+|\/+$/g,'');return s?`${PUBLIC_BASE_URL}/${s}`:PUBLIC_BASE_URL;}
+
+function applyPendingClaimSlug(){
+  const pendingSlug=getPendingClaimSlug();
+  const slugInput=document.getElementById('slug');
+  if(!pendingSlug||!slugInput)return;
+  slugInput.value=pendingSlug;checkSlug(slugInput);updatePreview();switchTab('profile');
+  document.getElementById('profileUrl').textContent=`Claim your public page at ${PUBLIC_HOST}/${pendingSlug}`;
+  document.getElementById('viewPublicPageLink').href=buildPublicProfileUrl(pendingSlug);
+  clearCookie(CLAIM_COOKIE_NAME);window._claimSlug='';
+  showToast('CLAIM',`Ready to claim ${PUBLIC_HOST}/${pendingSlug}`);
+}
+
+async function checkSession(){
+  try{
+    const sid=window._authSid;
+    const res=sid?await fetch(`${API_BASE}/auth/token?sid=${sid}`,{credentials:'include'}):await fetch(`${API_BASE}/auth/me`,{credentials:'include'});
+    if(!res.ok)throw new Error('Not logged in');
+    const data=await res.json();
+    if(!data.authenticated)throw new Error('Not authenticated');
+    const user=normalizeUser(data.user||data);
+    showUser(user);await loadProfile(user);applyPendingClaimSlug();loadRoles();
+  }catch{
+    document.getElementById('loginBtn').style.display='';
+    document.getElementById('userInfo').style.display='none';
+  }
+}
+
+function showUser(user){
+  document.getElementById('loginBtn').style.display='none';
+  document.getElementById('userInfo').style.display='';
+  const displayName=user.display_name||user.discord_username||'User';
+  document.getElementById('userAvatar').textContent=displayName[0]||'?';
+  document.getElementById('userName').textContent=user.display_name||user.discord_username;
+  document.getElementById('discordName').textContent=user.discord_username;
+  document.getElementById('discordId').textContent='ID: '+user.discord_id;
+  document.getElementById('planBadge').textContent='FREE PLAN';
+  document.getElementById('profileUrl').textContent=`Customize your public page at ${PUBLIC_HOST}/${user.slug}`;
+  document.getElementById('viewPublicPageLink').href=buildPublicProfileUrl(user.slug);
+  const ADMIN_USERNAME='gfxastro.';
+  const isAdmin=[user.discord_username,user.display_name].filter(Boolean).some(v=>String(v).toLowerCase()===ADMIN_USERNAME.toLowerCase());
+  const adminBar=document.getElementById('adminControlBar');
+  if(isAdmin&&adminBar){adminBar.style.display='flex';document.getElementById('statusNavLink').style.display='';document.getElementById('statusMenuLink').style.display='';loadCreatorStatus();}
+  else if(adminBar){adminBar.style.display='none';}
+}
+
+async function loadRoles(){
+  const roleList=document.getElementById('roleList');const roleCount=document.getElementById('roleCount');const scanStatus=document.getElementById('scanStatus');
+  roleList.innerHTML='<div class="empty-state">Loading...</div>';
+  try{
+    const sid=window._authSid;
+    const url=sid?`${API_BASE}/verify/roles?sid=${sid}`:`${API_BASE}/verify/roles`;
+    const res=await fetch(url,{credentials:'include'});
+    if(!res.ok)throw new Error('No roles');
+    const data=await res.json();const roles=data.roles||[];
+    if(!roles.length){roleList.innerHTML='<div class="empty-state">No verified roles found yet. Try another guild scan.</div>';roleCount.textContent='0 roles';scanStatus.innerHTML='<div class="scan-dot"></div> No roles found';return;}
+    const active=roles.filter(r=>r.is_active);
+    const latest=roles.map(r=>r.last_checked_at).filter(Boolean).sort().pop();
+    roleList.innerHTML=roles.map(role=>`
+      <div class="role-row">
+        <div class="server-icon" style="background:rgba(88,101,242,0.15);color:#8b9fff">${role.guild_name?role.guild_name[0].toUpperCase():'?'}</div>
+        <div class="role-info"><div class="role-name">${role.custom_label||role.role_name}</div><div class="role-meta">${role.guild_name}</div></div>
+        <div class="proof-chip"><div class="proof-dot" style="background:var(--neon)"></div>${role.proof_type}</div>
+        <div class="badge ${role.is_active?'badge-v':'badge-p'}">${role.is_active?'Verified':'Inactive'}</div>
+        <div class="toggle ${role.is_public?'on':''}" onclick="toggleRoleVisibility('${role.id}',${role.is_public?'false':'true'},this)"></div>
+      </div>`).join('');
+    roleCount.textContent=`${active.length} active of ${roles.length} total`;
+    scanStatus.innerHTML=latest?`<div class="scan-dot"></div> Last scanned ${new Date(latest).toLocaleString()} · ${active.length} active roles`:`<div class="scan-dot"></div> ${active.length} active roles`;
+  }catch{roleList.innerHTML='<div class="empty-state">Failed to load roles.</div>';roleCount.textContent='0 roles';scanStatus.innerHTML='<div class="scan-dot"></div> Error loading roles';}
+}
+
+async function toggleRoleVisibility(roleId,isPublic,toggleEl){
+  try{
+    const sid=window._authSid;
+    const url=sid?`${API_BASE}/verify/roles/${roleId}?sid=${sid}`:`${API_BASE}/verify/roles/${roleId}`;
+    const res=await fetch(url,{method:'PATCH',headers:{'Content-Type':'application/json'},credentials:'include',body:JSON.stringify({isPublic})});
+    if(!res.ok)throw new Error('Failed to update role visibility.');
+    toggleEl.classList.toggle('on',isPublic);toggleEl.setAttribute('onclick',`toggleRoleVisibility('${roleId}',${isPublic?'false':'true'},this)`);
+    showToast('OK',isPublic?'Role is now public.':'Role hidden from public profile.');
+  }catch(err){showToast('ERR',err.message||'Failed to update role visibility.');}
+}
+
+async function loadProfile(user){
+  try{
+    const res=await fetch(`${API_BASE}/profile/${user.slug}`);if(!res.ok)throw new Error('No profile');
+    const data=await res.json();
+    document.getElementById('displayName').value=data.profile.displayName||'';
+    document.getElementById('slug').value=data.profile.slug||'';
+    document.getElementById('bioText').value=data.profile.bio||'';
+    document.getElementById('twitterInput').value=data.profile.socialLinks?.twitter||'';
+    document.getElementById('githubInput').value=data.profile.socialLinks?.github||'';
+    document.getElementById('youtubeInput').value=data.profile.socialLinks?.youtube||'';
+    document.getElementById('websiteInput').value=data.profile.socialLinks?.website||'';
+    document.getElementById('tiktokInput').value=data.profile.socialLinks?.tiktok||'';
+    document.getElementById('instagramInput').value=data.profile.socialLinks?.instagram||'';
+    document.getElementById('emailInput').value=data.profile.email||'';
+    document.getElementById('accentColorInput').value=data.theme?.accentColor||'#5865F2';
+    document.getElementById('textColorInput').value=data.theme?.textColor||'#ffffff';
+    document.getElementById('cardColorInput').value=data.theme?.cardColor||'#111111';
+    document.getElementById('musicUrlInput').value=data.theme?.musicUrl||'';
+    updateEmailState();updatePreview();
+  }catch{/* leave blank */}
+}
+
+async function saveProfile(){
+  const savBtn=document.querySelector('[onclick="saveProfile()"]');savBtn.classList.add('loading');savBtn.disabled=true;
+  const slug=document.getElementById('slug').value;
+  const body={
+    display_name:document.getElementById('displayName').value,slug,bio:document.getElementById('bioText').value,
+    email:document.getElementById('emailInput').value,
+    bannerUrl:currentBannerData.value||'',
+    social_links:{
+      twitter:document.getElementById('twitterInput').value,github:document.getElementById('githubInput').value,
+      youtube:document.getElementById('youtubeInput').value,website:document.getElementById('websiteInput').value,
+      tiktok:document.getElementById('tiktokInput').value,instagram:document.getElementById('instagramInput').value,
+    },
+    theme:{
+      accentColor:document.getElementById('accentColorInput').value,textColor:document.getElementById('textColorInput').value,
+      cardColor:document.getElementById('cardColorInput').value,cardOpacity:document.getElementById('cardOpacityInput').value,
+      musicUrl:document.getElementById('musicUrlInput').value,musicAutoplay:document.getElementById('musicAutoplayInput')?.checked||false,
+      animatedBg:activeFx.anim,glassmorphism:activeFx.glassmorphism,particles:activeFx.particles,
+      bgType:currentBgType,bgValue:currentBgData.value,layout:currentLayout,font:currentFont,
+    }
+  };
+  try{
+    const sid=window._authSid;const url=sid?`${API_BASE}/profile?sid=${sid}`:`${API_BASE}/profile`;
+    const res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},credentials:'include',body:JSON.stringify(body)});
+    if(!res.ok){if(res.status===409){showToast('ERR','❌ This handle is already taken!');}else{const err=await res.json().catch(()=>({error:'Failed to save'}));showToast('ERR',err.error||'Failed to save profile!');}return;}
+    showToast('OK','Profile saved!','success');checkSession();
+  }catch{showToast('ERR','Failed to save profile!','error');}
+  finally{savBtn.classList.remove('loading');savBtn.disabled=false;}
+}
+
+function handleMusicUpload(event){
+  const file=event.target.files[0];if(!file)return;
+  const statusEl=document.getElementById('uploadStatus');const max=3*1024*1024;
+  if(file.size>max){statusEl.textContent='File too large (max 3MB)';statusEl.style.color='var(--hot)';return;}
+  statusEl.textContent='Converting...';statusEl.style.color='var(--muted2)';
+  const reader=new FileReader();
+  reader.onload=e=>{document.getElementById('musicUrlInput').value=e.target.result;statusEl.textContent=`${file.name} ready (${(file.size/1024/1024).toFixed(2)}MB)`;statusEl.style.color='var(--neon)';updatePreview();};
+  reader.readAsDataURL(file);
+}
+
+function logout(){
+  fetch(`${API_BASE}/auth/discord/logout`,{method:'POST',credentials:'include'}).then(()=>{document.getElementById('signOutModal').classList.remove('open');window.location.href='/';});
+}
+
+// ── Creator Status ──
+async function loadCreatorStatus(){
+  try{
+    const res=await fetch(`${API_BASE}/status`,{credentials:'include'});
+    if(res.ok){const data=await res.json();document.getElementById('statusTitle').value=data.statusTitle||'';document.getElementById('statusDescription').value=data.statusDescription||'';const list=document.getElementById('statusLinksList');list.innerHTML='';(data.statusLinks||[]).forEach(l=>addStatusLink(l.title,l.url));document.querySelector(`input[name="statusVisibility"][value="${data.statusVisibility||'private'}"]`).checked=true;updateStatusPreview();}
+  }catch(err){console.error('Failed to load status:',err);}
+}
+function addStatusLink(title='',url=''){
+  const list=document.getElementById('statusLinksList');const id=Date.now();
+  const item=document.createElement('div');item.style.cssText='display:flex;gap:8px;align-items:flex-start;';item.dataset.linkId=id;
+  item.innerHTML=`<div style="flex:1;display:flex;flex-direction:column;gap:5px;"><label style="font-size:11px;color:var(--muted2);text-transform:uppercase;letter-spacing:0.5px;">Title</label><input type="text" placeholder="Link title" value="${title}" class="field-input status-link-title" style="font-size:12px;"/></div><div style="flex:1;display:flex;flex-direction:column;gap:5px;"><label style="font-size:11px;color:var(--muted2);text-transform:uppercase;letter-spacing:0.5px;">URL</label><input type="url" placeholder="https://example.com" value="${url}" class="field-input status-link-url" style="font-size:12px;"/></div><button type="button" class="btn btn-danger" onclick="removeStatusLink(${id})" style="align-self:flex-end;margin-top:24px;padding:8px 12px;">✕</button>`;
+  list.appendChild(item);item.querySelectorAll('input').forEach(inp=>inp.addEventListener('input',updateStatusPreview));
+}
+function removeStatusLink(id){document.querySelector(`[data-link-id="${id}"]`)?.remove();updateStatusPreview();}
+function updateStatusPreview(){
+  const title=document.getElementById('statusTitle').value||'Building amazing things';
+  const desc=document.getElementById('statusDescription').value||'Cordfol.io - Discord Identity, Verified.';
+  const vis=document.querySelector('input[name="statusVisibility"]:checked')?.value||'private';
+  document.getElementById('previewStatusTitle').textContent=title;document.getElementById('previewStatusDesc').textContent=desc;document.getElementById('previewVisibility').textContent=vis==='public'?'Public':'Private';
+  const pl=document.getElementById('previewStatusLinks');pl.innerHTML='';let lc=0;
+  document.querySelectorAll('[data-link-id]').forEach(item=>{const t=item.querySelector('.status-link-title');const u=item.querySelector('.status-link-url');if(t.value&&u.value){lc++;const a=document.createElement('a');a.href=u.value;a.target='_blank';a.textContent=t.value;a.className='social-badge';pl.appendChild(a);}});
+  document.getElementById('linkCount').textContent=lc;
+}
+async function saveCreatorStatus(){
+  const links=[];document.querySelectorAll('[data-link-id]').forEach(item=>{const t=item.querySelector('.status-link-title').value;const u=item.querySelector('.status-link-url').value;if(t&&u)links.push({title:t,url:u});});
+  const data={statusTitle:document.getElementById('statusTitle').value,statusDescription:document.getElementById('statusDescription').value,statusLinks:links,statusVisibility:document.querySelector('input[name="statusVisibility"]:checked').value};
+  try{const res=await fetch(`${API_BASE}/status`,{method:'POST',headers:{'Content-Type':'application/json'},credentials:'include',body:JSON.stringify(data)});if(!res.ok)throw new Error('Failed to save');showToast('STATUS','Creator status saved!');}
+  catch(err){showToast('ERR',err.message||'Failed to save creator status');}
+}
+
+window.onload=()=>{
+  document.getElementById('profileHostLabel').textContent=`${PUBLIC_HOST}/`;
+  document.getElementById('profileUrl').textContent=`Customize your public page at ${PUBLIC_HOST}/...`;
+  initPresets();
   checkSession();
+  updatePreview();
 };
 </script>
 </body>
