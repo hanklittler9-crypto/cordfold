@@ -21,6 +21,7 @@ const {
   isConfigured: emailConfigured,
   maybeSendSetupReminder,
 } = require('./email');
+const createSpotifyRouter = require('./spotify');
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
@@ -48,6 +49,8 @@ const db = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: { rejectUnauthorized: false },
 });
+
+const { authRouter: spotifyAuthRouter, apiRouter: spotifyApiRouter, getNowPlayingForUser } = createSpotifyRouter(db);
 
 // ── Session Store ────────────────────────────────────────────────────────────
 const PgSession = connectPg(session);
@@ -176,6 +179,63 @@ app.use('/api/verify', async (req, res, next) => {
 });
 app.use('/api/verify', verifyRouter);
 
+// ── Spotify (session via sid query, same as profile) ─────────────────────────
+app.use('/api/auth/spotify', async (req, res, next) => {
+  const { sid } = req.query;
+  if (sid && !req.session?.userId) {
+    try {
+      const result = await db.query('SELECT sess FROM user_sessions WHERE sid = $1', [sid]);
+      if (result.rowCount > 0 && result.rows[0].sess?.userId) {
+        req.session.userId = result.rows[0].sess.userId;
+      }
+    } catch (err) {
+      console.error('[spotify] Session lookup error:', err);
+    }
+  }
+  next();
+});
+app.use('/api/auth/spotify', spotifyAuthRouter);
+
+app.use('/api/spotify', async (req, res, next) => {
+  const { sid } = req.query;
+  if (sid && !req.session?.userId) {
+    try {
+      const result = await db.query('SELECT sess FROM user_sessions WHERE sid = $1', [sid]);
+      if (result.rowCount > 0 && result.rows[0].sess?.userId) {
+        req.session.userId = result.rows[0].sess.userId;
+      }
+    } catch (err) {
+      console.error('[spotify] Session lookup error:', err);
+    }
+  }
+  next();
+});
+
+app.get('/api/spotify/now-playing/:slug', async (req, res) => {
+  try {
+    const { slug } = req.params;
+    const userRow = await db.query(
+      'SELECT id FROM users WHERE slug = $1',
+      [slug]
+    );
+    if (userRow.rowCount === 0) {
+      return res.status(404).json({ error: 'Profile not found' });
+    }
+
+    const nowPlaying = await getNowPlayingForUser(userRow.rows[0].id);
+    if (!nowPlaying) {
+      return res.status(404).json({ error: 'Spotify not connected or not public' });
+    }
+
+    res.json(nowPlaying);
+  } catch (err) {
+    console.error('[server] /api/spotify/now-playing error:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+app.use('/api/spotify', spotifyApiRouter);
+
 // ── Public Profile API ────────────────────────────────────────────────────────
 app.use('/api/profile', async (req, res, next) => {
   const { sid } = req.query;
@@ -200,6 +260,7 @@ app.get('/api/profile/:slug', async (req, res) => {
         u.id, u.discord_id, u.discord_username, u.display_name, u.bio,
         u.avatar_hash, u.avatar_url, u.banner_url, u.social_links, u.plan,
         u.email, u.email_verified,
+        u.spotify_enabled, u.spotify_public,
         t.background_color, t.accent_color, t.text_color, t.card_color,
         t.glass_enabled, t.glass_blur, t.glass_opacity, t.animated_bg,
         t.music_url, t.music_autoplay, t.custom_css,
@@ -256,6 +317,9 @@ app.get('/api/profile/:slug', async (req, res) => {
         email:       user.email,
         emailVerified: user.email_verified || false,
         plan:        user.plan,
+        spotify: {
+          public: !!(user.spotify_enabled && user.spotify_public),
+        },
       },
       theme: {
         backgroundColor: user.background_color || '#0d0d0d',
