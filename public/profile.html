@@ -1559,7 +1559,10 @@ async function pollSpotify(slug) {
     if (data.track) {
       renderSpotifyWidget(data.track, !!data.playing);
     } else if (data.connected) {
-      renderSpotifyIdle(data.tokenError ? 'Session expired — reconnect in dashboard' : 'Not playing right now');
+      const msg = data.errorReason === 'dev_mode'
+        ? 'Spotify app in dev mode — owner must add this user in Spotify Developer Dashboard'
+        : (data.tokenError ? 'Session expired — reconnect in dashboard' : 'Not playing right now');
+      renderSpotifyIdle(msg);
     } else {
       renderSpotifyIdle('Not playing right now');
     }

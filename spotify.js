@@ -79,34 +79,33 @@ function createSpotifyRouter(db) {
     }
   }
 
-  async function fetchCurrentlyPlayingForUser(userId) {
-    let accessToken = await getValidAccessToken(userId);
-    if (!accessToken) return null;
-
+  async function parseSpotifyError(res) {
+    let body = {};
     try {
-      return await fetchCurrentlyPlaying(accessToken);
-    } catch (err) {
-      if (!String(err.message).includes('401')) throw err;
-      accessToken = await getValidAccessToken(userId, true);
-      if (!accessToken) throw err;
-      return await fetchCurrentlyPlaying(accessToken);
+      body = await res.json();
+    } catch {
+      /* empty body */
     }
+    const message = body?.error?.message || `Spotify API ${res.status}`;
+    return { message, status: res.status, body };
   }
 
-  async function fetchCurrentlyPlaying(accessToken) {
-    const res = await fetch('https://api.spotify.com/v1/me/player/currently-playing', {
-      headers: { Authorization: `Bearer ${accessToken}` },
-    });
-
-    if (res.status === 204 || res.status === 202) {
-      return { playing: false };
+  function classifySpotifyError(status, message) {
+    const lower = String(message || '').toLowerCase();
+    if (status === 403) {
+      return 'dev_mode';
     }
-    if (!res.ok) {
-      throw new Error(`Spotify API ${res.status}`);
+    if (status === 401) {
+      if (lower.includes('scope') || lower.includes('permission') || lower.includes('insufficient')) {
+        return 'scope';
+      }
+      return 'token';
     }
+    return 'unknown';
+  }
 
-    const data = await res.json();
-    const item = data.item;
+  function normalizeTrackPayload(data) {
+    const item = data?.item;
     if (!item) return { playing: false };
 
     const artists = (item.artists || []).map(a => a.name).join(', ');
@@ -126,6 +125,59 @@ function createSpotifyRouter(db) {
     };
   }
 
+  async function fetchPlayerEndpoint(accessToken, url) {
+    const res = await fetch(url, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+
+    if (res.status === 204 || res.status === 202) {
+      return { playing: false };
+    }
+    if (!res.ok) {
+      const { message } = await parseSpotifyError(res);
+      const err = new Error(message);
+      err.status = res.status;
+      err.reason = classifySpotifyError(res.status, message);
+      throw err;
+    }
+
+    const data = await res.json();
+    return normalizeTrackPayload(data);
+  }
+
+  async function fetchCurrentlyPlaying(accessToken) {
+    const endpoints = [
+      'https://api.spotify.com/v1/me/player/currently-playing',
+      'https://api.spotify.com/v1/me/player',
+    ];
+
+    let lastErr;
+    for (const url of endpoints) {
+      try {
+        return await fetchPlayerEndpoint(accessToken, url);
+      } catch (err) {
+        lastErr = err;
+        // Only try fallback endpoint for generic failures, not dev-mode blocks.
+        if (err.reason === 'dev_mode') throw err;
+      }
+    }
+    throw lastErr || new Error('Spotify playback unavailable');
+  }
+
+  async function fetchCurrentlyPlayingForUser(userId) {
+    let accessToken = await getValidAccessToken(userId);
+    if (!accessToken) return null;
+
+    try {
+      return await fetchCurrentlyPlaying(accessToken);
+    } catch (err) {
+      if (err.status !== 401 && err.status !== 403) throw err;
+      accessToken = await getValidAccessToken(userId, true);
+      if (!accessToken) throw err;
+      return await fetchCurrentlyPlaying(accessToken);
+    }
+  }
+
   async function getNowPlayingForUser(userId) {
     const user = await getUserTokens(userId);
     if (!user?.spotify_enabled || !user.spotify_public) {
@@ -135,12 +187,18 @@ function createSpotifyRouter(db) {
     try {
       const result = await fetchCurrentlyPlayingForUser(userId);
       if (!result) {
-        return { playing: false, connected: true, tokenError: true };
+        return { playing: false, connected: true, tokenError: true, errorReason: 'token' };
       }
       return { ...result, connected: true };
     } catch (err) {
       console.error('[spotify] now playing error:', err.message);
-      return { playing: false, connected: true, tokenError: true };
+      return {
+        playing: false,
+        connected: true,
+        tokenError: true,
+        errorReason: err.reason || classifySpotifyError(err.status, err.message),
+        errorMessage: err.message,
+      };
     }
   }
 
@@ -186,17 +244,34 @@ function createSpotifyRouter(db) {
     return null;
   }
 
-  authRouter.get('/login', (req, res) => {
+  authRouter.get('/login', async (req, res) => {
     if (!SPOTIFY_CLIENT_ID || !SPOTIFY_CLIENT_SECRET) {
       return res.status(503).send('Spotify is not configured on this server.');
     }
+
     if (!req.session?.userId) {
-      return res.redirect(`${DASHBOARD_URL}?spotify=login_required`);
+      await restoreSessionFromSid(req, req.query.sid);
     }
+
+    const userId = req.session?.userId || await getAuthedUserId(req);
+    if (!userId) {
+      const sid = req.query.sid || '';
+      const qs = sid
+        ? `?spotify=login_required&sid=${encodeURIComponent(sid)}`
+        : '?spotify=login_required';
+      return res.redirect(`${DASHBOARD_URL}${qs}`);
+    }
+
+    if (!req.session.userId) {
+      req.session.userId = userId;
+    }
+
+    // Keep the dashboard sid so callback can restore the same Discord session row.
+    const oauthSid = req.query.sid || req.sessionID;
 
     const state = crypto.randomBytes(16).toString('hex');
     res.cookie('spotify_oauth_state', state, oauthCookieOpts);
-    res.cookie('spotify_oauth_sid', req.sessionID, oauthCookieOpts);
+    res.cookie('spotify_oauth_sid', oauthSid, oauthCookieOpts);
 
     const authUrl = new URL('https://accounts.spotify.com/authorize');
     authUrl.searchParams.set('client_id', SPOTIFY_CLIENT_ID);
@@ -205,6 +280,7 @@ function createSpotifyRouter(db) {
     authUrl.searchParams.set('scope', SCOPES.join(' '));
     authUrl.searchParams.set('state', state);
     authUrl.searchParams.set('prompt', 'consent');
+    authUrl.searchParams.set('show_dialog', 'true');
 
     req.session.save((err) => {
       if (err) {
@@ -287,7 +363,7 @@ function createSpotifyRouter(db) {
 
       req.session.save((err) => {
         if (err) console.error('[spotify] session save after connect:', err);
-        const sid = req.sessionID || savedSid || '';
+        const sid = savedSid || req.sessionID || '';
         const qs = sid ? `?spotify=connected&sid=${encodeURIComponent(sid)}` : '?spotify=connected';
         res.redirect(`${DASHBOARD_URL}${qs}`);
       });
@@ -309,12 +385,18 @@ function createSpotifyRouter(db) {
 
       let nowPlaying = { playing: false };
       let tokenError = false;
+      let errorReason = null;
       try {
         const result = await fetchCurrentlyPlayingForUser(userId);
         if (result) nowPlaying = result;
-        else tokenError = true;
-      } catch {
+        else {
+          tokenError = true;
+          errorReason = 'token';
+        }
+      } catch (err) {
         tokenError = true;
+        errorReason = err.reason || classifySpotifyError(err.status, err.message);
+        console.error('[spotify] status playback error:', err.message);
       }
 
       res.json({
@@ -322,6 +404,7 @@ function createSpotifyRouter(db) {
         public: user.spotify_public !== false,
         nowPlaying,
         tokenError,
+        errorReason,
       });
     } catch (err) {
       console.error('[spotify] status error:', err);

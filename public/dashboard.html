@@ -1373,7 +1373,11 @@ function spotifyApiUrl(path){
 
 function connectSpotify(){
   const sid=restoreAuthSid();
-  window.location.href=sid?`${API_BASE}/auth/spotify/login?sid=${encodeURIComponent(sid)}`:`${API_BASE}/auth/spotify/login`;
+  if(!sid){
+    showToast('ERR','Session expired — log in with Discord first.','error');
+    return;
+  }
+  window.location.href=`${API_BASE}/auth/spotify/login?sid=${encodeURIComponent(sid)}`;
 }
 
 function renderSpotifyStatus(data){
@@ -1397,8 +1401,13 @@ function renderSpotifyStatus(data){
   });
   if(!connected) return;
   if(data.tokenError){
-    document.getElementById('spotifyTrackName').textContent='Session expired';
-    document.getElementById('spotifyTrackArtist').textContent='Disconnect, then Connect with Spotify again';
+    if(data.errorReason==='dev_mode'){
+      document.getElementById('spotifyTrackName').textContent='Spotify blocked (dev mode)';
+      document.getElementById('spotifyTrackArtist').textContent='Your Spotify app only allows 5 test users. Add yourself under Users and Access in the Spotify Developer Dashboard, or apply for Extended Quota.';
+    }else{
+      document.getElementById('spotifyTrackName').textContent='Spotify token error';
+      document.getElementById('spotifyTrackArtist').textContent='Click Disconnect, then Connect with Spotify again';
+    }
     return;
   }
   const track=data.nowPlaying?.track;
@@ -1417,12 +1426,23 @@ async function refreshSpotifyStatus(){
 }
 
 async function disconnectSpotify(){
+  const sid=restoreAuthSid();
+  if(!sid){
+    showToast('ERR','Session expired — log in with Discord first.','error');
+    return;
+  }
   try{
     const res=await fetch(spotifyApiUrl('disconnect'),{method:'POST',credentials:'include'});
-    if(!res.ok) throw new Error('Failed');
+    const data=await res.json().catch(()=>({}));
+    if(!res.ok){
+      showToast('ERR',data.error||'Failed to disconnect Spotify.','error');
+      return;
+    }
     showToast('OK','Spotify disconnected.','success');
-    renderSpotifyStatus({connected:false});
-  }catch{showToast('ERR','Failed to disconnect Spotify.','error');}
+    await refreshSpotifyStatus();
+  }catch{
+    showToast('ERR','Failed to disconnect Spotify.','error');
+  }
 }
 
 async function toggleSpotifyPublic(){
@@ -1494,7 +1514,7 @@ window.onload=()=>{
   if(spotifyStatus==='connected'){showToast('OK','Spotify connected!','success');switchTab('spotify');}
   else if(spotifyStatus==='denied') showToast('ERR','Spotify connection cancelled.','error');
   else if(spotifyStatus==='failed') showToast('ERR','Spotify connection failed.','error');
-  else if(spotifyStatus==='login_required') showToast('ERR','Log in with Discord before connecting Spotify.','error');
+  else if(spotifyStatus==='login_required') showToast('ERR','Discord session expired — log in again, then connect Spotify.','error');
   else if(spotifyStatus==='csrf') showToast('ERR','Spotify session expired — try connecting again.','error');
   else if(spotifyStatus==='no_code') showToast('ERR','Spotify did not return a code. Try again.','error');
   if(emailStatus||spotifyStatus||spotifySid) window.history.replaceState({},'','/dashboard.html');
