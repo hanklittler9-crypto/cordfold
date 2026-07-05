@@ -369,7 +369,7 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
             <div class="field">
               <div class="field-label">Email Address</div>
               <input class="field-input" id="emailInput" type="email" placeholder="you@email.com" oninput="updateEmailState()"/>
-              <div class="email-notice">Used for account recovery and optional email login. We'll never share your email. <span class="email-verified" id="emailVerifiedBadge" style="display:none">✓ Verified</span></div>
+              <div class="email-notice">We'll send verification and reminders to this address — not your Discord email. <span class="email-verified" id="emailVerifiedBadge" style="display:none">✓ Verified</span></div>
             </div>
             <div class="btn-row" id="emailBtnRow" style="display:none">
               <button class="btn btn-ghost" onclick="sendVerifyEmail()">Send Verification Email</button>
@@ -912,7 +912,20 @@ function updateEmailState(){
 }
 
 function sendVerifyEmail(){
-  showToast('OK','Verification email sent! Check your inbox.','success');
+  const email=document.getElementById('emailInput').value.trim();
+  if(!email||!email.includes('@')){showToast('ERR','Enter a valid email first.','error');return;}
+  const sid=window._authSid;
+  const url=sid?`${API_BASE}/profile/verify-email?sid=${sid}`:`${API_BASE}/profile/verify-email`;
+  fetch(url,{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    credentials:'include',
+    body:JSON.stringify({email})
+  }).then(async res=>{
+    const data=await res.json().catch(()=>({}));
+    if(!res.ok) throw new Error(data.error||'Failed to send email');
+    showToast('OK','Verification email sent! Check your inbox.','success');
+  }).catch(err=>showToast('ERR',err.message||'Failed to send verification email.','error'));
 }
 
 // ── Live preview ──
@@ -1178,6 +1191,10 @@ async function loadProfile(user){
     document.getElementById('tiktokInput').value=data.profile.socialLinks?.tiktok||'';
     document.getElementById('instagramInput').value=data.profile.socialLinks?.instagram||'';
     document.getElementById('emailInput').value=data.profile.email||'';
+    if(data.profile.emailVerified){
+      document.getElementById('emailVerifiedBadge').style.display='inline-flex';
+      document.getElementById('emailBtnRow').style.display='none';
+    }
     document.getElementById('accentColorInput').value=th.accentColor||'#5865F2';
     document.getElementById('textColorInput').value=th.textColor||'#ffffff';
     document.getElementById('cardColorInput').value=th.cardColor||'#111111';
@@ -1322,6 +1339,13 @@ window.onload=()=>{
   initPresets();
   checkSession();
   updatePreview();
+  const params=new URLSearchParams(window.location.search);
+  const emailStatus=params.get('email');
+  if(emailStatus==='verified') showToast('OK','Email verified!','success');
+  else if(emailStatus==='expired') showToast('ERR','Verification link expired. Send a new one.','error');
+  else if(emailStatus==='invalid') showToast('ERR','Invalid verification link.','error');
+  else if(emailStatus==='error') showToast('ERR','Email verification failed.','error');
+  if(emailStatus) window.history.replaceState({},'','/dashboard.html');
 };
 </script>
 </body>

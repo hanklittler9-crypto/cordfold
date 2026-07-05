@@ -15,6 +15,12 @@ const cookieParser = require('cookie-parser');
 const authRouter              = require('./discord');
 const { router: verifyRouter } = require('./scan');
 const { router: adminRouter }  = require('./admin');
+const { runMigrations }        = require('./migrations');
+const {
+  sendVerificationEmail,
+  isConfigured: emailConfigured,
+  maybeSendSetupReminder,
+} = require('./email');
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
@@ -193,6 +199,7 @@ app.get('/api/profile/:slug', async (req, res) => {
       SELECT
         u.id, u.discord_id, u.discord_username, u.display_name, u.bio,
         u.avatar_hash, u.avatar_url, u.banner_url, u.social_links, u.plan,
+        u.email, u.email_verified,
         t.background_color, t.accent_color, t.text_color, t.card_color,
         t.glass_enabled, t.glass_blur, t.glass_opacity, t.animated_bg,
         t.music_url, t.music_autoplay, t.custom_css,
@@ -246,6 +253,8 @@ app.get('/api/profile/:slug', async (req, res) => {
             : null),
         bannerUrl:   user.banner_url,
         socialLinks: user.social_links,
+        email:       user.email,
+        emailVerified: user.email_verified || false,
         plan:        user.plan,
       },
       theme: {
@@ -301,6 +310,7 @@ app.post('/api/profile', async (req, res) => {
       bio,
       bannerUrl,
       social_links,
+      email,
       theme = {}
     } = req.body;
 
@@ -324,9 +334,10 @@ app.post('/api/profile', async (req, res) => {
         bio = $3,
         banner_url = $4,
         social_links = $5,
+        email = NULLIF(TRIM($6), ''),
         updated_at = NOW()
-      WHERE id = $6
-    `, [display_name, slug, bio, bannerUrl, social_links, userId]);
+      WHERE id = $7
+    `, [display_name, slug, bio, bannerUrl, social_links, email || '', userId]);
 
     const themeRow = await db.query(`
       SELECT t.id, t.is_preset
@@ -410,11 +421,101 @@ app.post('/api/profile', async (req, res) => {
       await db.query('UPDATE users SET theme_id = $1 WHERE id = $2', [insertTheme.rows[0].id, userId]);
     }
 
+    // Setup reminder goes to the email they entered in profile — not on signup
+    if (email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      maybeSendSetupReminder(db, userId).catch(err =>
+        console.error('[server] Setup reminder error:', err.message)
+      );
+    }
+
     res.json({ ok: true });
 
   } catch (err) {
     console.error('[server] /api/profile POST error:', err);
     res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// ── Email Verification ────────────────────────────────────────────────────────
+app.post('/api/profile/verify-email', async (req, res) => {
+  try {
+    const userId = req.session?.userId;
+    if (!userId) return res.status(401).json({ error: 'Not authenticated' });
+    if (!emailConfigured()) {
+      return res.status(503).json({ error: 'Email service not configured' });
+    }
+
+    const { email } = req.body;
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return res.status(400).json({ error: 'Valid email required' });
+    }
+
+    const userRow = await db.query(
+      'SELECT display_name, discord_username FROM users WHERE id = $1',
+      [userId]
+    );
+    if (userRow.rowCount === 0) return res.status(401).json({ error: 'User not found' });
+
+    const crypto = require('crypto');
+    const token = crypto.randomBytes(32).toString('hex');
+    const expires = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+    await db.query(`
+      UPDATE users SET
+        email = $1,
+        email_verify_token = $2,
+        email_verify_expires = $3,
+        email_verified = false
+      WHERE id = $4
+    `, [email, token, expires, userId]);
+
+    const u = userRow.rows[0];
+    await sendVerificationEmail({
+      to: email,
+      displayName: u.display_name || u.discord_username,
+      token,
+    });
+
+    res.json({ ok: true, message: 'Verification email sent' });
+  } catch (err) {
+    console.error('[server] /api/profile/verify-email error:', err);
+    res.status(500).json({ error: 'Failed to send verification email' });
+  }
+});
+
+app.get('/api/auth/verify-email', async (req, res) => {
+  const { token } = req.query;
+  if (!token) {
+    return res.redirect('https://dashboard.cordfol.org/dashboard.html?email=invalid');
+  }
+
+  try {
+    const row = await db.query(`
+      SELECT id, email_verify_expires FROM users
+      WHERE email_verify_token = $1
+    `, [token]);
+
+    if (row.rowCount === 0) {
+      return res.redirect('https://dashboard.cordfol.org/dashboard.html?email=invalid');
+    }
+
+    const user = row.rows[0];
+    if (new Date(user.email_verify_expires) < new Date()) {
+      return res.redirect('https://dashboard.cordfol.org/dashboard.html?email=expired');
+    }
+
+    await db.query(`
+      UPDATE users SET
+        email_verified = true,
+        email_verify_token = NULL,
+        email_verify_expires = NULL
+      WHERE id = $1
+    `, [user.id]);
+
+    res.redirect('https://dashboard.cordfol.org/dashboard.html?email=verified');
+  } catch (err) {
+    console.error('[server] /api/auth/verify-email error:', err);
+    res.redirect('https://dashboard.cordfol.org/dashboard.html?email=error');
   }
 });
 
@@ -631,9 +732,16 @@ app.get('/:slug', (req, res) => {
 });
 
 // ── Start Server ──────────────────────────────────────────────────────────────
-app.listen(PORT, () => {
-  console.log(`[server] Running on port ${PORT}`);
-});
+runMigrations(db)
+  .then(() => {
+    app.listen(PORT, () => {
+      console.log(`[server] Running on port ${PORT}`);
+    });
+  })
+  .catch(err => {
+    console.error('[server] Migration failed — cannot start:', err);
+    process.exit(1);
+  });
 
 // ── Start Bot ─────────────────────────────────────────────────────────────────
 botClient = require('./bot/index.js');

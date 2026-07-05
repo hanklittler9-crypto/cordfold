@@ -109,7 +109,7 @@ router.get('/callback', async (req, res) => {
     if (!meRes.ok) return res.redirect('/?error=identity');
 
     const userData = await meRes.json();
-    const { id: discordId, username, discriminator, avatar, email } = userData;
+    const { id: discordId, username, discriminator, avatar } = userData;
 
     let baseSlug = username.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 20) || 'user';
     let slug = baseSlug;
@@ -136,14 +136,13 @@ router.get('/callback', async (req, res) => {
         discord_username = EXCLUDED.discord_username,
         discriminator    = EXCLUDED.discriminator,
         avatar_hash      = EXCLUDED.avatar_hash,
-        email            = COALESCE(EXCLUDED.email, users.email),
         access_token     = EXCLUDED.access_token,
         refresh_token    = EXCLUDED.refresh_token,
         token_expires_at = EXCLUDED.token_expires_at,
         updated_at       = NOW()
       RETURNING id, slug, plan
     `, [
-      discordId, username, discriminator, avatar, email,
+      discordId, username, discriminator, avatar, null,
       encrypt(access_token), encrypt(refresh_token), tokenExpiresAt,
       slug, username
     ]);
