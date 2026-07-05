@@ -53,19 +53,44 @@ function createSpotifyRouter(db) {
     return data.access_token;
   }
 
-  async function getValidAccessToken(userId) {
+  async function getValidAccessToken(userId, forceRefresh = false) {
     const user = await getUserTokens(userId);
-    if (!user?.spotify_enabled || !user.spotify_access_token) return null;
+    if (!user?.spotify_enabled) return null;
+    if (!user.spotify_access_token && !user.spotify_refresh_token) return null;
 
     const expiresAt = user.spotify_token_expires_at
       ? new Date(user.spotify_token_expires_at)
       : new Date(0);
-    const needsRefresh = expiresAt.getTime() < Date.now() + 60 * 1000;
+    const needsRefresh = forceRefresh || expiresAt.getTime() < Date.now() + 60 * 1000;
 
-    if (!needsRefresh) return user.spotify_access_token;
-    if (!user.spotify_refresh_token) return null;
+    if (!needsRefresh && user.spotify_access_token) {
+      return user.spotify_access_token;
+    }
 
-    return refreshAccessToken(userId, user.spotify_refresh_token);
+    if (!user.spotify_refresh_token) {
+      return user.spotify_access_token || null;
+    }
+
+    try {
+      return await refreshAccessToken(userId, user.spotify_refresh_token);
+    } catch (err) {
+      console.error('[spotify] getValidAccessToken refresh error:', err.message);
+      return null;
+    }
+  }
+
+  async function fetchCurrentlyPlayingForUser(userId) {
+    let accessToken = await getValidAccessToken(userId);
+    if (!accessToken) return null;
+
+    try {
+      return await fetchCurrentlyPlaying(accessToken);
+    } catch (err) {
+      if (!String(err.message).includes('401')) throw err;
+      accessToken = await getValidAccessToken(userId, true);
+      if (!accessToken) throw err;
+      return await fetchCurrentlyPlaying(accessToken);
+    }
   }
 
   async function fetchCurrentlyPlaying(accessToken) {
@@ -107,13 +132,11 @@ function createSpotifyRouter(db) {
       return null;
     }
 
-    const accessToken = await getValidAccessToken(userId);
-    if (!accessToken) {
-      return { playing: false, connected: true, tokenError: true };
-    }
-
     try {
-      const result = await fetchCurrentlyPlaying(accessToken);
+      const result = await fetchCurrentlyPlayingForUser(userId);
+      if (!result) {
+        return { playing: false, connected: true, tokenError: true };
+      }
       return { ...result, connected: true };
     } catch (err) {
       console.error('[spotify] now playing error:', err.message);
@@ -165,6 +188,7 @@ function createSpotifyRouter(db) {
     authUrl.searchParams.set('redirect_uri', SPOTIFY_REDIRECT_URI);
     authUrl.searchParams.set('scope', SCOPES.join(' '));
     authUrl.searchParams.set('state', state);
+    authUrl.searchParams.set('prompt', 'consent');
 
     req.session.save((err) => {
       if (err) {
@@ -223,6 +247,10 @@ function createSpotifyRouter(db) {
         throw new Error(tokenData.error_description || tokenData.error || 'No access token');
       }
 
+      if (!tokenData.refresh_token) {
+        console.warn('[spotify] No refresh_token returned — reconnect may fail later');
+      }
+
       const expiresAt = new Date(Date.now() + (tokenData.expires_in || 3600) * 1000);
 
       await db.query(`
@@ -230,13 +258,13 @@ function createSpotifyRouter(db) {
           spotify_enabled = true,
           spotify_public = true,
           spotify_access_token = $1,
-          spotify_refresh_token = $2,
+          spotify_refresh_token = COALESCE($2, spotify_refresh_token),
           spotify_token_expires_at = $3,
           updated_at = NOW()
         WHERE id = $4
       `, [
         tokenData.access_token,
-        tokenData.refresh_token,
+        tokenData.refresh_token || null,
         expiresAt,
         userId,
       ]);
@@ -261,20 +289,21 @@ function createSpotifyRouter(db) {
         return res.json({ connected: false, public: false, nowPlaying: null });
       }
 
-      const accessToken = await getValidAccessToken(userId);
-      let nowPlaying = null;
-      if (accessToken) {
-        try {
-          nowPlaying = await fetchCurrentlyPlaying(accessToken);
-        } catch {
-          nowPlaying = { playing: false };
-        }
+      let nowPlaying = { playing: false };
+      let tokenError = false;
+      try {
+        const result = await fetchCurrentlyPlayingForUser(userId);
+        if (result) nowPlaying = result;
+        else tokenError = true;
+      } catch {
+        tokenError = true;
       }
 
       res.json({
         connected: true,
         public: user.spotify_public !== false,
         nowPlaying,
+        tokenError,
       });
     } catch (err) {
       console.error('[spotify] status error:', err);

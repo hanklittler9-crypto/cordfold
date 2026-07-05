@@ -1559,7 +1559,7 @@ async function pollSpotify(slug) {
     if (data.track) {
       renderSpotifyWidget(data.track, !!data.playing);
     } else if (data.connected) {
-      renderSpotifyIdle(data.tokenError ? 'Reconnect Spotify in dashboard' : 'Not playing right now');
+      renderSpotifyIdle(data.tokenError ? 'Session expired — reconnect in dashboard' : 'Not playing right now');
     } else {
       renderSpotifyIdle('Not playing right now');
     }

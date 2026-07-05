@@ -1381,6 +1381,11 @@ function renderSpotifyStatus(data){
     else el.style.display='none';
   });
   if(!connected) return;
+  if(data.tokenError){
+    document.getElementById('spotifyTrackName').textContent='Session expired';
+    document.getElementById('spotifyTrackArtist').textContent='Disconnect, then Connect with Spotify again';
+    return;
+  }
   const track=data.nowPlaying?.track;
   document.getElementById('spotifyTrackName').textContent=track?.name||(data.nowPlaying?.playing===false?'Nothing playing right now':'Waiting for playback...');
   document.getElementById('spotifyTrackArtist').textContent=track?.artist||'Open Spotify on any device';
