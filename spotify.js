@@ -36,7 +36,10 @@ function createSpotifyRouter(db) {
     });
 
     const data = await tokenRes.json();
-    if (!data.access_token) throw new Error('Spotify token refresh failed');
+    if (!data.access_token) {
+      console.error('[spotify] refresh failed:', data);
+      throw new Error('Spotify token refresh failed');
+    }
 
     const expiresAt = new Date(Date.now() + (data.expires_in || 3600) * 1000);
     await db.query(`
@@ -105,13 +108,16 @@ function createSpotifyRouter(db) {
     }
 
     const accessToken = await getValidAccessToken(userId);
-    if (!accessToken) return null;
+    if (!accessToken) {
+      return { playing: false, connected: true, tokenError: true };
+    }
 
     try {
-      return await fetchCurrentlyPlaying(accessToken);
+      const result = await fetchCurrentlyPlaying(accessToken);
+      return { ...result, connected: true };
     } catch (err) {
       console.error('[spotify] now playing error:', err.message);
-      return null;
+      return { playing: false, connected: true, tokenError: true };
     }
   }
 

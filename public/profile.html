@@ -1508,6 +1508,22 @@ async function renderProfile() {
   }
 }
 
+function renderSpotifyIdle(message) {
+  const slot = document.getElementById('spotifySlot');
+  if (!slot) return;
+  slot.innerHTML = `
+    <div class="spotify-widget" style="cursor:default">
+      <div class="spotify-art" style="display:flex;align-items:center;justify-content:center;font-size:22px">🎵</div>
+      <div class="spotify-meta">
+        <div class="spotify-label">Spotify connected</div>
+        <div class="spotify-track">${escapeHtml(message || 'Not playing right now')}</div>
+        <div class="spotify-artist">Open Spotify and play a song</div>
+      </div>
+      <div class="spotify-bars"><div class="spotify-bar paused" style="height:6px"></div><div class="spotify-bar paused" style="height:8px"></div><div class="spotify-bar paused" style="height:4px"></div></div>
+    </div>
+  `;
+}
+
 function renderSpotifyWidget(track, playing) {
   const slot = document.getElementById('spotifySlot');
   if (!slot) return;
@@ -1536,23 +1552,24 @@ async function pollSpotify(slug) {
   try {
     const res = await fetch(`${API_BASE}/spotify/now-playing/${encodeURIComponent(slug)}`);
     if (!res.ok) {
-      document.getElementById('spotifySlot').innerHTML = '';
+      renderSpotifyIdle('Spotify unavailable');
       return;
     }
     const data = await res.json();
-    if (data.playing && data.track) {
-      renderSpotifyWidget(data.track, true);
-    } else if (data.track) {
-      renderSpotifyWidget(data.track, false);
+    if (data.track) {
+      renderSpotifyWidget(data.track, !!data.playing);
+    } else if (data.connected) {
+      renderSpotifyIdle(data.tokenError ? 'Reconnect Spotify in dashboard' : 'Not playing right now');
     } else {
-      document.getElementById('spotifySlot').innerHTML = '';
+      renderSpotifyIdle('Not playing right now');
     }
   } catch {
-    /* ignore transient errors */
+    renderSpotifyIdle('Could not load Spotify status');
   }
 }
 
 function initSpotifyWidget(slug) {
+  renderSpotifyIdle('Loading...');
   pollSpotify(slug);
   setInterval(() => pollSpotify(slug), 30000);
 }
