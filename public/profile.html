@@ -3,8 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg"/>
   <title>Cordfol Profile</title>
-  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;700&family=IBM+Plex+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&family=Space+Mono:wght@400;700&family=Syne:wght@500;600;700&display=swap" rel="stylesheet"/>
   <style>
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -128,6 +129,17 @@
       max-width: 680px;
       box-shadow: 0 40px 100px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.05);
     }
+    .page.layout-magazine { align-items: center; }
+    .page.layout-magazine .card.magazine-layout { max-width: 640px; }
+    .page.layout-magazine .card.magazine-layout .banner { height: 220px; }
+    .page.layout-magazine .card.magazine-layout .avatar-wrap { margin-top: -58px; }
+    .page.layout-magazine .card.magazine-layout .profile-name {
+      font-family: 'Instrument Serif', serif;
+      font-size: clamp(2.2rem, 5vw, 3rem);
+      letter-spacing: -0.5px;
+      font-weight: 400;
+    }
+    .page.layout-magazine .card.magazine-layout .card-body { padding-top: 10px; }
 
     /* ── Background media ── */
     .bg-media {
@@ -254,8 +266,21 @@
       width: 8px;
       height: 8px;
       border-radius: 50%;
-      background: var(--neon);
-      box-shadow: 0 0 16px rgba(0,255,178,0.75);
+      background: var(--accent);
+      box-shadow: 0 0 10px rgba(var(--accent-rgb, 88,101,242), 0.45);
+    }
+
+    .cf-verified-mark {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: rgba(var(--accent-rgb, 88,101,242), 0.2);
+      color: var(--accent);
+      font-size: 9px;
+      font-weight: 700;
     }
 
     .profile-name {
@@ -298,6 +323,12 @@
       font-size: 11px;
       color: var(--muted);
       letter-spacing: 1px;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .profile-tag:hover {
+      border-color: rgba(var(--accent-rgb, 88,101,242), 0.35);
+      background: rgba(var(--accent-rgb, 88,101,242), 0.08);
     }
 
     .profile-bio {
@@ -366,11 +397,11 @@
       gap: 12px;
       background: rgba(255,255,255,0.035);
       border: 1px solid rgba(255,255,255,0.07);
+      border-left: 3px solid var(--role-color, var(--accent));
       border-radius: 16px;
       padding: 12px 14px;
       text-align: left;
       transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-      cursor: pointer;
     }
     .role-item:hover {
       background: rgba(255,255,255,0.06);
@@ -414,9 +445,30 @@
     .role-name {
       font-size: 13px;
       font-weight: 600;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .role-color-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--role-color, var(--accent));
+      flex-shrink: 0;
+    }
+
+    .role-pin-tag {
+      font-family: 'Space Mono', monospace;
+      font-size: 8px;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      padding: 3px 7px;
+      border-radius: 999px;
+      background: rgba(var(--accent-rgb, 88,101,242), 0.12);
+      color: rgba(245,247,251,0.72);
+      border: 1px solid rgba(var(--accent-rgb, 88,101,242), 0.22);
     }
 
     .role-server {
@@ -1149,24 +1201,25 @@
 <div class="profile-actions" id="actionBar">
   <button class="action-btn" id="copyBtn" title="Copy Handle">
     <span class="action-tooltip">Copy Handle</span>
-    📋
+    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
   </button>
   <button class="action-btn" id="shareBtn" title="Share Profile">
     <span class="action-tooltip">Share</span>
-    🔗
+    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.59 13.51l6.83 3.98M15.41 6.51l-6.82 3.98"/></svg>
   </button>
 </div>
 
 <script>
+const _si = (path) => `<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">${path}</svg>`;
 const SOCIAL_ICONS = {
-  twitter: '𝕏',
-  github: '⚙️',
-  youtube: '▶️',
-  website: '🌐',
-  twitch: '📺',
-  instagram: '📷',
-  tiktok: '🎵',
-  linkedin: 'in',
+  twitter: _si('<path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>'),
+  github: _si('<path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/>'),
+  youtube: _si('<path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>'),
+  website: _si('<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm7.93 9h-3.02a15.7 15.7 0 0 0-1.27-5.44A8.03 8.03 0 0 1 19.93 11zM12 4.04c.83 1.2 1.48 2.53 1.91 3.96h-3.82c.43-1.43 1.08-2.76 1.91-3.96zM4.26 14A8.1 8.1 0 0 1 4 12c0-.69.1-1.36.26-2h3.38a16.5 16.5 0 0 0 0 4H4.26zm.82 2h3.02c.35 1.94.78 3.72 1.27 5.44A8.03 8.03 0 0 1 5.08 16zm3.02-8H5.08a8.03 8.03 0 0 1 4.29-3.44A15.7 15.7 0 0 0 8.1 8zM12 19.96c-.83-1.2-1.48-2.53-1.91-3.96h3.82c-.43 1.43-1.08 2.76-1.91 3.96zM14.34 14H9.66a14.6 14.6 0 0 1 0-4h4.68a14.6 14.6 0 0 1 0 4zm.29 7.44c.49-1.72.92-3.5 1.27-5.44h3.02a8.03 8.03 0 0 1-4.29 5.44zM16.36 14a16.5 16.5 0 0 0 0-4h3.38c.16.64.26 1.31.26 2s-.1 1.36-.26 2h-3.38z"/>'),
+  twitch: _si('<path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714z"/>'),
+  instagram: _si('<path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zm0 10.162a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881z"/>'),
+  tiktok: _si('<path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/>'),
+  linkedin: _si('<path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>'),
 };
 
 const SOCIAL_NAMES = {
@@ -1220,6 +1273,19 @@ function formatCount(n) {
   return String(n);
 }
 
+function animateViewCount(el, target) {
+  if (!el || !target || target <= 0) return;
+  const duration = 900;
+  const start = performance.now();
+  const tick = (now) => {
+    const p = Math.min((now - start) / duration, 1);
+    const eased = 1 - Math.pow(1 - p, 3);
+    el.textContent = formatCount(Math.round(target * eased));
+    if (p < 1) requestAnimationFrame(tick);
+  };
+  requestAnimationFrame(tick);
+}
+
 function hexToRgb(hex) {
   const clean = String(hex || '#111111').replace('#', '');
   if (clean.length !== 6) return '17,17,17';
@@ -1260,14 +1326,19 @@ function applyFont(fontName) {
     'DM Sans': "'DM Sans', sans-serif",
     'Space Mono': "'Space Mono', monospace",
     'Bebas Neue': "'Bebas Neue', sans-serif",
+    'Instrument Serif': "'Instrument Serif', serif",
+    'Syne': "'Syne', sans-serif",
+    'IBM Plex Mono': "'IBM Plex Mono', monospace",
   };
   document.body.style.fontFamily = fontMap[fontName] || fontMap['DM Sans'];
 }
 
 function applyLayout(layout) {
   const page = document.querySelector('.page');
-  page.classList.remove('layout-centered', 'layout-left', 'layout-card');
+  const card = document.getElementById('card');
+  page.classList.remove('layout-centered', 'layout-left', 'layout-card', 'layout-magazine');
   page.classList.add(`layout-${layout || 'centered'}`);
+  if (card) card.classList.toggle('magazine-layout', layout === 'magazine');
 }
 
 function isGifUrl(url) {
@@ -1577,18 +1648,25 @@ async function renderProfile() {
     <div class="divider"></div>
     <div class="roles-title">Verified Roles</div>
     <div class="roles-list">
-      ${roles.map(r => `
-        <div class="role-item">
+      ${roles.map(r => {
+        const roleColor = r.roleColor || null;
+        const styleAttr = roleColor ? ` style="--role-color: ${escapeHtml(roleColor)}"` : '';
+        return `
+        <div class="role-item"${styleAttr}>
           <div class="role-icon" ${r.guildIconHash ? `style="background-image: url('https://cdn.discordapp.com/icons/${r.guildId}/${r.guildIconHash}.png'); background-size: cover; background-position: center;"` : ''}>
-            ${!r.guildIconHash ? '🏰' : ''}
+            ${!r.guildIconHash ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-8a2 2 0 0 0-2-2H9a2 2 0 0 0-2 2v8"/><path d="M3 21V7l4-4 5 4 5-4 4 4v14"/><path d="M1 21h22"/></svg>' : ''}
           </div>
           <div class="role-info">
-            <div class="role-name">${escapeHtml(r.roleName || r.roleId)}</div>
+            <div class="role-name">
+              ${roleColor ? `<span class="role-color-dot"></span>` : ''}
+              <span>${escapeHtml(r.roleName || r.roleId)}</span>
+              ${r.isPinned ? '<span class="role-pin-tag">Pinned</span>' : ''}
+            </div>
             <div class="role-server">${escapeHtml(r.guildName || 'Unknown Server')}</div>
           </div>
           <div class="role-proof ${r.proofType === 'BOT' ? 'bot' : ''}">${r.proofType === 'BOT' ? 'Bot Verified' : r.proofType === 'OAUTH' ? 'OAuth Verified' : escapeHtml(r.proofType)}</div>
-        </div>
-      `).join('')}
+        </div>`;
+      }).join('')}
     </div>
   ` : '';
 
@@ -1602,7 +1680,7 @@ async function renderProfile() {
     <div class="socials">
       ${socialEntries.map(([k, url]) => `
         <a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer" class="social-link ${k}" title="${SOCIAL_NAMES[k] || 'Link'}" onclick="trackEvent('link_click','${escapeHtml(SOCIAL_NAMES[k] || k)}','${escapeHtml(k)}')">
-          <span>${SOCIAL_ICONS[k] || '🔗'}</span>
+          <span style="display:inline-flex">${SOCIAL_ICONS[k] || SOCIAL_ICONS.website}</span>
           <span>${SOCIAL_NAMES[k] || 'Link'}</span>
         </a>
       `).join('')}
@@ -1627,7 +1705,7 @@ async function renderProfile() {
     ? `<div class="presence-dot presence-${escapeHtml(presence.status)}" title="${presenceTitles[presence.status] || ''}"></div>`
     : '';
   const presenceActivityHtml = (presence && presence.activity && presence.status !== 'offline')
-    ? `<div class="presence-activity">🎮 ${escapeHtml(presence.activity)}</div>`
+    ? `<div class="presence-activity"><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" style="flex-shrink:0"><path d="M21.58 16.09l-1.09-7.66A4.996 4.996 0 0 0 15.54 4H8.46C6 4 3.9 5.83 3.51 8.43l-1.09 7.66a3.16 3.16 0 0 0 5.35 2.72L10.17 16h3.66l2.4 2.81a3.16 3.16 0 0 0 5.35-2.72zM11 11H9v2H8v-2H6v-1h2V8h1v2h2v1zm4-1.5a1 1 0 1 1 2 0 1 1 0 0 1-2 0zm2 3.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2z"/></svg> ${escapeHtml(presence.activity)}</div>`
     : '';
 
   document.getElementById('card').innerHTML = `
@@ -1639,12 +1717,12 @@ async function renderProfile() {
     <div class="card-body">
       <div class="profile-header">
         <div class="profile-heading">
-          <div class="profile-kicker">Verified Discord profile</div>
+          <div class="profile-kicker"><span class="cf-verified-mark">✓</span> Verified by Cordfol</div>
           <div class="profile-name">
             ${escapeHtml(p.displayName)}
             ${p.discordId === EXCLUSIVE_USER_ID ? '<div class="verified-crown" title="Cordfol Creator">👑</div>' : ''}
           </div>
-          <div class="profile-tag">cordfol.org/${escapeHtml(p.slug)}</div>
+          <div class="profile-tag" id="profileTag" title="Click to copy link">cordfol.org/${escapeHtml(p.slug)}</div>
           ${presenceActivityHtml}
         </div>
       </div>
@@ -1652,7 +1730,8 @@ async function renderProfile() {
       <div id="spotifySlot"></div>
       ${customLinksHtml}
       <div class="profile-summary">
-        ${p.viewCount ? `<div class="summary-chip"><strong>${formatCount(p.viewCount)}</strong> Views</div>` : ''}
+        ${p.viewCount ? `<div class="summary-chip"><strong id="viewCountNum">0</strong> Views</div>` : ''}
+        ${p.memberSince ? `<div class="summary-chip"><strong>${escapeHtml(p.memberSince)}</strong> on Discord</div>` : ''}
         <div class="summary-chip"><strong>${activeRoleCount}</strong> Active roles</div>
         <div class="summary-chip"><strong>${botVerifiedCount}</strong> Bot proof</div>
         <div class="summary-chip"><strong>${oauthVerifiedCount}</strong> OAuth proof</div>
@@ -1669,6 +1748,15 @@ async function renderProfile() {
   if (t.typewriterBio && p.bio) initTypewriter(p.bio);
   if (t.tiltCard) initTilt();
   if (t.entrySplash) showEntrySplash(p, !!t.musicAutoplay);
+
+  const tagEl = document.getElementById('profileTag');
+  if (tagEl) {
+    tagEl.addEventListener('click', () => {
+      copyToClipboard(`cordfol.org/${p.slug}`);
+      trackEvent('share', 'Copy handle');
+    });
+  }
+  if (p.viewCount) animateViewCount(document.getElementById('viewCountNum'), p.viewCount);
 }
 
 // ── Entry splash ("click to enter") ──

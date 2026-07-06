@@ -73,8 +73,8 @@ function buildSvg({ name, bio, slug, accent, avatarData, roleCount, viewCount })
       <stop offset="100%" stop-color="${safeAccent}" stop-opacity="0"/>
     </radialGradient>
     <radialGradient id="glow2" cx="90%" cy="95%" r="55%">
-      <stop offset="0%" stop-color="#00FFB2" stop-opacity="0.18"/>
-      <stop offset="100%" stop-color="#00FFB2" stop-opacity="0"/>
+      <stop offset="0%" stop-color="${safeAccent}" stop-opacity="0.12"/>
+      <stop offset="100%" stop-color="${safeAccent}" stop-opacity="0"/>
     </radialGradient>
   </defs>
 

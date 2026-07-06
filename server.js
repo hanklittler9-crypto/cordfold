@@ -292,10 +292,14 @@ app.get('/api/profile/:slug', async (req, res) => {
       viewCount = Number(vc.rows[0]?.c || 0);
     } catch { /* non-critical */ }
 
+    const rawMusic = user.music_url || null;
+    const musicIsEmbedded = rawMusic && String(rawMusic).startsWith('data:');
+
     res.json({
       profile: {
         slug,
         discordId:   user.discord_id,
+        memberSince: discordMemberSince(user.discord_id),
         displayName: user.display_name || user.discord_username,
         bio:         user.bio,
         avatarUrl:   user.avatar_url ||
@@ -324,7 +328,8 @@ app.get('/api/profile/:slug', async (req, res) => {
         glassBlur:       user.glass_blur       || 12,
         glassOpacity:    user.glass_opacity    || 0.15,
         animatedBg:      user.animated_bg      || false,
-        musicUrl:        user.music_url        || null,
+        musicUrl:        musicIsEmbedded ? null : (rawMusic || null),
+        musicLegacy:     musicIsEmbedded || false,
         musicAutoplay:   user.music_autoplay   || false,
         customCss:       user.custom_css       || null,
         bgType:          user.bg_type          || 'solid',
@@ -354,8 +359,10 @@ app.get('/api/profile/:slug', async (req, res) => {
         roleColor:     r.role_color
           ? `#${r.role_color.toString(16).padStart(6, '0')}`
           : null,
-        proofType:  r.proof_type,
-        verifiedAt: r.verified_at,
+        proofType:     r.proof_type,
+        verifiedAt:    r.verified_at,
+        isPinned:      r.display_order != null && r.display_order < 3,
+        displayOrder:  r.display_order,
       })),
     });
 
@@ -431,6 +438,25 @@ app.post('/api/profile', async (req, res) => {
     else if (bgType === 'gradient' && bgValue) backgroundColor = bgValue;
     else if (bgType === 'gif' || bgType === 'video') backgroundColor = '#09090d';
 
+    let musicUrl = theme.musicUrl || null;
+    if (musicUrl && String(musicUrl).startsWith('data:')) {
+      return res.status(400).json({
+        error: 'Music must be a direct URL (e.g. catbox.moe). Embedded uploads slow down every profile load.',
+      });
+    }
+    if (musicUrl && String(musicUrl).length > 2000) {
+      return res.status(400).json({ error: 'Music URL too long' });
+    }
+
+    const allowedFonts = new Set([
+      'DM Sans', 'Space Mono', 'Bebas Neue',
+      'Instrument Serif', 'Syne', 'IBM Plex Mono',
+    ]);
+    const fontFamily = allowedFonts.has(theme.font) ? theme.font : 'DM Sans';
+    const layout = ['centered', 'left', 'card', 'magazine'].includes(theme.layout)
+      ? theme.layout
+      : 'centered';
+
     const themeFields = [
       backgroundColor,
       theme.accentColor || '#5865F2',
@@ -440,13 +466,13 @@ app.post('/api/profile', async (req, res) => {
       Number(theme.glassBlur || 12),
       Number(theme.glassOpacity || 0.15),
       theme.animatedBg ? true : false,
-      theme.musicUrl || null,
+      musicUrl,
       theme.musicAutoplay ? true : false,
       theme.customCss || null,
       bgType,
       bgValue,
-      theme.layout || 'centered',
-      theme.font || 'DM Sans',
+      layout,
+      fontFamily,
       theme.cardOpacity != null ? Number(theme.cardOpacity) / (Number(theme.cardOpacity) > 1 ? 100 : 1) : 0.92,
       theme.particles ? true : false,
       theme.bgBlur ? true : false,
@@ -622,6 +648,18 @@ async function resolveUserId(req) {
   return null;
 }
 
+function discordMemberSince(discordId) {
+  if (!discordId) return null;
+  try {
+    const ts = Number(BigInt(discordId) >> 22n) + 1420070400000;
+    const d = new Date(ts);
+    if (Number.isNaN(d.getTime())) return null;
+    return d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+  } catch {
+    return null;
+  }
+}
+
 function referrerLabel(raw) {
   if (!raw) return 'Direct link';
   try {
@@ -763,6 +801,70 @@ app.post('/api/analytics/event', async (req, res) => {
     res.json({ ok: true });
   } catch (err) {
     console.error('[server] /api/analytics/event error:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// ── Public Stats + Showcase (landing page, cached 5 min) ─────────────────────
+let publicStatsCache = { data: null, at: 0 };
+app.get('/api/stats/public', async (req, res) => {
+  try {
+    if (publicStatsCache.data && Date.now() - publicStatsCache.at < 5 * 60 * 1000) {
+      return res.json(publicStatsCache.data);
+    }
+    const [users, roles, views] = await Promise.all([
+      db.query(`SELECT COUNT(*) AS n FROM users`),
+      db.query(`SELECT COUNT(*) AS n FROM verified_roles`),
+      db.query(`SELECT COUNT(*) AS n FROM analytics_events WHERE type = 'profile_view'`),
+    ]);
+    const data = {
+      profiles: Number(users.rows[0].n),
+      rolesVerified: Number(roles.rows[0].n),
+      profileViews: Number(views.rows[0].n),
+    };
+    publicStatsCache = { data, at: Date.now() };
+    res.json(data);
+  } catch (err) {
+    console.error('[server] /api/stats/public error:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+let showcaseCache = { data: null, at: 0 };
+app.get('/api/showcase', async (req, res) => {
+  try {
+    if (showcaseCache.data && Date.now() - showcaseCache.at < 5 * 60 * 1000) {
+      return res.json(showcaseCache.data);
+    }
+    const rows = await db.query(`
+      SELECT u.slug, COALESCE(u.display_name, u.discord_username) AS name,
+             u.avatar_url,
+             COUNT(vr.id) AS role_count,
+             COALESCE(v.views, 0) AS views
+      FROM users u
+      LEFT JOIN verified_roles vr ON vr.user_id = u.id
+      LEFT JOIN (
+        SELECT user_id, COUNT(*) AS views FROM analytics_events
+        WHERE type = 'profile_view' GROUP BY user_id
+      ) v ON v.user_id = u.id
+      WHERE u.slug IS NOT NULL
+      GROUP BY u.id, v.views
+      ORDER BY COALESCE(v.views, 0) DESC, COUNT(vr.id) DESC
+      LIMIT 6
+    `);
+    const data = {
+      profiles: rows.rows.map(r => ({
+        slug: r.slug,
+        name: r.name || r.slug,
+        avatarUrl: r.avatar_url || null,
+        roleCount: Number(r.role_count),
+        views: Number(r.views),
+      })),
+    };
+    showcaseCache = { data, at: Date.now() };
+    res.json(data);
+  } catch (err) {
+    console.error('[server] /api/showcase error:', err);
     res.status(500).json({ error: 'Server error' });
   }
 });
@@ -968,6 +1070,14 @@ app.get('/status', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'status.html'));
 });
 
+// ── Legal Pages ────────────────────────────────────────────────────────────────
+app.get('/privacy', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'privacy.html'));
+});
+app.get('/terms', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'terms.html'));
+});
+
 app.use('/api/admin', adminRouter);
 
 // ── OG Image Cards (Discord/Twitter embed previews) ───────────────────────────
@@ -994,7 +1104,7 @@ function escapeAttr(s) {
 }
 
 app.get('/:slug', async (req, res) => {
-  const reserved = ['api', 'dashboard', 'login', 'logout', 'static', 'status', 'admin', 'og'];
+  const reserved = ['api', 'dashboard', 'login', 'logout', 'static', 'status', 'admin', 'og', 'privacy', 'terms'];
   const slug = String(req.params.slug || '').toLowerCase();
   if (reserved.includes(slug)) {
     return res.status(404).send('Not found');
@@ -1006,6 +1116,11 @@ app.get('/:slug', async (req, res) => {
       SELECT discord_id, discord_username, display_name, bio, avatar_hash, avatar_url
       FROM users WHERE slug = $1
     `, [slug]);
+
+    // Unclaimed handle → show the "this handle is available" page instead of a bare 404
+    if (row.rowCount === 0 && /^[a-z0-9\-]{1,32}$/.test(slug)) {
+      return res.status(404).sendFile(path.join(__dirname, 'public', 'claim.html'));
+    }
 
     if (row.rowCount > 0) {
       const u = row.rows[0];

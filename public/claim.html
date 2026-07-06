@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="robots" content="noindex"/>
+<title>Available — Cordfol</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --bg:#F3EDE1;--card:#FFFFFF;--ink:#19170F;
+  --ink-soft:rgba(25,23,15,0.6);--ink-faint:rgba(25,23,15,0.4);
+  --line:rgba(25,23,15,0.1);--blurple:#5865F2;
+}
+body{background:var(--bg);color:var(--ink);font-family:'Inter',sans-serif;min-height:100vh;display:flex;flex-direction:column;}
+nav{padding:20px 5vw;display:flex;align-items:center;justify-content:space-between;}
+.nav-logo{font-family:'Poppins',sans-serif;font-weight:800;font-size:19px;color:var(--ink);display:flex;align-items:center;gap:8px;text-decoration:none;}
+.nav-mark{width:22px;height:22px;border-radius:7px;background:var(--blurple);display:inline-block;}
+main{flex:1;display:flex;align-items:center;justify-content:center;padding:40px 5vw;}
+.panel{max-width:460px;width:100%;text-align:center;}
+.handle-pill{display:inline-flex;align-items:center;gap:2px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 20px;font-size:15px;font-weight:600;margin-bottom:26px;}
+.handle-pill .prefix{color:var(--ink-faint);font-weight:500;}
+h1{font-family:'Poppins',sans-serif;font-weight:700;font-size:clamp(28px,5vw,40px);letter-spacing:-1px;line-height:1.1;margin-bottom:14px;}
+h1 .accent{color:var(--blurple);}
+p{font-size:14.5px;color:var(--ink-soft);line-height:1.7;margin-bottom:28px;}
+.cta{display:inline-block;padding:14px 28px;background:var(--ink);color:var(--bg);font-weight:600;font-size:14px;border-radius:10px;text-decoration:none;transition:background 0.2s;}
+.cta:hover{background:var(--blurple);color:#fff;}
+.sub-link{display:block;margin-top:18px;font-size:12.5px;color:var(--ink-faint);text-decoration:none;}
+.sub-link:hover{color:var(--ink);}
+footer{padding:24px 5vw;text-align:center;font-size:11.5px;color:var(--ink-faint);}
+</style>
+</head>
+<body>
+<nav>
+  <a class="nav-logo" href="/"><span class="nav-mark"></span>Cordfol</a>
+</nav>
+<main>
+  <div class="panel">
+    <div class="handle-pill"><span class="prefix">cordfol.org/</span><span id="handleName">yourname</span></div>
+    <h1>This handle is <span class="accent">still open</span>.</h1>
+    <p>Nobody has claimed it yet. Sign in with Discord, verify your roles, and this link is yours — free, live in under a minute.</p>
+    <a class="cta" id="claimBtn" href="https://api.cordfol.org/api/auth/discord">Claim it with Discord</a>
+    <a class="sub-link" href="/">or see what Cordfol is first →</a>
+  </div>
+</main>
+<footer>Cordfol — Your Discord Identity, Verified.</footer>
+<script>
+const CLAIM_COOKIE_NAME = 'cordfol_claim_slug';
+const slug = decodeURIComponent(location.pathname.replace(/^\//, '')).toLowerCase().replace(/[^a-z0-9\-]/g, '').slice(0, 32);
+if (slug) {
+  document.getElementById('handleName').textContent = slug;
+  document.title = `cordfol.org/${slug} is available — Cordfol`;
+  document.getElementById('claimBtn').addEventListener('click', () => {
+    document.cookie = `${CLAIM_COOKIE_NAME}=${encodeURIComponent(slug)}; Max-Age=1800; Path=/; Domain=.cordfol.org; Secure; SameSite=Lax`;
+  });
+}
+</script>
+</body>
+</html>

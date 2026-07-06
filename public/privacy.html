@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Privacy — Cordfol</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{--bg:#F3EDE1;--ink:#19170F;--ink-soft:rgba(25,23,15,0.65);--ink-faint:rgba(25,23,15,0.4);--line:rgba(25,23,15,0.1);--blurple:#5865F2;}
+body{background:var(--bg);color:var(--ink);font-family:'Inter',sans-serif;}
+nav{padding:20px 5vw;display:flex;align-items:center;justify-content:space-between;}
+.nav-logo{font-family:'Poppins',sans-serif;font-weight:800;font-size:19px;color:var(--ink);display:flex;align-items:center;gap:8px;text-decoration:none;}
+.nav-mark{width:22px;height:22px;border-radius:7px;background:var(--blurple);display:inline-block;}
+main{max-width:640px;margin:0 auto;padding:48px 5vw 96px;}
+h1{font-family:'Poppins',sans-serif;font-weight:700;font-size:34px;letter-spacing:-1px;margin-bottom:8px;}
+.updated{font-size:12.5px;color:var(--ink-faint);margin-bottom:40px;}
+h2{font-family:'Poppins',sans-serif;font-weight:600;font-size:17px;margin:36px 0 10px;}
+p{font-size:14.5px;color:var(--ink-soft);line-height:1.75;margin-bottom:12px;}
+a{color:var(--blurple);}
+</style>
+</head>
+<body>
+<nav><a class="nav-logo" href="/"><span class="nav-mark"></span>Cordfol</a></nav>
+<main>
+  <h1>Privacy</h1>
+  <div class="updated">Last updated July 2026</div>
+
+  <p>Cordfol exists to verify your Discord roles and show them on a page you control. Here's exactly what we collect and why — no legalese padding.</p>
+
+  <h2>What we collect</h2>
+  <p>When you sign in with Discord, we store your Discord ID, username, avatar, and the OAuth tokens Discord gives us so we can re-check your roles. We store the roles you verify, the profile content you write (bio, links, theme settings), and an optional email if you add one.</p>
+  <p>When someone views your public profile, we log the view and the referring site so you can see your own analytics. We don't run third-party ad trackers.</p>
+
+  <h2>What we don't do</h2>
+  <p>We don't sell your data, we don't read your Discord messages (the OAuth scopes we ask for can't even see them), and we don't show anything on your public page that you haven't chosen to show.</p>
+
+  <h2>Where it lives</h2>
+  <p>Data is stored in a managed PostgreSQL database. OAuth tokens are only used server-side to talk to Discord's API.</p>
+
+  <h2>Deleting your data</h2>
+  <p>Remove your account from the dashboard, or reach us on <a href="https://discord.gg/wcrCgc6pMf" target="_blank" rel="noopener">our Discord server</a> and we'll wipe it manually. Deleting your account removes your profile, roles, analytics, and tokens.</p>
+
+  <h2>Questions</h2>
+  <p>Ask in <a href="https://discord.gg/wcrCgc6pMf" target="_blank" rel="noopener">the Discord server</a> — that's the fastest way to reach us.</p>
+</main>
+</body>
+</html>

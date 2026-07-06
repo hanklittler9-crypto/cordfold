@@ -3,9 +3,10 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Dashboard — Cordfol.io</title>
+<title>Dashboard — Cordfol</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg"/>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&family=IBM+Plex+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&family=Space+Mono:wght@400;700&family=Syne:wght@500;600;700&display=swap" rel="stylesheet"/>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
 :root{
@@ -160,7 +161,15 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
 .font-btn:hover,.font-btn.selected{border-color:var(--discord);color:var(--text);background:rgba(88,101,242,0.08);}
 
 /* ── LAYOUT PRESETS ── */
-.layout-options{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+.layout-options{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
+.theme-preset-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:4px;}
+.theme-preset-btn{padding:14px 12px;border:1px solid var(--border);border-radius:14px;cursor:pointer;text-align:left;background:rgba(255,255,255,0.02);transition:all 0.15s;}
+.theme-preset-btn:hover,.theme-preset-btn.active{border-color:var(--discord);background:rgba(88,101,242,0.08);transform:translateY(-1px);}
+.theme-preset-name{font-size:13px;font-weight:600;margin-bottom:4px;}
+.theme-preset-sub{font-size:10px;color:var(--muted2);line-height:1.45;}
+.pin-btn{background:none;border:none;cursor:pointer;font-size:15px;color:var(--muted2);padding:6px 8px;line-height:1;transition:color 0.15s,transform 0.15s;}
+.pin-btn:hover{color:var(--amber);transform:scale(1.1);}
+.pin-btn.pinned{color:var(--amber);}
 .layout-btn{padding:14px 8px;border:1px solid var(--border);border-radius:14px;cursor:pointer;text-align:center;color:var(--muted2);background:rgba(255,255,255,0.02);transition:all 0.15s;}
 .layout-btn:hover,.layout-btn.selected{border-color:var(--discord);background:rgba(88,101,242,0.08);}
 .layout-btn .layout-icon{font-size:20px;margin-bottom:6px;}
@@ -278,7 +287,7 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
   .custom-link-row{flex-wrap:wrap;}
   .custom-link-row .cl-title,.custom-link-row .cl-url{flex:1 1 100%!important;}
 }
-@media (max-width:640px){.topbar{padding:0 14px;}.plan-badge{display:none;}.card{padding:18px;}.theme-grid{grid-template-columns:1fr 1fr;}.btn-row{flex-wrap:wrap;}.preset-grid{grid-template-columns:repeat(3,1fr);}.gradient-presets{grid-template-columns:repeat(3,1fr);}}
+@media (max-width:640px){.topbar{padding:0 14px;}.plan-badge{display:none;}.card{padding:18px;}.theme-grid{grid-template-columns:1fr 1fr;}.btn-row{flex-wrap:wrap;}.preset-grid{grid-template-columns:repeat(3,1fr);}.gradient-presets{grid-template-columns:repeat(3,1fr);}.theme-preset-grid{grid-template-columns:repeat(2,1fr);}.layout-options{grid-template-columns:repeat(2,1fr);}.font-options{grid-template-columns:repeat(2,1fr);}}
 </style>
 </head>
 <body>
@@ -357,6 +366,7 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
       </div>
       <div class="card">
         <div class="card-title">Active verified roles<span class="card-subtitle" id="roleCount">Loading...</span></div>
+        <div class="hint-text" style="margin-bottom:12px">Pin up to 3 roles — they show first on your public profile.</div>
         <div class="role-list" id="roleList"></div>
       </div>
       <div class="card helper-card">
@@ -426,6 +436,13 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
             </div>
           </div>
 
+          <!-- THEME PRESETS -->
+          <div class="card">
+            <div class="card-title">Theme Preset</div>
+            <div class="hint-text" style="margin-bottom:14px">Start with a curated look, then tweak colors below. Less is usually more.</div>
+            <div class="theme-preset-grid" id="themePresetGrid"></div>
+          </div>
+
           <!-- BACKGROUND -->
           <div class="card">
             <div class="card-title">Profile Background</div>
@@ -475,13 +492,17 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
             <div class="layout-options" style="margin-bottom:18px">
               <div class="layout-btn selected" onclick="setLayout('centered',this)"><div class="layout-icon">⊡</div><div class="layout-name">Centered</div></div>
               <div class="layout-btn" onclick="setLayout('left',this)"><div class="layout-icon">▤</div><div class="layout-name">Left Align</div></div>
+              <div class="layout-btn" onclick="setLayout('magazine',this)"><div class="layout-icon">▣</div><div class="layout-name">Magazine</div></div>
               <div class="layout-btn" onclick="setLayout('card',this)"><div class="layout-icon">◫</div><div class="layout-name">Card Stack</div></div>
             </div>
             <div class="field-label" style="margin-bottom:10px">Font</div>
             <div class="font-options" style="margin-bottom:18px">
               <div class="font-btn selected" style="font-family:'DM Sans',sans-serif" onclick="setFont('DM Sans',this)">DM Sans<br><span style="font-size:10px;opacity:0.5">Clean</span></div>
-              <div class="font-btn" style="font-family:'Space Mono',monospace" onclick="setFont('Space Mono',this)">MONO<br><span style="font-size:10px;opacity:0.5">Technical</span></div>
-              <div class="font-btn" style="font-family:'Bebas Neue',sans-serif;font-size:16px" onclick="setFont('Bebas Neue',this)">BEBAS<br><span style="font-size:10px;opacity:0.5;font-family:'DM Sans'">Bold</span></div>
+              <div class="font-btn" style="font-family:'Space Mono',monospace" onclick="setFont('Space Mono',this)">Mono<br><span style="font-size:10px;opacity:0.5">Technical</span></div>
+              <div class="font-btn" style="font-family:'Bebas Neue',sans-serif;font-size:16px" onclick="setFont('Bebas Neue',this)">Bebas<br><span style="font-size:10px;opacity:0.5;font-family:'DM Sans'">Bold</span></div>
+              <div class="font-btn" style="font-family:'Instrument Serif',serif;font-size:15px" onclick="setFont('Instrument Serif',this)">Serif<br><span style="font-size:10px;opacity:0.5;font-family:'DM Sans'">Editorial</span></div>
+              <div class="font-btn" style="font-family:'Syne',sans-serif;font-weight:600" onclick="setFont('Syne',this)">Syne<br><span style="font-size:10px;opacity:0.5;font-family:'DM Sans'">Designer</span></div>
+              <div class="font-btn" style="font-family:'IBM Plex Mono',monospace;font-size:12px" onclick="setFont('IBM Plex Mono',this)">Plex<br><span style="font-size:10px;opacity:0.5;font-family:'DM Sans'">Dev</span></div>
             </div>
             <div class="grid-2">
               <div class="field">
@@ -546,8 +567,8 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
             </div>
             <div id="music-section" style="display:none;margin-top:16px">
               <div class="section-divider"><span>Music Source</span></div>
-              <div class="field"><div class="field-label">Music URL</div><input class="field-input" id="musicUrlInput" placeholder="Direct MP3/WAV/OGG URL" oninput="updatePreview()"/><div class="field-hint">Direct audio file URL. No YouTube or Spotify.</div></div>
-              <div class="field"><div class="field-label">Or Upload MP3</div><input class="field-input" type="file" id="musicFileInput" accept=".mp3,.wav,.ogg,.m4a" onchange="handleMusicUpload(event)"/><div class="field-hint" id="uploadStatus"></div></div>
+              <div class="field"><div class="field-label">Music URL</div><input class="field-input" id="musicUrlInput" placeholder="https://files.catbox.moe/yourtrack.mp3" oninput="updatePreview()"/><div class="field-hint">Direct MP3/WAV/OGG link only — host on catbox.moe, Dropbox, or your CDN. No YouTube.</div></div>
+              <div class="field" id="musicLegacyWarn" style="display:none"><div class="field-hint" style="color:var(--amber)">Your old uploaded track was removed from the API — paste a URL and save to restore music.</div></div>
               <div class="field"><label class="field-label"><input type="checkbox" id="musicAutoplayInput"/> Autoplay (muted until interaction)</label></div>
             </div>
           </div>
@@ -825,6 +846,98 @@ const BANNER_PRESETS=[
   {label:'Crimson',v:'linear-gradient(135deg,#8B0000,#FF3366)'},
 ];
 
+  {label:'Crimson',v:'linear-gradient(135deg,#8B0000,#FF3366)'},
+];
+
+const THEME_PRESETS=[
+  {id:'clean',label:'Clean',sub:'Minimal · fast · no noise',
+   accent:'#5865F2',text:'#f0f2f8',card:'#141418',opacity:90,
+   bgType:'solid',bgValue:'#0c0c0f',layout:'centered',font:'DM Sans',
+   fx:{music:0,anim:0,particles:0,glassmorphism:0,blur:0,splash:0,typewriter:0,tilt:0}},
+  {id:'editorial',label:'Editorial',sub:'Magazine layout · warm serif',
+   accent:'#c9a962',text:'#f5f0e8',card:'#121110',opacity:88,
+   bgType:'gradient',bgValue:'linear-gradient(160deg,#0a0a0a 0%,#1a1814 100%)',layout:'magazine',font:'Instrument Serif',
+   fx:{music:0,anim:0,particles:0,glassmorphism:0,blur:0,splash:0,typewriter:0,tilt:0}},
+  {id:'neon',label:'Neon',sub:'Dark glow · glass · particles',
+   accent:'#00FFB2',text:'#eafff8',card:'#0a1210',opacity:72,
+   bgType:'gradient',bgValue:'linear-gradient(135deg,#001a12,#003325)',layout:'centered',font:'Space Mono',
+   fx:{music:0,anim:1,particles:1,glassmorphism:1,blur:1,splash:0,typewriter:0,tilt:0}},
+  {id:'chaos',label:'Chaos',sub:'All effects · guns.lol energy',
+   accent:'#fd12e9',text:'#ffffff',card:'#3b3b3b',opacity:28,
+   bgType:'gradient',bgValue:'linear-gradient(135deg,#1a0a2e,#7c5cff 55%,#00FFB2)',layout:'card',font:'Bebas Neue',
+   fx:{music:0,anim:1,particles:1,glassmorphism:1,blur:1,splash:1,typewriter:1,tilt:1}},
+];
+let activeThemePreset=null;
+
+function initThemePresets(){
+  const grid=document.getElementById('themePresetGrid');
+  if(!grid) return;
+  THEME_PRESETS.forEach(p=>{
+    const btn=document.createElement('button');
+    btn.type='button';
+    btn.className='theme-preset-btn';
+    btn.dataset.preset=p.id;
+    btn.innerHTML=`<div class="theme-preset-name">${p.label}</div><div class="theme-preset-sub">${p.sub}</div>`;
+    btn.onclick=()=>applyThemePreset(p.id);
+    grid.appendChild(btn);
+  });
+}
+
+function applyThemePreset(id){
+  const p=THEME_PRESETS.find(x=>x.id===id);
+  if(!p) return;
+  activeThemePreset=id;
+  document.querySelectorAll('.theme-preset-btn').forEach(b=>b.classList.toggle('active',b.dataset.preset===id));
+
+  document.getElementById('accentColorInput').value=p.accent;
+  document.getElementById('textColorInput').value=p.text;
+  document.getElementById('cardColorInput').value=p.card;
+  document.getElementById('cardOpacityInput').value=p.opacity;
+
+  currentBgType=p.bgType;
+  currentBgData={type:p.bgType,value:p.bgValue};
+  document.querySelectorAll('.bg-type-btn').forEach((btn,i)=>{
+    const types=['gradient','solid','gif','video'];
+    btn.classList.toggle('active',types[i]===p.bgType);
+  });
+  document.querySelectorAll('.bg-panel').forEach(panel=>panel.classList.remove('active'));
+  const bgPanel=document.getElementById('bg-panel-'+p.bgType);
+  if(bgPanel) bgPanel.classList.add('active');
+  if(p.bgType==='solid') document.getElementById('backgroundColorInput').value=p.bgValue;
+  if(p.bgType==='gradient'){
+    document.querySelectorAll('.grad-chip').forEach(c=>c.classList.remove('selected'));
+  }
+
+  currentLayout=p.layout;
+  document.querySelectorAll('.layout-btn').forEach(btn=>{
+    const name=(btn.querySelector('.layout-name')?.textContent||'').toLowerCase();
+    const match=(p.layout==='left'&&name.includes('left'))||(p.layout==='magazine'&&name.includes('magazine'))||(p.layout==='card'&&name.includes('stack'))||(p.layout==='centered'&&name.includes('center'));
+    btn.classList.toggle('selected',match);
+  });
+  document.getElementById('previewLayoutState').textContent=p.layout.charAt(0).toUpperCase()+p.layout.slice(1);
+
+  currentFont=p.font;
+  document.querySelectorAll('.font-btn').forEach(btn=>{
+    btn.classList.toggle('selected',btn.textContent.trim().startsWith(p.font.split(' ')[0]));
+  });
+
+  Object.keys(activeFx).forEach(key=>{
+    if(key==='cursor') return;
+    if(key==='music') return;
+    activeFx[key]=!!p.fx[key];
+    const card=document.getElementById('fx-'+key);
+    const toggle=document.getElementById('fx-toggle-'+key);
+    if(card&&toggle){
+      card.classList.toggle('active',activeFx[key]);
+      toggle.classList.toggle('on',activeFx[key]);
+    }
+  });
+
+  markProfileDirty();
+  updatePreview();
+  showToast('OK',`${p.label} preset applied — tweak anything below.`);
+}
+
 function initPresets(){
   const gc=document.getElementById('gradientPresets');
   GRADIENTS.forEach((g,i)=>{
@@ -876,6 +989,8 @@ function updateCustomGradient(){
 
 function setLayout(layout,btn){
   currentLayout=layout;
+  activeThemePreset=null;
+  document.querySelectorAll('.theme-preset-btn').forEach(b=>b.classList.remove('active'));
   document.querySelectorAll('.layout-btn').forEach(b=>b.classList.remove('selected'));
   btn.classList.add('selected');
   document.getElementById('previewLayoutState').textContent=layout.charAt(0).toUpperCase()+layout.slice(1);
@@ -884,6 +999,8 @@ function setLayout(layout,btn){
 
 function setFont(font,btn){
   currentFont=font;
+  activeThemePreset=null;
+  document.querySelectorAll('.theme-preset-btn').forEach(b=>b.classList.remove('active'));
   document.querySelectorAll('.font-btn').forEach(b=>b.classList.remove('selected'));
   btn.classList.add('selected');
   updatePreview();
@@ -1377,14 +1494,18 @@ async function loadRoles(){
     window._onboard.roles=true;updateOnboarding();
     const active=roles.filter(r=>r.is_active);
     const latest=roles.map(r=>r.last_checked_at).filter(Boolean).sort().pop();
-    roleList.innerHTML=roles.map(role=>`
+    roleList.innerHTML=roles.map(role=>{
+      const pinned=role.display_order!=null&&role.display_order<3;
+      return `
       <div class="role-row">
-        <div class="server-icon" style="background:rgba(88,101,242,0.15);color:#8b9fff">${role.guild_name?role.guild_name[0].toUpperCase():'?'}</div>
+        <button type="button" class="pin-btn ${pinned?'pinned':''}" title="${pinned?'Unpin':'Pin to profile top (max 3)'}" onclick="togglePinRole('${role.id}',${pinned})">★</button>
+        <div class="server-icon" ${role.guild_icon_hash?`style="background-image:url('https://cdn.discordapp.com/icons/${role.guild_id}/${role.guild_icon_hash}.png');background-size:cover;background-position:center"`:'style="background:rgba(88,101,242,0.15);color:#8b9fff"'}>${role.guild_icon_hash?'':(role.guild_name?role.guild_name[0].toUpperCase():'?')}</div>
         <div class="role-info"><div class="role-name">${escapeHtmlDash(role.custom_label||role.role_name)}</div><div class="role-meta">${escapeHtmlDash(role.guild_name)}</div></div>
         <div class="proof-chip"><div class="proof-dot" style="background:var(--neon)"></div>${role.proof_type}</div>
         <div class="badge ${role.is_active?'badge-v':'badge-p'}">${role.is_active?'Verified':'Inactive'}</div>
         <div class="toggle ${role.is_public?'on':''}" onclick="toggleRoleVisibility('${role.id}',${role.is_public?'false':'true'},this)"></div>
-      </div>`).join('');
+      </div>`;
+    }).join('');
     roleCount.textContent=`${active.length} active of ${roles.length} total`;
     scanStatus.innerHTML=latest?`<div class="scan-dot"></div> Last scanned ${new Date(latest).toLocaleString()} · ${active.length} active roles`:`<div class="scan-dot"></div> ${active.length} active roles`;
     renderServerList(roles);
@@ -1409,6 +1530,25 @@ function renderServerList(roles){
       <div class="role-info"><div class="role-name">${escapeHtmlDash(g.name)}</div><div class="role-meta">${g.active} active role${g.active===1?'':'s'} · ${g.total} total</div></div>
       ${g.bot?'<div class="proof-chip"><div class="proof-dot" style="background:var(--neon)"></div>Bot installed</div>':'<div class="proof-chip" style="opacity:0.5">OAuth only</div>'}
     </div>`).join('');
+}
+
+async function togglePinRole(roleId,isPinned){
+  try{
+    const sid=restoreAuthSid();
+    const url=sid?`${API_BASE}/verify/roles/${roleId}?sid=${sid}`:`${API_BASE}/verify/roles/${roleId}`;
+    let displayOrder=999;
+    if(!isPinned){
+      const res=await fetch(sid?`${API_BASE}/verify/roles?sid=${sid}`:`${API_BASE}/verify/roles`,{credentials:'include'});
+      const data=res.ok?await res.json():{roles:[]};
+      const pinned=(data.roles||[]).filter(r=>r.display_order!=null&&r.display_order<3);
+      if(pinned.length>=3){showToast('ERR','Max 3 pinned roles — unpin one first.','error');return;}
+      displayOrder=pinned.length;
+    }
+    const patch=await fetch(url,{method:'PATCH',headers:{'Content-Type':'application/json'},credentials:'include',body:JSON.stringify({displayOrder})});
+    if(!patch.ok) throw new Error('Failed to update pin.');
+    showToast('OK',isPinned?'Role unpinned.':'Role pinned to top of profile.');
+    loadRoles();
+  }catch(err){showToast('ERR',err.message||'Failed to pin role.','error');}
 }
 
 async function toggleRoleVisibility(roleId,isPublic,toggleEl){
@@ -1447,6 +1587,8 @@ async function loadProfile(user){
     document.getElementById('cardColorInput').value=th.cardColor||'#111111';
     document.getElementById('cardOpacityInput').value=th.cardOpacity!=null?Math.round(Number(th.cardOpacity)* (Number(th.cardOpacity)<=1?100:1)):92;
     document.getElementById('musicUrlInput').value=th.musicUrl||'';
+    const legacyWarn=document.getElementById('musicLegacyWarn');
+    if(legacyWarn) legacyWarn.style.display=th.musicLegacy?'block':'none';
     if(document.getElementById('musicAutoplayInput')) document.getElementById('musicAutoplayInput').checked=!!th.musicAutoplay;
 
     if(data.profile.bannerUrl){
@@ -1473,15 +1615,19 @@ async function loadProfile(user){
 
     currentLayout=th.layout||'centered';
     document.querySelectorAll('.layout-btn').forEach(btn=>{
-      btn.classList.toggle('selected',btn.querySelector('.layout-name')?.textContent.toLowerCase().includes(currentLayout==='left'?'left':currentLayout));
+      const name=(btn.querySelector('.layout-name')?.textContent||'').toLowerCase();
+      const match=(currentLayout==='left'&&name.includes('left'))||(currentLayout==='magazine'&&name.includes('magazine'))||(currentLayout==='card'&&name.includes('stack'))||(currentLayout==='centered'&&name.includes('center'));
+      btn.classList.toggle('selected',match);
     });
     currentFont=th.font||'DM Sans';
     document.querySelectorAll('.font-btn').forEach(btn=>{
-      btn.classList.toggle('selected',btn.textContent.includes(currentFont==='Space Mono'?'MONO':currentFont==='Bebas Neue'?'BEBAS':'DM Sans'));
+      btn.classList.toggle('selected',btn.textContent.trim().startsWith(currentFont.split(' ')[0]));
     });
+    document.querySelectorAll('.theme-preset-btn').forEach(b=>b.classList.remove('active'));
+    activeThemePreset=null;
 
     activeFx={
-      music:!!th.musicUrl,
+      music:!!th.musicUrl||!!th.musicLegacy,
       anim:!!th.animatedBg,
       particles:!!th.particles,
       glassmorphism:!!(th.glassmorphism||th.glassEnabled),
@@ -1559,22 +1705,12 @@ function initDirtyTracking(){
   tab.addEventListener('input',markProfileDirty);
   tab.addEventListener('change',markProfileDirty);
   tab.addEventListener('click',e=>{
-    if(e.target.closest('.fx-card,.layout-btn,.font-btn,.bg-type-btn,.toggle,.preset-item')) markProfileDirty();
+    if(e.target.closest('.fx-card,.layout-btn,.font-btn,.bg-type-btn,.toggle,.preset-item,.theme-preset-btn')) markProfileDirty();
   });
 }
 window.addEventListener('beforeunload',e=>{
   if(window._profileDirty){e.preventDefault();e.returnValue='';}
 });
-
-function handleMusicUpload(event){
-  const file=event.target.files[0];if(!file)return;
-  const statusEl=document.getElementById('uploadStatus');const max=3*1024*1024;
-  if(file.size>max){statusEl.textContent='File too large (max 3MB)';statusEl.style.color='var(--hot)';return;}
-  statusEl.textContent='Converting...';statusEl.style.color='var(--muted2)';
-  const reader=new FileReader();
-  reader.onload=e=>{document.getElementById('musicUrlInput').value=e.target.result;statusEl.textContent=`${file.name} ready (${(file.size/1024/1024).toFixed(2)}MB)`;statusEl.style.color='var(--neon)';updatePreview();};
-  reader.readAsDataURL(file);
-}
 
 function spotifyApiUrl(path){
   const sid=restoreAuthSid();
@@ -1717,6 +1853,7 @@ window.onload=()=>{
   document.getElementById('profileHostLabel').textContent=`${PUBLIC_HOST}/`;
   document.getElementById('profileUrl').textContent=`Customize your public page at ${PUBLIC_HOST}/...`;
   initPresets();
+  initThemePresets();
   checkSession();
   updatePreview();
   initDirtyTracking();

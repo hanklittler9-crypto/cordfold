@@ -9,6 +9,7 @@
 <meta property="og:url" content="https://cordfol.org" />
 <meta name="theme-color" content="#F3EDE1" />
 <title>Cordfol — Your Discord Identity, Verified.</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg"/>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
@@ -85,7 +86,9 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:20px 5vw;display:fle
 .fc3{bottom:-14px;right:40px;animation:floaty 6.5s ease-in-out infinite 1s;}
 @keyframes floaty{0%,100%{transform:translateY(0);}50%{transform:translateY(-10px);}}
 .mock-id{display:flex;align-items:flex-end;gap:14px;margin-top:-32px;margin-left:18px;margin-bottom:18px;}
-.mock-avatar{width:62px;height:62px;border-radius:14px;border:3px solid var(--card);background:var(--ink);display:flex;align-items:center;justify-content:center;color:var(--bg);font-family:'Poppins',sans-serif;font-weight:700;font-size:24px;}
+.mock-avatar{width:62px;height:62px;border-radius:14px;border:3px solid var(--card);background:var(--ink);display:flex;align-items:center;justify-content:center;color:var(--bg);font-family:'Poppins',sans-serif;font-weight:700;font-size:24px;overflow:hidden;flex-shrink:0;}
+.mock-avatar img{width:100%;height:100%;object-fit:cover;border-radius:11px;}
+.mock-banner img,.mock-banner video{width:100%;height:100%;object-fit:cover;border-radius:12px;}
 .mock-name{font-family:'Poppins',sans-serif;font-weight:600;font-size:16px;}
 .mock-handle{font-size:11.5px;color:var(--ink-faint);margin-top:2px;}
 .mock-roles{display:flex;flex-direction:column;gap:8px;}
@@ -140,9 +143,13 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:20px 5vw;display:fle
 .price-col.right .price-line:first-of-type{border-top:none;}
 
 .showcase-scroll{display:flex;gap:14px;overflow-x:auto;padding-bottom:10px;}
-.showcase-card{min-width:230px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;flex-shrink:0;}
+.showcase-empty{font-size:13px;color:var(--ink-faint);padding:20px 4px;}
+.showcase-card{min-width:230px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;flex-shrink:0;text-decoration:none;color:var(--ink);transition:transform 0.18s,box-shadow 0.18s;display:block;}
+.showcase-card:hover{transform:translateY(-3px);box-shadow:0 14px 30px rgba(25,23,15,0.1);}
+.sc-top{display:flex;align-items:center;gap:11px;margin-bottom:14px;}
+.sc-avatar{width:40px;height:40px;border-radius:12px;background:var(--blurple-soft);object-fit:cover;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-family:'Poppins',sans-serif;font-weight:700;font-size:16px;color:var(--blurple);}
 .sc-name{font-family:'Poppins',sans-serif;font-weight:600;font-size:14.5px;margin-bottom:2px;}
-.sc-handle{font-size:11px;color:var(--ink-faint);margin-bottom:14px;}
+.sc-handle{font-size:11px;color:var(--ink-faint);}
 .sc-roles{display:flex;flex-direction:column;gap:6px;}
 .sc-role{display:flex;align-items:center;gap:7px;font-size:11.5px;padding:8px 9px;background:var(--bg);border-radius:8px;}
 .sc-role-dot{width:6px;height:6px;border-radius:50%;background:var(--blurple);flex-shrink:0;}
@@ -232,12 +239,12 @@ footer{padding:40px 5vw;border-top:1px solid var(--line);display:flex;align-item
 <section class="hero">
   <div class="hero-top">
     <h1 class="hero-title">One link for your <span class="accent">real</span> Discord reputation.</h1>
-    <div class="hero-eyebrow">Est. on Discord OAuth2 · <b>24,819</b> profiles verified</div>
+    <div class="hero-eyebrow" id="heroStat">Est. on Discord OAuth2</div>
   </div>
 
   <div class="hero-grid">
     <div class="hero-left">
-      <p class="hero-sub">Cordfol checks your roles against Discord itself and turns them into one page people can actually trust — no fake claims, just receipts.</p>
+      <p class="hero-sub">Paste your link in #general. People see your Discord roles — verified against the API, not your word for it.</p>
       <form class="claim-bar" id="claimForm">
         <span class="claim-prefix">cordfol.org/</span>
         <input class="claim-input" id="claimSlugInput" name="slug" type="text" inputmode="text" autocomplete="off" spellcheck="false" maxlength="32" placeholder="yourname" aria-label="Choose your Cordfol handle"/>
@@ -246,57 +253,26 @@ footer{padding:40px 5vw;border-top:1px solid var(--line);display:flex;align-item
       <div class="hero-meta">Free to start · <b>no card required</b></div>
     </div>
 
-    <div class="mock-wrap">
-      <div class="float-chip fc1"><span class="dot" style="background:var(--mint)"></span> Verified Mod</div>
-      <div class="float-chip fc2"><span class="dot" style="background:var(--pink)"></span> Bot proof</div>
-      <div class="float-chip fc3"><span class="dot" style="background:var(--gold)"></span> 8.4k views</div>
-      <svg class="mascot" viewBox="0 0 160 160" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-        <defs>
-          <linearGradient id="mascotBody" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stop-color="#5865F2"/>
-            <stop offset="60%" stop-color="#8b6cf2"/>
-            <stop offset="100%" stop-color="#E0529C"/>
-          </linearGradient>
-        </defs>
-        <ellipse cx="80" cy="148" rx="42" ry="7" fill="#19170F" opacity="0.08"/>
-        <path d="M80 16c38 0 62 26 62 60 0 30-18 52-40 60-7 2-10 8-10 14 0 4-2 6-6 6h-12c-4 0-6-2-6-6 0-6-3-12-10-14-22-8-40-30-40-60 0-34 24-60 62-60z" fill="url(#mascotBody)"/>
-        <circle cx="58" cy="78" r="7.5" fill="#19170F"/>
-        <circle cx="102" cy="78" r="7.5" fill="#19170F"/>
-        <circle cx="61" cy="75" r="2" fill="#fff"/>
-        <circle cx="105" cy="75" r="2" fill="#fff"/>
-        <path d="M62 102c6 7 30 7 36 0" stroke="#19170F" stroke-width="4.5" stroke-linecap="round" fill="none"/>
-        <g>
-          <circle cx="118" cy="112" r="17" fill="#fff"/>
-          <circle cx="118" cy="112" r="17" fill="none" stroke="var(--gold)" stroke-width="3"/>
-          <path d="M110 112l5 5 10-11" stroke="var(--gold)" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-        </g>
-        <circle cx="38" cy="46" r="3" fill="var(--gold)"/>
-        <circle cx="128" cy="38" r="2.4" fill="var(--mint)"/>
-        <circle cx="140" cy="64" r="2" fill="var(--pink)"/>
-      </svg>
+    <div class="mock-wrap" id="heroPreview">
       <div class="mock-card">
       <div class="mock-top">
         <span class="mock-dot"></span><span class="mock-dot"></span><span class="mock-dot"></span>
-        <span class="mock-url">cordfol.org/arcticfox</span>
+        <span class="mock-url" id="heroMockUrl">cordfol.org/…</span>
       </div>
       <div class="mock-body">
-        <div class="mock-banner"></div>
+        <div class="mock-banner" id="heroMockBanner"></div>
         <div class="mock-id">
-          <div class="mock-avatar">A</div>
+          <div class="mock-avatar" id="heroMockAvatar">?</div>
           <div>
-            <div class="mock-name">ArcticFox</div>
-            <div class="mock-handle">Head Moderator · Developer</div>
+            <div class="mock-name" id="heroMockName">Loading…</div>
+            <div class="mock-handle" id="heroMockHandle">Verified Discord profile</div>
           </div>
         </div>
-        <div class="mock-roles">
-          <div class="mock-role"><div class="mock-role-left"><span class="mock-check"></span> Head Moderator · MidnightDev</div><span class="mock-role-proof">Bot proof</span></div>
-          <div class="mock-role"><div class="mock-role-left"><span class="mock-check"></span> Developer · SkyCraft</div><span class="mock-role-proof">OAuth proof</span></div>
-          <div class="mock-role"><div class="mock-role-left"><span class="mock-check"></span> Tournament Staff · RL Pro Hub</div><span class="mock-role-proof">Verified</span></div>
-        </div>
+        <div class="mock-roles" id="heroMockRoles"></div>
         <div class="mock-stats">
-          <div><div class="mock-stat-num">12</div><div class="mock-stat-label">Active roles</div></div>
-          <div><div class="mock-stat-num">8.4k</div><div class="mock-stat-label">Profile views</div></div>
-          <div><div class="mock-stat-num">2h</div><div class="mock-stat-label">Last synced</div></div>
+          <div><div class="mock-stat-num" id="heroStatRoles">—</div><div class="mock-stat-label">Active roles</div></div>
+          <div><div class="mock-stat-num" id="heroStatViews">—</div><div class="mock-stat-label">Profile views</div></div>
+          <div><div class="mock-stat-num" id="heroStatSince">—</div><div class="mock-stat-label">On Discord</div></div>
         </div>
       </div>
       </div>
@@ -377,12 +353,8 @@ footer{padding:40px 5vw;border-top:1px solid var(--line);display:flex;align-item
     <h2 class="section-title">Real profiles</h2>
     <div class="section-num">04 / Showcase</div>
   </div>
-  <div class="showcase-scroll">
-    <div class="showcase-card"><div class="sc-name">ArcticFox</div><div class="sc-handle">cordfol.org/arcticfox</div><div class="sc-roles"><div class="sc-role"><div class="sc-role-dot" style="background:var(--blurple)"></div>Head Admin · MidnightDev</div><div class="sc-role"><div class="sc-role-dot" style="background:var(--pink)"></div>Developer · SkyCraft</div></div><div class="sc-verified">✓ 3 roles verified</div></div>
-    <div class="showcase-card"><div class="sc-name">LunarDev</div><div class="sc-handle">cordfol.org/lunardev</div><div class="sc-roles"><div class="sc-role"><div class="sc-role-dot" style="background:var(--mint)"></div>Staff · Creator Hub</div><div class="sc-role"><div class="sc-role-dot" style="background:var(--gold)"></div>Bot Developer · 5 servers</div></div><div class="sc-verified">✓ 3 roles verified</div></div>
-    <div class="showcase-card"><div class="sc-name">ZapMod</div><div class="sc-handle">cordfol.org/zapmod</div><div class="sc-roles"><div class="sc-role"><div class="sc-role-dot" style="background:var(--peach)"></div>Esports Coach · RL Pro Hub</div><div class="sc-role"><div class="sc-role-dot" style="background:var(--blurple)"></div>Organizer · ESL</div></div><div class="sc-verified">✓ 3 roles verified</div></div>
-    <div class="showcase-card"><div class="sc-name">PixelArt</div><div class="sc-handle">cordfol.org/pixelart</div><div class="sc-roles"><div class="sc-role"><div class="sc-role-dot" style="background:var(--pink)"></div>Creative Director · PixelForge</div><div class="sc-role"><div class="sc-role-dot" style="background:var(--mint)"></div>Artist · NFT Collective</div></div><div class="sc-verified">✓ 3 roles verified</div></div>
-    <div class="showcase-card"><div class="sc-name">FlameKeep</div><div class="sc-handle">cordfol.org/flamekeep</div><div class="sc-roles"><div class="sc-role"><div class="sc-role-dot" style="background:var(--gold)"></div>Senior Mod · 80k Server</div><div class="sc-role"><div class="sc-role-dot" style="background:var(--peach)"></div>Organizer · Weekly</div></div><div class="sc-verified">✓ 3 roles verified</div></div>
+  <div class="showcase-scroll" id="showcaseScroll">
+    <div class="showcase-empty" id="showcaseEmpty">Loading profiles…</div>
   </div>
 </section>
 
@@ -399,13 +371,12 @@ footer{padding:40px 5vw;border-top:1px solid var(--line);display:flex;align-item
 <footer>
   <div class="footer-logo">Cordfol</div>
   <div class="footer-links">
-    <a href="#">Privacy</a>
-    <a href="#">Terms</a>
+    <a href="/privacy">Privacy</a>
+    <a href="/terms">Terms</a>
     <a href="/status">Status</a>
-    <a href="#">Discord</a>
-    <a href="#">GitHub</a>
+    <a href="https://discord.gg/wcrCgc6pMf" target="_blank" rel="noopener">Discord</a>
   </div>
-  <div class="footer-right">Built for the Discord ecosystem · 2025</div>
+  <div class="footer-right">Built for the Discord ecosystem · <span id="footerYear">2026</span></div>
 </footer>
 
 <button class="chat-launcher" id="chatLauncher" aria-label="Ask Cordfol">
@@ -444,8 +415,106 @@ footer{padding:40px 5vw;border-top:1px solid var(--line);display:flex;align-item
 
 <script>
 const OAUTH_LOGIN_URL = 'https://api.cordfol.org/api/auth/discord';
+const API_BASE = 'https://api.cordfol.org/api';
+const FEATURED_SLUG = 'gfxastro';
 const CLAIM_COOKIE_NAME = 'cordfol_claim_slug';
 document.querySelectorAll('[data-oauth-link]').forEach(link => { link.href = OAUTH_LOGIN_URL; });
+document.getElementById('footerYear').textContent = new Date().getFullYear();
+
+function renderHeroPreview(data) {
+  if (!data || !data.profile) return;
+  const p = data.profile;
+  const roles = (data.roles || []).slice(0, 3);
+  const urlEl = document.getElementById('heroMockUrl');
+  const nameEl = document.getElementById('heroMockName');
+  const handleEl = document.getElementById('heroMockHandle');
+  const avatarEl = document.getElementById('heroMockAvatar');
+  const bannerEl = document.getElementById('heroMockBanner');
+  const rolesEl = document.getElementById('heroMockRoles');
+  if (urlEl) urlEl.textContent = `cordfol.org/${p.slug}`;
+  if (nameEl) nameEl.textContent = p.displayName || p.slug;
+  if (handleEl) {
+    const bits = [];
+    if (roles[0]) bits.push(roles[0].roleName);
+    if (p.memberSince) bits.push(`Discord since ${p.memberSince}`);
+    handleEl.textContent = bits.join(' · ') || 'Verified Discord profile';
+  }
+  if (avatarEl && p.avatarUrl) {
+    avatarEl.innerHTML = `<img src="${escapeHtml(p.avatarUrl)}" alt="" loading="eager" onerror="this.remove()"/>`;
+  } else if (avatarEl) {
+    avatarEl.textContent = (p.displayName || '?')[0].toUpperCase();
+  }
+  if (bannerEl) {
+    if (p.bannerUrl && !String(p.bannerUrl).startsWith('data:')) {
+      if (/\.(mp4|webm)(\?|$)/i.test(p.bannerUrl)) {
+        bannerEl.innerHTML = `<video autoplay muted loop playsinline src="${escapeHtml(p.bannerUrl)}"></video>`;
+      } else {
+        bannerEl.innerHTML = `<img src="${escapeHtml(p.bannerUrl)}" alt="" loading="eager"/>`;
+      }
+    } else if (data.theme?.accentColor) {
+      bannerEl.style.background = `linear-gradient(135deg, ${data.theme.accentColor}, #7c5cff)`;
+    }
+  }
+  if (rolesEl) {
+    rolesEl.innerHTML = roles.map(r => `
+      <div class="mock-role">
+        <div class="mock-role-left"><span class="mock-check"></span> ${escapeHtml(r.roleName)} · ${escapeHtml(r.guildName || 'Server')}</div>
+        <span class="mock-role-proof">${r.proofType === 'BOT' ? 'Bot proof' : 'Verified'}</span>
+      </div>`).join('');
+  }
+  const statRoles = document.getElementById('heroStatRoles');
+  const statViews = document.getElementById('heroStatViews');
+  const statSince = document.getElementById('heroStatSince');
+  if (statRoles) statRoles.textContent = String((data.roles || []).length || 0);
+  if (statViews) statViews.textContent = p.viewCount ? formatNum(p.viewCount) : '0';
+  if (statSince) statSince.textContent = p.memberSince ? p.memberSince.split(' ').pop() : '—';
+  const wrap = document.getElementById('heroPreview');
+  if (wrap) wrap.style.cursor = 'pointer', wrap.onclick = () => { window.location.href = `/${p.slug}`; };
+}
+
+fetch(`${API_BASE}/profile/${FEATURED_SLUG}`).then(r => r.ok ? r.json() : null).then(renderHeroPreview).catch(() => {});
+
+function escapeHtml(s) {
+  return String(s || '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+function formatNum(n) {
+  if (n >= 1000000) return (n / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
+  if (n >= 1000) return (n / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
+  return String(n);
+}
+
+// Live stats in the hero eyebrow
+fetch(`${API_BASE}/stats/public`).then(r => r.ok ? r.json() : null).then(stats => {
+  if (!stats || !stats.profiles) return;
+  const parts = [`<b>${formatNum(stats.profiles)}</b> profile${stats.profiles === 1 ? '' : 's'}`];
+  if (stats.rolesVerified) parts.push(`<b>${formatNum(stats.rolesVerified)}</b> roles verified`);
+  if (stats.profileViews) parts.push(`<b>${formatNum(stats.profileViews)}</b> views`);
+  document.getElementById('heroStat').innerHTML = 'Est. on Discord OAuth2 · ' + parts.join(' · ');
+}).catch(() => {});
+
+// Real profiles in the showcase
+fetch(`${API_BASE}/showcase`).then(r => r.ok ? r.json() : null).then(data => {
+  const wrap = document.getElementById('showcaseScroll');
+  const profiles = data && Array.isArray(data.profiles) ? data.profiles : [];
+  if (!profiles.length) {
+    document.getElementById('showcaseEmpty').textContent = 'Be the first — claim your handle above.';
+    return;
+  }
+  wrap.innerHTML = profiles.map(p => {
+    const avatar = p.avatarUrl
+      ? `<img class="sc-avatar" src="${escapeHtml(p.avatarUrl)}" alt="" loading="lazy" onerror="this.outerHTML='<div class=\\'sc-avatar\\'>${escapeHtml((p.name || '?')[0].toUpperCase())}</div>'"/>`
+      : `<div class="sc-avatar">${escapeHtml((p.name || '?')[0].toUpperCase())}</div>`;
+    const stats = [];
+    if (p.roleCount) stats.push(`${p.roleCount} role${p.roleCount === 1 ? '' : 's'} verified`);
+    if (p.views) stats.push(`${formatNum(p.views)} views`);
+    return `<a class="showcase-card" href="/${escapeHtml(p.slug)}">
+      <div class="sc-top">${avatar}<div><div class="sc-name">${escapeHtml(p.name)}</div><div class="sc-handle">cordfol.org/${escapeHtml(p.slug)}</div></div></div>
+      <div class="sc-verified">${stats.length ? '✓ ' + stats.join(' · ') : 'New profile'}</div>
+    </a>`;
+  }).join('');
+}).catch(() => {
+  document.getElementById('showcaseEmpty').textContent = 'Profiles are loading slowly — check back in a moment.';
+});
 
 function sanitizeSlug(value) {
   return String(value || '').toLowerCase().replace(/[^a-z0-9\-]/g, '').replace(/^-+|-+$/g, '').slice(0, 32);
