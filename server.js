@@ -296,6 +296,7 @@ app.get('/api/profile/:slug', async (req, res) => {
     const rawMusic = user.music_url || null;
     const musicIsEmbedded = rawMusic && String(rawMusic).startsWith('data:');
 
+    res.set('Cache-Control', 'private, no-store, must-revalidate');
     res.json({
       profile: {
         slug,
@@ -583,7 +584,7 @@ app.post('/api/profile/music-upload', async (req, res) => {
     const safeName = `${String(userId).replace(/[^a-zA-Z0-9-]/g, '')}${ext}`;
     await fs.promises.writeFile(path.join(MUSIC_UPLOAD_DIR, safeName), buf);
 
-    res.json({ url: `${PUBLIC_ORIGIN}/uploads/music/${safeName}` });
+    res.json({ url: `${API_ORIGIN}/uploads/music/${safeName}` });
   } catch (err) {
     console.error('[server] /api/profile/music-upload error:', err);
     res.status(500).json({ error: 'Upload failed' });
@@ -702,7 +703,7 @@ function discordMemberSince(discordId) {
 }
 
 const MUSIC_UPLOAD_DIR = path.join(__dirname, 'public', 'uploads', 'music');
-const PUBLIC_ORIGIN = process.env.PUBLIC_ORIGIN || 'https://cordfol.org';
+const API_ORIGIN = process.env.API_ORIGIN || 'https://api.cordfol.org';
 const MAX_MUSIC_BYTES = 5 * 1024 * 1024;
 
 try {

@@ -1017,7 +1017,12 @@ function toggleFx(key){
   toggle.classList.toggle('on',activeFx[key]);
   if(key==='music'){
     document.getElementById('music-section').style.display=activeFx[key]?'block':'none';
+    if(!activeFx[key]){
+      const statusEl=document.getElementById('uploadStatus');
+      if(statusEl) statusEl.textContent='Music disabled — Save Changes to remove from profile';
+    }
   }
+  markProfileDirty();
   updatePreview();
 }
 
@@ -1567,7 +1572,8 @@ async function toggleRoleVisibility(roleId,isPublic,toggleEl){
 
 async function loadProfile(user){
   try{
-    const res=await fetch(`${API_BASE}/profile/${user.slug}`);if(!res.ok)throw new Error('No profile');
+    const res=await fetch(`${API_BASE}/profile/${user.slug}?t=${Date.now()}`,{cache:'no-store'});
+    if(!res.ok)throw new Error('No profile');
     const data=await res.json();
     const th=data.theme||{};
     document.getElementById('displayName').value=data.profile.displayName||'';
@@ -1671,6 +1677,12 @@ function isVideoUrl(url){
 async function saveProfile(){
   const savBtn=document.querySelector('[onclick="saveProfile()"]');savBtn.classList.add('loading');savBtn.disabled=true;
   const slug=document.getElementById('slug').value;
+  const musicUrl=(document.getElementById('musicUrlInput')?.value||'').trim();
+  if(activeFx.music&&!musicUrl){
+    showToast('ERR','Upload an MP3 or paste a direct file link before saving.','error');
+    savBtn.classList.remove('loading');savBtn.disabled=false;
+    return;
+  }
   const body={
     display_name:document.getElementById('displayName').value,slug,bio:document.getElementById('bioText').value,
     email:document.getElementById('emailInput').value,
@@ -1684,7 +1696,8 @@ async function saveProfile(){
     theme:{
       accentColor:document.getElementById('accentColorInput').value,textColor:document.getElementById('textColorInput').value,
       cardColor:document.getElementById('cardColorInput').value,cardOpacity:document.getElementById('cardOpacityInput').value,
-      musicUrl:document.getElementById('musicUrlInput').value,musicAutoplay:document.getElementById('musicAutoplayInput')?.checked||false,
+      musicUrl:activeFx.music?musicUrl:null,
+      musicAutoplay:document.getElementById('musicAutoplayInput')?.checked||false,
       animatedBg:activeFx.anim,glassmorphism:activeFx.glassmorphism,particles:activeFx.particles,
       bgBlur:activeFx.blur,entrySplash:activeFx.splash,typewriterBio:activeFx.typewriter,tiltCard:activeFx.tilt,
       bgType:currentBgType,bgValue:currentBgData.value||document.getElementById('backgroundColorInput')?.value||'',layout:currentLayout,font:currentFont,
@@ -1694,7 +1707,16 @@ async function saveProfile(){
     const sid=restoreAuthSid();const url=sid?`${API_BASE}/profile?sid=${encodeURIComponent(sid)}`:`${API_BASE}/profile`;
     const res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},credentials:'include',body:JSON.stringify(body)});
     if(!res.ok){if(res.status===409){showToast('ERR','❌ This handle is already taken!');}else{const err=await res.json().catch(()=>({error:'Failed to save'}));showToast('ERR',err.error||'Failed to save profile!');}return;}
-    showToast('OK','Profile saved!','success');window._profileDirty=false;checkSession();
+    const savedMusic=activeFx.music&&musicUrl;
+    showToast('OK','Profile saved!','success');window._profileDirty=false;
+    await checkSession();
+    if(savedMusic){
+      activeFx.music=true;
+      document.getElementById('musicUrlInput').value=musicUrl;
+      document.getElementById('fx-music')?.classList.add('active');
+      document.getElementById('fx-toggle-music')?.classList.add('on');
+      document.getElementById('music-section').style.display='block';
+    }
   }catch{showToast('ERR','Failed to save profile!','error');}
   finally{savBtn.classList.remove('loading');savBtn.disabled=false;}
 }
