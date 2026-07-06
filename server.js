@@ -949,6 +949,11 @@ app.get('/status', (req, res) => {
 
 app.use('/api/admin', adminRouter);
 
+// ── OG Image Cards (Discord/Twitter embed previews) ───────────────────────────
+const { createOgRoute } = require('./og');
+app.get('/og/:slug.png', createOgRoute(db));
+app.get('/og/:slug', createOgRoute(db));
+
 // ── Public Profile Page (with per-user OG tags for link previews) ────────────
 const fs = require('fs');
 let profileTemplate = null;
@@ -968,7 +973,7 @@ function escapeAttr(s) {
 }
 
 app.get('/:slug', async (req, res) => {
-  const reserved = ['api', 'dashboard', 'login', 'logout', 'static', 'status', 'admin'];
+  const reserved = ['api', 'dashboard', 'login', 'logout', 'static', 'status', 'admin', 'og'];
   const slug = String(req.params.slug || '').toLowerCase();
   if (reserved.includes(slug)) {
     return res.status(404).send('Not found');
@@ -985,11 +990,8 @@ app.get('/:slug', async (req, res) => {
       const u = row.rows[0];
       const name = u.display_name || u.discord_username || slug;
       const bio = (u.bio || `${name}'s verified Discord profile on Cordfol.`).slice(0, 200);
-      const avatar = u.avatar_url ||
-        (u.avatar_hash
-          ? `https://cdn.discordapp.com/avatars/${u.discord_id}/${u.avatar_hash}.png?size=512`
-          : 'https://cdn.discordapp.com/embed/avatars/0.png');
       const pageUrl = `https://cordfol.org/${slug}`;
+      const cardImage = `https://cordfol.org/og/${slug}.png`;
 
       const meta = [
         `<title>${escapeAttr(name)} — Cordfol</title>`,
@@ -1000,11 +1002,13 @@ app.get('/:slug', async (req, res) => {
         `<meta property="og:title" content="${escapeAttr(name)} — Cordfol"/>`,
         `<meta property="og:description" content="${escapeAttr(bio)}"/>`,
         `<meta property="og:url" content="${escapeAttr(pageUrl)}"/>`,
-        `<meta property="og:image" content="${escapeAttr(avatar)}"/>`,
-        `<meta name="twitter:card" content="summary"/>`,
+        `<meta property="og:image" content="${escapeAttr(cardImage)}"/>`,
+        `<meta property="og:image:width" content="1200"/>`,
+        `<meta property="og:image:height" content="630"/>`,
+        `<meta name="twitter:card" content="summary_large_image"/>`,
         `<meta name="twitter:title" content="${escapeAttr(name)} — Cordfol"/>`,
         `<meta name="twitter:description" content="${escapeAttr(bio)}"/>`,
-        `<meta name="twitter:image" content="${escapeAttr(avatar)}"/>`,
+        `<meta name="twitter:image" content="${escapeAttr(cardImage)}"/>`,
         `<meta name="theme-color" content="#5865F2"/>`,
       ].join('\n  ');
 
