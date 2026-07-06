@@ -521,6 +521,91 @@
     .social-link.website:hover { background: rgba(var(--accent-rgb, 88, 101, 242), 0.1); }
 
     /* ── Spotify now playing ── */
+    /* ── Entry splash ── */
+    .entry-splash {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 18px;
+      background: rgba(9,9,13,0.7);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      cursor: pointer;
+      transition: opacity 0.5s ease;
+      user-select: none;
+    }
+    .entry-splash.leaving { opacity: 0; pointer-events: none; }
+    .entry-splash-avatar {
+      width: 96px;
+      height: 96px;
+      border-radius: 50%;
+      border: 3px solid var(--accent);
+      object-fit: cover;
+      box-shadow: 0 0 40px rgba(var(--accent-rgb, 88,101,242), 0.5);
+    }
+    .entry-splash-name { font-size: 26px; font-weight: 700; }
+    .entry-splash-hint {
+      font-family: 'Space Mono', monospace;
+      font-size: 12px;
+      letter-spacing: 3px;
+      color: var(--muted);
+      text-transform: uppercase;
+      animation: splashPulse 1.8s ease-in-out infinite;
+    }
+    @keyframes splashPulse { 0%,100%{opacity:0.4} 50%{opacity:1} }
+
+    /* ── Typewriter caret ── */
+    .typewriter-caret {
+      display: inline-block;
+      width: 2px;
+      height: 1em;
+      background: var(--accent);
+      margin-left: 2px;
+      vertical-align: text-bottom;
+      animation: caretBlink 0.85s step-end infinite;
+    }
+    @keyframes caretBlink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+    /* ── Tilt ── */
+    .card.tilt-enabled { transform-style: preserve-3d; will-change: transform; transition: transform 0.15s ease-out; }
+
+    /* ── Presence ── */
+    .avatar-wrap { position: relative; }
+    .presence-dot {
+      position: absolute;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      border: 4px solid var(--surface);
+      bottom: 4px;
+      left: 78px;
+      z-index: 3;
+    }
+    .presence-online { background: #23a55a; }
+    .presence-idle { background: #f0b232; }
+    .presence-dnd { background: #f23f43; }
+    .presence-offline { background: #80848e; }
+    .presence-activity {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      margin-top: 10px;
+      padding: 6px 12px;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border);
+      font-size: 12.5px;
+      color: rgba(255,255,255,0.65);
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
     .custom-links { display: flex; flex-direction: column; gap: 10px; margin-top: 18px; }
     .custom-link-block {
       display: flex;
@@ -1458,7 +1543,7 @@ async function renderProfile() {
         console.log('[profile] Audio loaded successfully');
       };
       
-      if (t.musicAutoplay) {
+      if (t.musicAutoplay && !t.entrySplash) {
         audio.muted = true;
         audio.play().then(() => {
           audio.muted = false;
@@ -1536,10 +1621,20 @@ async function renderProfile() {
 
   const bannerHtml = buildBannerHtml(p.bannerUrl, t.accentColor);
 
+  const presence = (data.presence && !data.presence.stale) ? data.presence : null;
+  const presenceTitles = { online: 'Online', idle: 'Idle', dnd: 'Do Not Disturb', offline: 'Offline' };
+  const presenceDotHtml = presence
+    ? `<div class="presence-dot presence-${escapeHtml(presence.status)}" title="${presenceTitles[presence.status] || ''}"></div>`
+    : '';
+  const presenceActivityHtml = (presence && presence.activity && presence.status !== 'offline')
+    ? `<div class="presence-activity">🎮 ${escapeHtml(presence.activity)}</div>`
+    : '';
+
   document.getElementById('card').innerHTML = `
     ${bannerHtml}
     <div class="avatar-wrap">
       <img class="avatar" src="${escapeHtml(p.avatarUrl || '')}" alt="avatar" onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'"/>
+      ${presenceDotHtml}
     </div>
     <div class="card-body">
       <div class="profile-header">
@@ -1550,9 +1645,10 @@ async function renderProfile() {
             ${p.discordId === EXCLUSIVE_USER_ID ? '<div class="verified-crown" title="Cordfol Creator">👑</div>' : ''}
           </div>
           <div class="profile-tag">cordfol.org/${escapeHtml(p.slug)}</div>
+          ${presenceActivityHtml}
         </div>
       </div>
-      ${p.bio ? `<div class="profile-bio">${escapeHtml(p.bio)}</div>` : ''}
+      ${p.bio ? `<div class="profile-bio" id="profileBio">${escapeHtml(p.bio)}</div>` : ''}
       <div id="spotifySlot"></div>
       ${customLinksHtml}
       <div class="profile-summary">
@@ -1569,6 +1665,74 @@ async function renderProfile() {
   if (p.spotify?.public) {
     initSpotifyWidget(p.slug);
   }
+
+  if (t.typewriterBio && p.bio) initTypewriter(p.bio);
+  if (t.tiltCard) initTilt();
+  if (t.entrySplash) showEntrySplash(p, !!t.musicAutoplay);
+}
+
+// ── Entry splash ("click to enter") ──
+function showEntrySplash(p, playMusicOnEnter) {
+  const splash = document.createElement('div');
+  splash.className = 'entry-splash';
+  splash.innerHTML = `
+    <img class="entry-splash-avatar" src="${escapeHtml(p.avatarUrl || 'https://cdn.discordapp.com/embed/avatars/0.png')}" alt="" onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'"/>
+    <div class="entry-splash-name">${escapeHtml(p.displayName)}</div>
+    <div class="entry-splash-hint">Click to enter</div>
+  `;
+  document.body.appendChild(splash);
+  splash.addEventListener('click', () => {
+    splash.classList.add('leaving');
+    setTimeout(() => splash.remove(), 550);
+    if (playMusicOnEnter && audio) {
+      audio.play().then(() => {
+        isPlaying = true;
+        const btn = document.getElementById('musicBtn');
+        if (btn) btn.textContent = '⏸';
+        document.querySelectorAll('.music-bar').forEach(b => b.classList.remove('paused'));
+      }).catch(() => {});
+    }
+  }, { once: true });
+}
+
+// ── Typewriter bio ──
+function initTypewriter(bio) {
+  const el = document.getElementById('profileBio');
+  if (!el) return;
+  const text = String(bio);
+  el.textContent = '';
+  const caret = document.createElement('span');
+  caret.className = 'typewriter-caret';
+  el.appendChild(caret);
+  let i = 0;
+  const tick = () => {
+    if (i < text.length) {
+      caret.before(document.createTextNode(text[i]));
+      i++;
+      setTimeout(tick, 28 + Math.random() * 40);
+    } else {
+      setTimeout(() => caret.remove(), 2500);
+    }
+  };
+  setTimeout(tick, 400);
+}
+
+// ── 3D tilt ──
+function initTilt() {
+  if (!window.matchMedia('(pointer: fine)').matches) return;
+  const card = document.getElementById('card');
+  if (!card) return;
+  card.classList.add('tilt-enabled');
+  const MAX = 7;
+  card.addEventListener('mousemove', e => {
+    const r = card.getBoundingClientRect();
+    const px = (e.clientX - r.left) / r.width - 0.5;
+    const py = (e.clientY - r.top) / r.height - 0.5;
+    card.style.transform = `perspective(1000px) rotateY(${px * MAX}deg) rotateX(${-py * MAX}deg)`;
+  });
+  card.addEventListener('mouseleave', () => {
+    card.style.transform = 'perspective(1000px) rotateY(0deg) rotateX(0deg)';
+  });
 }
 
 function renderSpotifyIdle(message) {

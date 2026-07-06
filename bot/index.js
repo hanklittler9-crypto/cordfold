@@ -44,6 +44,7 @@ const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
     GatewayIntentBits.GuildMembers,
+    GatewayIntentBits.GuildPresences,
   ],
 });
 
@@ -467,6 +468,50 @@ client.on('interactionCreate', async (interaction) => {
         content: '❌ Something went wrong while looking up that user.'
       });
     }
+  }
+});
+
+// ── Presence Tracking ─────────────────────────────────────────────────────────
+// Stores last known status + activity for registered users so their public
+// profile can show a live Discord presence dot. Requires the "Presence Intent"
+// toggle in the Discord Developer Portal → Bot settings.
+const presenceDebounce = new Map(); // discordId -> last write ms
+
+function describeActivity(presence) {
+  const activities = presence?.activities || [];
+  const act = activities.find(a => a.type !== 4) || null; // skip custom status
+  if (!act) {
+    const custom = activities.find(a => a.type === 4 && a.state);
+    return custom ? custom.state.slice(0, 120) : null;
+  }
+  const prefixes = { 0: 'Playing', 1: 'Streaming', 2: 'Listening to', 3: 'Watching', 5: 'Competing in' };
+  const prefix = prefixes[act.type] || '';
+  return `${prefix} ${act.name}`.trim().slice(0, 120);
+}
+
+client.on('presenceUpdate', async (_oldPresence, newPresence) => {
+  try {
+    const discordId = newPresence?.userId || newPresence?.user?.id;
+    if (!discordId) return;
+
+    // Debounce per user (presence events can fire rapidly)
+    const last = presenceDebounce.get(discordId) || 0;
+    if (Date.now() - last < 15000) return;
+    presenceDebounce.set(discordId, Date.now());
+    if (presenceDebounce.size > 5000) presenceDebounce.clear();
+
+    const status = newPresence.status || 'offline';
+    const activity = describeActivity(newPresence);
+
+    await db.query(`
+      UPDATE users SET
+        presence_status = $1,
+        presence_activity = $2,
+        presence_updated_at = NOW()
+      WHERE discord_id = $3
+    `, [status, activity, discordId]);
+  } catch (err) {
+    console.error('[bot] presenceUpdate error:', err.message);
   }
 });
 

@@ -18,6 +18,12 @@ const MIGRATIONS = [
   `ALTER TABLE users ADD COLUMN IF NOT EXISTS spotify_refresh_token TEXT`,
   `ALTER TABLE users ADD COLUMN IF NOT EXISTS spotify_token_expires_at TIMESTAMPTZ`,
   `ALTER TABLE users ADD COLUMN IF NOT EXISTS custom_links JSONB DEFAULT '[]'::jsonb`,
+  `ALTER TABLE themes ADD COLUMN IF NOT EXISTS entry_splash BOOLEAN DEFAULT false`,
+  `ALTER TABLE themes ADD COLUMN IF NOT EXISTS typewriter_bio BOOLEAN DEFAULT false`,
+  `ALTER TABLE themes ADD COLUMN IF NOT EXISTS tilt_card BOOLEAN DEFAULT false`,
+  `ALTER TABLE users ADD COLUMN IF NOT EXISTS presence_status VARCHAR(10)`,
+  `ALTER TABLE users ADD COLUMN IF NOT EXISTS presence_activity TEXT`,
+  `ALTER TABLE users ADD COLUMN IF NOT EXISTS presence_updated_at TIMESTAMPTZ`,
 ];
 
 async function runMigrations(db) {

@@ -244,7 +244,9 @@ app.get('/api/profile/:slug', async (req, res) => {
         t.glass_enabled, t.glass_blur, t.glass_opacity, t.animated_bg,
         t.music_url, t.music_autoplay, t.custom_css,
         t.bg_type, t.bg_value, t.layout, t.font_family,
-        t.card_opacity, t.particles_enabled, t.bg_blur_enabled
+        t.card_opacity, t.particles_enabled, t.bg_blur_enabled,
+        t.entry_splash, t.typewriter_bio, t.tilt_card,
+        u.presence_status, u.presence_activity, u.presence_updated_at
       FROM users u
       LEFT JOIN themes t ON t.id = u.theme_id
       WHERE u.slug = $1
@@ -331,7 +333,18 @@ app.get('/api/profile/:slug', async (req, res) => {
         font:            user.font_family      || 'DM Sans',
         particles:       user.particles_enabled || false,
         bgBlur:          user.bg_blur_enabled  || false,
+        entrySplash:     user.entry_splash     || false,
+        typewriterBio:   user.typewriter_bio   || false,
+        tiltCard:        user.tilt_card        || false,
       },
+      presence: user.presence_status ? {
+        status:   user.presence_status,
+        activity: user.presence_activity || null,
+        // Presence older than 12h is likely stale (bot restart, user left shared guild)
+        stale: user.presence_updated_at
+          ? (Date.now() - new Date(user.presence_updated_at).getTime()) > 12 * 60 * 60 * 1000
+          : true,
+      } : null,
       roles: rolesResult.rows.map(r => ({
         guildId:       r.guild_id,
         guildName:     r.guild_name,
@@ -437,6 +450,9 @@ app.post('/api/profile', async (req, res) => {
       theme.cardOpacity != null ? Number(theme.cardOpacity) / (Number(theme.cardOpacity) > 1 ? 100 : 1) : 0.92,
       theme.particles ? true : false,
       theme.bgBlur ? true : false,
+      theme.entrySplash ? true : false,
+      theme.typewriterBio ? true : false,
+      theme.tiltCard ? true : false,
     ];
 
     if (themeRow.rowCount > 0 && !themeRow.rows[0].is_preset) {
@@ -459,8 +475,11 @@ app.post('/api/profile', async (req, res) => {
           font_family      = $15,
           card_opacity     = $16,
           particles_enabled = $17,
-          bg_blur_enabled  = $18
-        WHERE id = $19
+          bg_blur_enabled  = $18,
+          entry_splash     = $19,
+          typewriter_bio   = $20,
+          tilt_card        = $21
+        WHERE id = $22
       `, [...themeFields, themeRow.rows[0].id]);
     } else {
       const insertTheme = await db.query(`
@@ -470,14 +489,16 @@ app.post('/api/profile', async (req, res) => {
           glass_enabled, glass_blur, glass_opacity, animated_bg,
           music_url, music_autoplay, custom_css,
           bg_type, bg_value, layout, font_family, card_opacity,
-          particles_enabled, bg_blur_enabled
+          particles_enabled, bg_blur_enabled,
+          entry_splash, typewriter_bio, tilt_card
         ) VALUES (
           gen_random_uuid(), $1, false, false, false,
           $2, $3, $4, $5,
           $6, $7, $8, $9,
           $10, $11, $12,
           $13, $14, $15, $16, $17,
-          $18, $19
+          $18, $19,
+          $20, $21, $22
         ) RETURNING id
       `, [
         `Custom theme for user ${userId}`,

@@ -531,6 +531,18 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
                 <div><div class="fx-label">🖱️ Custom Cursor</div><div class="fx-sub">Glow trail on cursor</div></div>
                 <div class="toggle" id="fx-toggle-cursor"></div>
               </div>
+              <div class="fx-card" id="fx-splash" onclick="toggleFx('splash')">
+                <div><div class="fx-label">🚪 Entry Screen</div><div class="fx-sub">"Click to enter" splash — lets music autoplay</div></div>
+                <div class="toggle" id="fx-toggle-splash"></div>
+              </div>
+              <div class="fx-card" id="fx-typewriter" onclick="toggleFx('typewriter')">
+                <div><div class="fx-label">⌨️ Typewriter Bio</div><div class="fx-sub">Bio types itself out letter by letter</div></div>
+                <div class="toggle" id="fx-toggle-typewriter"></div>
+              </div>
+              <div class="fx-card" id="fx-tilt" onclick="toggleFx('tilt')">
+                <div><div class="fx-label">🃏 3D Tilt</div><div class="fx-sub">Card tilts as the cursor moves</div></div>
+                <div class="toggle" id="fx-toggle-tilt"></div>
+              </div>
             </div>
             <div id="music-section" style="display:none;margin-top:16px">
               <div class="section-divider"><span>Music Source</span></div>
@@ -783,7 +795,7 @@ const DISCORD_BOT_PERMISSIONS='0';
 let currentBgType='gradient';
 let currentBannerData={type:'gradient',value:''};
 let currentBgData={type:'gradient',value:''};
-let activeFx={music:false,anim:false,particles:false,glassmorphism:false,blur:false,cursor:false};
+let activeFx={music:false,anim:false,particles:false,glassmorphism:false,blur:false,cursor:false,splash:false,typewriter:false,tilt:false};
 let currentLayout='centered';
 let currentFont='DM Sans';
 let pendingMediaType='banner';
@@ -1474,7 +1486,10 @@ async function loadProfile(user){
       particles:!!th.particles,
       glassmorphism:!!(th.glassmorphism||th.glassEnabled),
       blur:!!th.bgBlur,
-      cursor:false
+      cursor:false,
+      splash:!!th.entrySplash,
+      typewriter:!!th.typewriterBio,
+      tilt:!!th.tiltCard
     };
     Object.keys(activeFx).forEach(key=>{
       const card=document.getElementById('fx-'+key);
@@ -1522,7 +1537,7 @@ async function saveProfile(){
       cardColor:document.getElementById('cardColorInput').value,cardOpacity:document.getElementById('cardOpacityInput').value,
       musicUrl:document.getElementById('musicUrlInput').value,musicAutoplay:document.getElementById('musicAutoplayInput')?.checked||false,
       animatedBg:activeFx.anim,glassmorphism:activeFx.glassmorphism,particles:activeFx.particles,
-      bgBlur:activeFx.blur,
+      bgBlur:activeFx.blur,entrySplash:activeFx.splash,typewriterBio:activeFx.typewriter,tiltCard:activeFx.tilt,
       bgType:currentBgType,bgValue:currentBgData.value||document.getElementById('backgroundColorInput')?.value||'',layout:currentLayout,font:currentFont,
     }
   };
