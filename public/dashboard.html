@@ -265,7 +265,19 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
 .section-divider span{font-size:10px;font-family:'Space Mono',monospace;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);white-space:nowrap;}
 .section-divider::before,.section-divider::after{content:'';flex:1;height:1px;background:var(--border);}
 @media (max-width:1100px){.profile-layout{grid-template-columns:1fr;}}
-@media (max-width:860px){html,body{overflow:auto;}.layout{flex-direction:column;padding:10px;}.sidebar{width:100%;min-width:0;border-radius:18px;}.main{padding:4px 0 20px;}.grid-2,.grid-3,.metrics,.split-panels,.bot-compare,.fx-grid,.layout-options{grid-template-columns:1fr;}}
+@media (max-width:860px){
+  html,body{overflow:auto;}
+  .layout{flex-direction:column;padding:10px;}
+  .sidebar{width:100%;min-width:0;border-radius:18px;flex-direction:row;overflow-x:auto;overflow-y:hidden;padding:8px;gap:2px;position:sticky;top:8px;z-index:50;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
+  .sidebar::-webkit-scrollbar{display:none;}
+  .sidebar-section-label,.sidebar-spacer,.sidebar-bot-cta{display:none;}
+  .nav-item{flex-shrink:0;white-space:nowrap;margin:0;padding:9px 13px;}
+  .nav-dot,.notif-dot{display:none;}
+  .main{padding:4px 0 20px;}
+  .grid-2,.grid-3,.metrics,.split-panels,.bot-compare,.fx-grid,.layout-options{grid-template-columns:1fr;}
+  .custom-link-row{flex-wrap:wrap;}
+  .custom-link-row .cl-title,.custom-link-row .cl-url{flex:1 1 100%!important;}
+}
 @media (max-width:640px){.topbar{padding:0 14px;}.plan-badge{display:none;}.card{padding:18px;}.theme-grid{grid-template-columns:1fr 1fr;}.btn-row{flex-wrap:wrap;}.preset-grid{grid-template-columns:repeat(3,1fr);}.gradient-presets{grid-template-columns:repeat(3,1fr);}}
 </style>
 </head>
@@ -335,6 +347,10 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
     <div class="tab active" id="tab-verify">
       <div class="page-title">Verified Role History</div>
       <div class="page-sub">These roles are confirmed via Discord's API. Toggle visibility on your public profile. Roles re-verify every 24h automatically.</div>
+      <div class="card" id="onboardCard" style="display:none;margin-bottom:18px">
+        <div class="card-title">Getting started<span class="card-subtitle" id="onboardProgress"></span></div>
+        <div id="onboardList"></div>
+      </div>
       <div class="scan-header">
         <div class="scan-status" id="scanStatus"><div class="scan-dot"></div> Loading...</div>
         <button class="btn btn-ghost" onclick="triggerScan(this)">Rescan Guilds</button>
@@ -388,6 +404,14 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
               <div class="field"><div class="field-label">TikTok</div><input class="field-input" id="tiktokInput" placeholder="@handle"/></div>
               <div class="field"><div class="field-label">Instagram</div><input class="field-input" id="instagramInput" placeholder="@handle"/></div>
             </div>
+          </div>
+
+          <!-- CUSTOM LINKS -->
+          <div class="card">
+            <div class="card-title">Custom Links<span class="card-subtitle" id="customLinkCount">0 of 10</span></div>
+            <div class="hint-text" style="margin-bottom:12px">Add any link — your Discord server, store, Ko-fi, portfolio. Shown as buttons on your public profile.</div>
+            <div id="customLinksList"></div>
+            <button class="btn btn-ghost" type="button" onclick="addCustomLink()" id="addLinkBtn">+ Add link</button>
           </div>
 
           <!-- BANNER PICKER -->
@@ -556,7 +580,10 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
     <!-- SPOTIFY TAB -->
     <div class="tab" id="tab-spotify">
       <div class="page-title">Spotify Integration</div>
-      <div class="page-sub">Connect your Spotify account to show what you're listening to on your public Cordfol profile. You log in with Spotify once — visitors only see your live track.</div>
+      <div class="page-sub">Connect your Spotify account to show what you're listening to on your public Cordfol profile.</div>
+      <div class="card" style="margin-bottom:16px;border-color:rgba(255,193,7,0.35);background:rgba(255,193,7,0.06)">
+        <div class="hint-text" style="color:var(--text);margin:0"><strong>Spotify Developer requirement:</strong> Apps in Development Mode only work if the <em>app owner</em> (you, on the Spotify Developer Dashboard) has an active <strong>Spotify Premium</strong> subscription. Without Premium, Spotify returns 403 and now playing will not work — even if your email is on the allowlist.</div>
+      </div>
       <div class="profile-layout">
         <div>
           <div class="card">
@@ -646,14 +673,14 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
       <div class="page-title">Profile Analytics</div>
       <div class="page-sub">How your public profile is performing. Data updates every hour.</div>
       <div class="metrics">
-        <div class="metric"><div class="metric-label">Profile Views</div><div class="metric-val" id="cnt-views">0</div><div class="metric-delta">+18% this week</div></div>
-        <div class="metric"><div class="metric-label">Role Clicks</div><div class="metric-val" id="cnt-roles">0</div><div class="metric-delta">+6% this week</div></div>
-        <div class="metric"><div class="metric-label">Link Clicks</div><div class="metric-val" id="cnt-links">0</div><div class="metric-delta neg">-2% this week</div></div>
+        <div class="metric"><div class="metric-label">Profile Views</div><div class="metric-val" id="cnt-views">0</div><div class="metric-delta" id="delta-views"></div></div>
+        <div class="metric"><div class="metric-label">Role Clicks</div><div class="metric-val" id="cnt-roles">0</div><div class="metric-delta" id="delta-roles">last 30 days</div></div>
+        <div class="metric"><div class="metric-label">Link Clicks</div><div class="metric-val" id="cnt-links">0</div><div class="metric-delta" id="delta-links">last 30 days</div></div>
       </div>
       <div class="card"><div class="card-title">Views — last 7 days</div><div class="chart-area" id="chart"></div><div class="bar-days" id="chartDays"></div></div>
       <div class="split-panels">
-        <div class="card"><div class="card-title">Top referrers</div><div class="ref-list"><div class="ref-row"><div class="ref-label">Discord DMs</div><div class="ref-bar-wrap"><div class="ref-bar-fill" style="width:68%"></div></div><div class="ref-pct">68%</div></div><div class="ref-row"><div class="ref-label">Direct link</div><div class="ref-bar-wrap"><div class="ref-bar-fill" style="width:19%"></div></div><div class="ref-pct">19%</div></div><div class="ref-row"><div class="ref-label">Twitter / X</div><div class="ref-bar-wrap"><div class="ref-bar-fill" style="width:13%"></div></div><div class="ref-pct">13%</div></div></div></div>
-        <div class="card"><div class="card-title">Most clicked roles</div><div class="ref-list"><div class="ref-row"><div class="ref-label">Head Mod</div><div class="ref-bar-wrap"><div class="ref-bar-fill" style="width:72%"></div></div><div class="ref-pct">72%</div></div><div class="ref-row"><div class="ref-label">Developer</div><div class="ref-bar-wrap"><div class="ref-bar-fill" style="width:52%"></div></div><div class="ref-pct">52%</div></div><div class="ref-row"><div class="ref-label">Admin</div><div class="ref-bar-wrap"><div class="ref-bar-fill" style="width:28%"></div></div><div class="ref-pct">28%</div></div></div></div>
+        <div class="card"><div class="card-title">Top referrers</div><div class="ref-list" id="referrerList"><div class="empty-state">No visits yet — share your profile link!</div></div></div>
+        <div class="card"><div class="card-title">Most clicked</div><div class="ref-list" id="topClicksList"><div class="empty-state">No clicks tracked yet.</div></div></div>
       </div>
     </div>
 
@@ -1100,24 +1127,142 @@ function selectTheme(el,name){
   showToast('THEME',name+' theme selected!');
 }
 
-// ── Analytics chart ──
-const chartData=[142,98,210,187,245,312,90];
-const chartDays=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
-let chartInited=false;
-function initChart(){
-  if(chartInited)return;chartInited=true;
-  const max=Math.max(...chartData);
+// ── Custom links editor ──
+function addCustomLink(title,url){
+  const list=document.getElementById('customLinksList');
+  if(list.children.length>=10){showToast('ERR','Maximum 10 custom links.','error');return;}
+  const row=document.createElement('div');
+  row.className='custom-link-row';
+  row.style.cssText='display:flex;gap:8px;margin-bottom:10px;align-items:center';
+  row.innerHTML=`
+    <input class="field-input cl-title" placeholder="Title (e.g. My Discord Server)" style="flex:1" maxlength="60" value="${escapeHtmlDash(title||'')}"/>
+    <input class="field-input cl-url" placeholder="https://..." style="flex:2" maxlength="500" value="${escapeHtmlDash(url||'')}"/>
+    <button class="btn btn-ghost" type="button" onclick="this.parentElement.remove();updateCustomLinkCount();markProfileDirty();updatePreview()" style="flex-shrink:0;padding:8px 12px" title="Remove">✕</button>`;
+  list.appendChild(row);
+  updateCustomLinkCount();
+}
+
+function updateCustomLinkCount(){
+  const n=document.querySelectorAll('.custom-link-row').length;
+  const el=document.getElementById('customLinkCount');
+  if(el) el.textContent=`${n} of 10`;
+  const btn=document.getElementById('addLinkBtn');
+  if(btn) btn.style.display=n>=10?'none':'';
+}
+
+function collectCustomLinks(){
+  return[...document.querySelectorAll('.custom-link-row')].map(row=>({
+    title:row.querySelector('.cl-title').value.trim(),
+    url:row.querySelector('.cl-url').value.trim(),
+  })).filter(l=>l.title&&l.url);
+}
+
+function setCustomLinks(links){
+  const list=document.getElementById('customLinksList');
+  if(!list) return;
+  list.innerHTML='';
+  (links||[]).forEach(l=>addCustomLink(l.title,l.url));
+  updateCustomLinkCount();
+}
+
+// ── Onboarding checklist ──
+window._onboard={slug:false,bio:false,social:false,roles:false,shared:false};
+
+function updateOnboarding(){
+  const o=window._onboard;
+  try{ if(localStorage.getItem('cordfol_onboard_done')==='1') return; }catch{}
+  const steps=[
+    {key:'slug',label:'Claim your handle',tab:'profile'},
+    {key:'bio',label:'Add a bio or banner',tab:'profile'},
+    {key:'social',label:'Add a social link',tab:'profile'},
+    {key:'roles',label:'Scan your Discord roles',tab:'verify'},
+    {key:'shared',label:'Share your profile link',action:'copyProfileLink()'},
+  ];
+  const done=steps.filter(s=>o[s.key]).length;
+  const card=document.getElementById('onboardCard');
+  if(!card) return;
+  if(done===steps.length){
+    card.style.display='none';
+    try{ localStorage.setItem('cordfol_onboard_done','1'); }catch{}
+    return;
+  }
+  card.style.display='';
+  document.getElementById('onboardProgress').textContent=`${done} of ${steps.length} complete`;
+  document.getElementById('onboardList').innerHTML=steps.map(s=>{
+    const isDone=!!o[s.key];
+    const go=s.action||`switchTab('${s.tab}')`;
+    return `<div class="role-row" style="cursor:pointer;${isDone?'opacity:0.5':''}" onclick="${go}">
+      <div style="width:22px;height:22px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;${isDone?'background:var(--neon,#00FFB2);color:#000':'border:2px solid rgba(255,255,255,0.2);color:transparent'}">✓</div>
+      <div style="flex:1;${isDone?'text-decoration:line-through':''}">${s.label}</div>
+      ${isDone?'':'<div style="color:var(--muted2,rgba(255,255,255,0.4));font-size:12px">→</div>'}
+    </div>`;
+  }).join('');
+}
+
+function copyProfileLink(){
+  const slug=document.getElementById('slug')?.value||'';
+  if(!slug){showToast('ERR','Set your handle first.','error');switchTab('profile');return;}
+  navigator.clipboard.writeText(`https://cordfol.org/${slug}`).then(()=>{
+    showToast('LINK','Profile link copied — paste it anywhere!');
+    window._onboard.shared=true;
+    try{ localStorage.setItem('cordfol_onboard_shared','1'); }catch{}
+    updateOnboarding();
+  }).catch(()=>showToast('ERR','Could not copy link.','error'));
+}
+
+// ── Analytics (real data) ──
+let analyticsLoaded=false;
+async function initChart(){
+  if(analyticsLoaded)return;analyticsLoaded=true;
+  try{
+    const sid=restoreAuthSid();
+    const url=sid?`${API_BASE}/analytics?sid=${encodeURIComponent(sid)}`:`${API_BASE}/analytics`;
+    const res=await fetch(url,{credentials:'include'});
+    if(!res.ok)throw new Error('Failed');
+    renderAnalytics(await res.json());
+  }catch{
+    analyticsLoaded=false;
+    document.getElementById('chart').innerHTML='<div class="empty-state">Could not load analytics.</div>';
+  }
+}
+
+function renderAnalytics(data){
+  const t=data.totals||{};
+  animateCounterEl('cnt-views',t.views||0);
+  animateCounterEl('cnt-roles',t.roleClicks||0);
+  animateCounterEl('cnt-links',t.linkClicks||0);
+  const deltaEl=document.getElementById('delta-views');
+  if(deltaEl){
+    const d=t.viewsDeltaPct||0;
+    deltaEl.textContent=(d>=0?'+':'')+d+'% this week';
+    deltaEl.classList.toggle('neg',d<0);
+  }
+  const series=data.daily||[];
+  const max=Math.max(1,...series.map(s=>s.views));
   const container=document.getElementById('chart');
   const days=document.getElementById('chartDays');
   container.innerHTML='';days.innerHTML='';
-  chartData.forEach((v,i)=>{
+  series.forEach(s=>{
     const bar=document.createElement('div');bar.className='bar';
-    bar.style.height=Math.round((v/max)*100)+'%';bar.title=chartDays[i]+': '+v+' views';
+    bar.style.height=Math.max(3,Math.round((s.views/max)*100))+'%';
+    bar.title=s.day+': '+s.views+' views';
     container.appendChild(bar);
-    const d=document.createElement('div');d.className='bar-day';d.textContent=chartDays[i];days.appendChild(d);
+    const d=document.createElement('div');d.className='bar-day';d.textContent=s.day;days.appendChild(d);
   });
-  animateCounterEl('cnt-views',1284);animateCounterEl('cnt-roles',347);animateCounterEl('cnt-links',92);
+  const refList=document.getElementById('referrerList');
+  const refs=data.referrers||[];
+  if(refs.length){
+    refList.innerHTML=refs.map(r=>`<div class="ref-row"><div class="ref-label">${escapeHtmlDash(r.label)}</div><div class="ref-bar-wrap"><div class="ref-bar-fill" style="width:${r.pct}%"></div></div><div class="ref-pct">${r.pct}%</div></div>`).join('');
+  }
+  const clicksList=document.getElementById('topClicksList');
+  const clicks=data.topClicks||[];
+  if(clicks.length){
+    const maxClicks=Math.max(...clicks.map(c=>c.count));
+    clicksList.innerHTML=clicks.map(c=>`<div class="ref-row"><div class="ref-label">${escapeHtmlDash(c.label)}</div><div class="ref-bar-wrap"><div class="ref-bar-fill" style="width:${Math.round((c.count/maxClicks)*100)}%"></div></div><div class="ref-pct">${c.count}</div></div>`).join('');
+  }
 }
+
+function escapeHtmlDash(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 
 function animateCounterEl(id,target){
   const el=document.getElementById(id);const start=performance.now();const dur=1200;
@@ -1216,20 +1361,42 @@ async function loadRoles(){
     const res=await fetch(url,{credentials:'include'});
     if(!res.ok)throw new Error('No roles');
     const data=await res.json();const roles=data.roles||[];
-    if(!roles.length){roleList.innerHTML='<div class="empty-state">No verified roles found yet. Try another guild scan.</div>';roleCount.textContent='0 roles';scanStatus.innerHTML='<div class="scan-dot"></div> No roles found';return;}
+    if(!roles.length){roleList.innerHTML='<div class="empty-state">No verified roles found yet. Try another guild scan.</div>';roleCount.textContent='0 roles';scanStatus.innerHTML='<div class="scan-dot"></div> No roles found';updateOnboarding();return;}
+    window._onboard.roles=true;updateOnboarding();
     const active=roles.filter(r=>r.is_active);
     const latest=roles.map(r=>r.last_checked_at).filter(Boolean).sort().pop();
     roleList.innerHTML=roles.map(role=>`
       <div class="role-row">
         <div class="server-icon" style="background:rgba(88,101,242,0.15);color:#8b9fff">${role.guild_name?role.guild_name[0].toUpperCase():'?'}</div>
-        <div class="role-info"><div class="role-name">${role.custom_label||role.role_name}</div><div class="role-meta">${role.guild_name}</div></div>
+        <div class="role-info"><div class="role-name">${escapeHtmlDash(role.custom_label||role.role_name)}</div><div class="role-meta">${escapeHtmlDash(role.guild_name)}</div></div>
         <div class="proof-chip"><div class="proof-dot" style="background:var(--neon)"></div>${role.proof_type}</div>
         <div class="badge ${role.is_active?'badge-v':'badge-p'}">${role.is_active?'Verified':'Inactive'}</div>
         <div class="toggle ${role.is_public?'on':''}" onclick="toggleRoleVisibility('${role.id}',${role.is_public?'false':'true'},this)"></div>
       </div>`).join('');
     roleCount.textContent=`${active.length} active of ${roles.length} total`;
     scanStatus.innerHTML=latest?`<div class="scan-dot"></div> Last scanned ${new Date(latest).toLocaleString()} · ${active.length} active roles`:`<div class="scan-dot"></div> ${active.length} active roles`;
-  }catch{roleList.innerHTML='<div class="empty-state">Failed to load roles.</div>';roleCount.textContent='0 roles';scanStatus.innerHTML='<div class="scan-dot"></div> Error loading roles';}
+    renderServerList(roles);
+  }catch{roleList.innerHTML='<div class="empty-state">Failed to load roles.</div>';roleCount.textContent='0 roles';scanStatus.innerHTML='<div class="scan-dot"></div> Error loading roles';renderServerList([]);}
+}
+
+function renderServerList(roles){
+  const el=document.getElementById('serverList');
+  if(!el) return;
+  const guilds=new Map();
+  roles.forEach(r=>{
+    if(!guilds.has(r.guild_id)) guilds.set(r.guild_id,{name:r.guild_name||'Unknown Server',icon:r.guild_icon_hash,id:r.guild_id,active:0,total:0,bot:false});
+    const g=guilds.get(r.guild_id);
+    g.total++;
+    if(r.is_active) g.active++;
+    if(r.proof_type==='BOT') g.bot=true;
+  });
+  if(!guilds.size){el.innerHTML='<div class="empty-state">No servers scanned yet. Run a guild scan from the Verify Roles tab.</div>';return;}
+  el.innerHTML=[...guilds.values()].sort((a,b)=>b.active-a.active).map(g=>`
+    <div class="role-row">
+      <div class="server-icon" ${g.icon?`style="background-image:url('https://cdn.discordapp.com/icons/${g.id}/${g.icon}.png');background-size:cover;background-position:center"`:'style="background:rgba(88,101,242,0.15);color:#8b9fff"'}>${g.icon?'':g.name[0].toUpperCase()}</div>
+      <div class="role-info"><div class="role-name">${escapeHtmlDash(g.name)}</div><div class="role-meta">${g.active} active role${g.active===1?'':'s'} · ${g.total} total</div></div>
+      ${g.bot?'<div class="proof-chip"><div class="proof-dot" style="background:var(--neon)"></div>Bot installed</div>':'<div class="proof-chip" style="opacity:0.5">OAuth only</div>'}
+    </div>`).join('');
 }
 
 async function toggleRoleVisibility(roleId,isPublic,toggleEl){
@@ -1257,6 +1424,7 @@ async function loadProfile(user){
     document.getElementById('websiteInput').value=data.profile.socialLinks?.website||'';
     document.getElementById('tiktokInput').value=data.profile.socialLinks?.tiktok||'';
     document.getElementById('instagramInput').value=data.profile.socialLinks?.instagram||'';
+    setCustomLinks(data.profile.customLinks);
     document.getElementById('emailInput').value=data.profile.email||'';
     if(data.profile.emailVerified){
       document.getElementById('emailVerifiedBadge').style.display='inline-flex';
@@ -1319,7 +1487,17 @@ async function loadProfile(user){
     document.getElementById('music-section').style.display=activeFx.music?'block':'none';
 
     updateEmailState();updatePreview();
-  }catch{/* leave blank */}
+
+    const sl=data.profile.socialLinks||{};
+    window._onboard.slug=!!data.profile.slug;
+    window._onboard.bio=!!(data.profile.bio||data.profile.bannerUrl);
+    window._onboard.social=Object.values(sl).some(v=>v);
+    try{ if(localStorage.getItem('cordfol_onboard_shared')==='1'||data.profile.viewCount>0) window._onboard.shared=true; }catch{}
+    updateOnboarding();
+  }catch{
+    window._onboard.slug=!!user.slug;
+    updateOnboarding();
+  }
 }
 
 function isVideoUrl(url){
@@ -1338,6 +1516,7 @@ async function saveProfile(){
       youtube:document.getElementById('youtubeInput').value,website:document.getElementById('websiteInput').value,
       tiktok:document.getElementById('tiktokInput').value,instagram:document.getElementById('instagramInput').value,
     },
+    custom_links:collectCustomLinks(),
     theme:{
       accentColor:document.getElementById('accentColorInput').value,textColor:document.getElementById('textColorInput').value,
       cardColor:document.getElementById('cardColorInput').value,cardOpacity:document.getElementById('cardOpacityInput').value,
@@ -1351,10 +1530,26 @@ async function saveProfile(){
     const sid=restoreAuthSid();const url=sid?`${API_BASE}/profile?sid=${encodeURIComponent(sid)}`:`${API_BASE}/profile`;
     const res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},credentials:'include',body:JSON.stringify(body)});
     if(!res.ok){if(res.status===409){showToast('ERR','❌ This handle is already taken!');}else{const err=await res.json().catch(()=>({error:'Failed to save'}));showToast('ERR',err.error||'Failed to save profile!');}return;}
-    showToast('OK','Profile saved!','success');checkSession();
+    showToast('OK','Profile saved!','success');window._profileDirty=false;checkSession();
   }catch{showToast('ERR','Failed to save profile!','error');}
   finally{savBtn.classList.remove('loading');savBtn.disabled=false;}
 }
+
+// ── Unsaved changes guard ──
+window._profileDirty=false;
+function markProfileDirty(){window._profileDirty=true;}
+function initDirtyTracking(){
+  const tab=document.getElementById('tab-profile');
+  if(!tab) return;
+  tab.addEventListener('input',markProfileDirty);
+  tab.addEventListener('change',markProfileDirty);
+  tab.addEventListener('click',e=>{
+    if(e.target.closest('.fx-card,.layout-btn,.font-btn,.bg-type-btn,.toggle,.preset-item')) markProfileDirty();
+  });
+}
+window.addEventListener('beforeunload',e=>{
+  if(window._profileDirty){e.preventDefault();e.returnValue='';}
+});
 
 function handleMusicUpload(event){
   const file=event.target.files[0];if(!file)return;
@@ -1401,9 +1596,16 @@ function renderSpotifyStatus(data){
   });
   if(!connected) return;
   if(data.tokenError){
-    if(data.errorReason==='dev_mode'){
-      document.getElementById('spotifyTrackName').textContent='Spotify blocked (dev mode)';
-      document.getElementById('spotifyTrackArtist').textContent='Your Spotify app only allows 5 test users. Add yourself under Users and Access in the Spotify Developer Dashboard, or apply for Extended Quota.';
+    const reason=data.errorReason||'token';
+    if(reason==='scope'){
+      document.getElementById('spotifyTrackName').textContent='Permissions need refresh';
+      document.getElementById('spotifyTrackArtist').textContent='Click Disconnect, wait 5 seconds, then Connect with Spotify again';
+    }else if(reason==='premium'){
+      document.getElementById('spotifyTrackName').textContent='Spotify Premium required';
+      document.getElementById('spotifyTrackArtist').textContent='Development mode apps need the app owner to have an active Spotify Premium subscription';
+    }else if(reason==='dev_mode'||reason==='access_denied'){
+      document.getElementById('spotifyTrackName').textContent='Spotify still blocking access';
+      document.getElementById('spotifyTrackArtist').textContent='After adding your email in Spotify Dashboard → Users and Access, wait 15 min, then Disconnect → Connect again. Email must match Spotify → Edit Profile exactly.';
     }else{
       document.getElementById('spotifyTrackName').textContent='Spotify token error';
       document.getElementById('spotifyTrackArtist').textContent='Click Disconnect, then Connect with Spotify again';
@@ -1502,6 +1704,7 @@ window.onload=()=>{
   initPresets();
   checkSession();
   updatePreview();
+  initDirtyTracking();
   const params=new URLSearchParams(window.location.search);
   const emailStatus=params.get('email');
   if(emailStatus==='verified') showToast('OK','Email verified!','success');
@@ -1510,14 +1713,24 @@ window.onload=()=>{
   else if(emailStatus==='error') showToast('ERR','Email verification failed.','error');
   const spotifyStatus=params.get('spotify');
   const spotifySid=params.get('sid');
+  const spotifyReason=params.get('reason');
   if(spotifySid) persistAuthSid(spotifySid);
   if(spotifyStatus==='connected'){showToast('OK','Spotify connected!','success');switchTab('spotify');}
+  else if(spotifyStatus==='access_denied'){
+    const msg=spotifyReason==='scope'
+      ? 'Spotify connected but permissions failed — disconnect and reconnect.'
+      : (spotifyReason==='premium'
+        ? 'Spotify blocked: app owner needs Premium for dev mode.'
+        : 'Spotify blocked access — check Users and Access email, wait 15 min, reconnect.');
+    showToast('ERR',msg,'error');
+    switchTab('spotify');
+  }
   else if(spotifyStatus==='denied') showToast('ERR','Spotify connection cancelled.','error');
   else if(spotifyStatus==='failed') showToast('ERR','Spotify connection failed.','error');
   else if(spotifyStatus==='login_required') showToast('ERR','Discord session expired — log in again, then connect Spotify.','error');
   else if(spotifyStatus==='csrf') showToast('ERR','Spotify session expired — try connecting again.','error');
   else if(spotifyStatus==='no_code') showToast('ERR','Spotify did not return a code. Try again.','error');
-  if(emailStatus||spotifyStatus||spotifySid) window.history.replaceState({},'','/dashboard.html');
+  if(emailStatus||spotifyStatus||spotifySid||spotifyReason) window.history.replaceState({},'','/dashboard.html');
 };
 </script>
 </body>

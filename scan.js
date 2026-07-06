@@ -196,16 +196,23 @@ async function runScanForUser(userId) {
       const member = await memberRes.json();
       const roleIds = member.roles || [];
 
+      // Resolve role names via bot token (only works in guilds the bot is in)
+      const roleInfo = await fetchGuildRoleMap(guild.id);
+
       // For each confirmed role, upsert
       for (const roleId of roleIds) {
         seenRoleKeys.add(`${guild.id}:${roleId}`);
 
+        const info = roleInfo.get(roleId);
+        const roleName = info?.name || null;
+        const roleColor = info?.color || null;
+
         await db.query(`
           INSERT INTO verified_roles
-            (id, user_id, guild_id, guild_name, guild_icon_hash, role_id, role_name,
+            (id, user_id, guild_id, guild_name, guild_icon_hash, role_id, role_name, role_color,
              verified_at, last_checked_at, is_active, proof_type, is_public, display_order)
           VALUES
-            (gen_random_uuid(), $1, $2, $3, $4, $5, $5,
+            (gen_random_uuid(), $1, $2, $3, $4, $5, COALESCE($6, $5), $7,
              NOW(), NOW(), true, 'OAUTH'::\"ProofType\", true, 0)
           ON CONFLICT (user_id, guild_id, role_id)
           DO UPDATE SET
@@ -213,11 +220,16 @@ async function runScanForUser(userId) {
             last_checked_at = NOW(),
             guild_name      = EXCLUDED.guild_name,
             guild_icon_hash = EXCLUDED.guild_icon_hash,
+            role_name       = CASE
+              WHEN $6::text IS NOT NULL THEN $6
+              ELSE verified_roles.role_name
+            END,
+            role_color      = COALESCE($7, verified_roles.role_color),
             proof_type      = CASE
               WHEN verified_roles.proof_type = 'BOT' THEN 'BOT'
               ELSE 'OAUTH' 
             END
-        `, [userId, guild.id, guild.name, guild.icon, roleId]);
+        `, [userId, guild.id, guild.name, guild.icon, roleId, roleName, roleColor]);
       }
 
       // Deactivate roles the user no longer has in this guild (OAuth-only)
@@ -307,6 +319,41 @@ router.post('/cron', async (req, res) => {
     console.error('[cron] runBackgroundReverify error:', err)
   );
 });
+
+// ── Role name lookup (bot token) ──────────────────────────────────────────────
+// OAuth member endpoint only returns role IDs. Use the bot token to resolve
+// names/colors — works for guilds the bot is in; others keep the ID as a
+// fallback until the bot is added. Cached 10 min per guild.
+const roleMapCache = new Map(); // guildId -> { expires, map }
+
+async function fetchGuildRoleMap(guildId) {
+  const cached = roleMapCache.get(guildId);
+  if (cached && cached.expires > Date.now()) return cached.map;
+
+  const map = new Map();
+  const botToken = process.env.BOT_TOKEN;
+  if (botToken) {
+    try {
+      const res = await fetch(`${DISCORD_API}/guilds/${guildId}/roles`, {
+        headers: { Authorization: `Bot ${botToken}` },
+      });
+      if (res.ok) {
+        const roles = await res.json();
+        for (const r of roles) {
+          map.set(r.id, {
+            name: r.name,
+            color: r.color ? `#${r.color.toString(16).padStart(6, '0')}` : null,
+          });
+        }
+      }
+    } catch (err) {
+      console.warn(`[scan] Role lookup failed for guild ${guildId}:`, err.message);
+    }
+  }
+
+  roleMapCache.set(guildId, { expires: Date.now() + 10 * 60 * 1000, map });
+  return map;
+}
 
 // ── Utility ───────────────────────────────────────────────────────────────────
 function sleep(ms) {

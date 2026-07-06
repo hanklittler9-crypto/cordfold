@@ -93,7 +93,16 @@ function createSpotifyRouter(db) {
   function classifySpotifyError(status, message) {
     const lower = String(message || '').toLowerCase();
     if (status === 403) {
-      return 'dev_mode';
+      if (
+        lower.includes('not registered') ||
+        lower.includes('not approved') ||
+        lower.includes('developer dashboard') ||
+        lower.includes('user not')
+      ) {
+        return 'dev_mode';
+      }
+      if (lower.includes('premium')) return 'premium';
+      return 'access_denied';
     }
     if (status === 401) {
       if (lower.includes('scope') || lower.includes('permission') || lower.includes('insufficient')) {
@@ -102,6 +111,24 @@ function createSpotifyRouter(db) {
       return 'token';
     }
     return 'unknown';
+  }
+
+  async function diagnoseSpotify403(accessToken) {
+    try {
+      const meRes = await fetch('https://api.spotify.com/v1/me', {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      if (meRes.ok) {
+        // Token works for /me but player endpoints fail — usually stale scopes; reconnect fixes it.
+        return 'scope';
+      }
+      const { message } = await parseSpotifyError(meRes);
+      console.error('[spotify] /me probe failed:', message);
+      return classifySpotifyError(403, message);
+    } catch (err) {
+      console.error('[spotify] diagnose403 error:', err.message);
+      return 'dev_mode';
+    }
   }
 
   function normalizeTrackPayload(data) {
@@ -134,7 +161,8 @@ function createSpotifyRouter(db) {
       return { playing: false };
     }
     if (!res.ok) {
-      const { message } = await parseSpotifyError(res);
+      const { message, body } = await parseSpotifyError(res);
+      console.error('[spotify] player API error:', res.status, message, body?.error || '');
       const err = new Error(message);
       err.status = res.status;
       err.reason = classifySpotifyError(res.status, message);
@@ -147,8 +175,8 @@ function createSpotifyRouter(db) {
 
   async function fetchCurrentlyPlaying(accessToken) {
     const endpoints = [
-      'https://api.spotify.com/v1/me/player/currently-playing',
-      'https://api.spotify.com/v1/me/player',
+      'https://api.spotify.com/v1/me/player/currently-playing?additional_types=track,episode',
+      'https://api.spotify.com/v1/me/player?additional_types=track,episode',
     ];
 
     let lastErr;
@@ -157,8 +185,10 @@ function createSpotifyRouter(db) {
         return await fetchPlayerEndpoint(accessToken, url);
       } catch (err) {
         lastErr = err;
-        // Only try fallback endpoint for generic failures, not dev-mode blocks.
-        if (err.reason === 'dev_mode') throw err;
+        if (err.status === 403 && !err.reason) {
+          err.reason = await diagnoseSpotify403(accessToken);
+        }
+        if (err.reason === 'dev_mode' || err.reason === 'premium') throw err;
       }
     }
     throw lastErr || new Error('Spotify playback unavailable');
@@ -174,7 +204,14 @@ function createSpotifyRouter(db) {
       if (err.status !== 401 && err.status !== 403) throw err;
       accessToken = await getValidAccessToken(userId, true);
       if (!accessToken) throw err;
-      return await fetchCurrentlyPlaying(accessToken);
+      try {
+        return await fetchCurrentlyPlaying(accessToken);
+      } catch (retryErr) {
+        if (retryErr.status === 403 && !retryErr.reason) {
+          retryErr.reason = await diagnoseSpotify403(accessToken);
+        }
+        throw retryErr;
+      }
     }
   }
 
@@ -350,7 +387,7 @@ function createSpotifyRouter(db) {
           spotify_enabled = true,
           spotify_public = true,
           spotify_access_token = $1,
-          spotify_refresh_token = COALESCE($2, spotify_refresh_token),
+          spotify_refresh_token = $2,
           spotify_token_expires_at = $3,
           updated_at = NOW()
         WHERE id = $4
@@ -360,6 +397,24 @@ function createSpotifyRouter(db) {
         expiresAt,
         userId,
       ]);
+
+      // Verify the new token can reach Spotify before declaring success.
+      try {
+        await fetchCurrentlyPlaying(tokenData.access_token);
+      } catch (verifyErr) {
+        let reason = verifyErr.reason;
+        if (verifyErr.status === 403) {
+          reason = await diagnoseSpotify403(tokenData.access_token);
+        }
+        console.error('[spotify] post-connect verify failed:', verifyErr.message, 'reason:', reason);
+        const sid = savedSid || req.sessionID || '';
+        const qs = new URLSearchParams({
+          spotify: 'access_denied',
+          reason: reason || 'unknown',
+          ...(sid ? { sid } : {}),
+        });
+        return res.redirect(`${DASHBOARD_URL}?${qs.toString()}`);
+      }
 
       req.session.save((err) => {
         if (err) console.error('[spotify] session save after connect:', err);
@@ -386,6 +441,7 @@ function createSpotifyRouter(db) {
       let nowPlaying = { playing: false };
       let tokenError = false;
       let errorReason = null;
+      let errorMessage = null;
       try {
         const result = await fetchCurrentlyPlayingForUser(userId);
         if (result) nowPlaying = result;
@@ -396,7 +452,8 @@ function createSpotifyRouter(db) {
       } catch (err) {
         tokenError = true;
         errorReason = err.reason || classifySpotifyError(err.status, err.message);
-        console.error('[spotify] status playback error:', err.message);
+        errorMessage = err.message;
+        console.error('[spotify] status playback error:', err.message, 'reason:', errorReason);
       }
 
       res.json({
@@ -405,6 +462,7 @@ function createSpotifyRouter(db) {
         nowPlaying,
         tokenError,
         errorReason,
+        errorMessage,
       });
     } catch (err) {
       console.error('[spotify] status error:', err);

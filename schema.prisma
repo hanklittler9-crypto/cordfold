@@ -61,6 +61,8 @@ model User {
   bannerUrl        String?  @map("banner_url")   // Pro
   socialLinks      Json     @default("[]") @map("social_links")
   // Format: [{ platform: "twitter", url: "https://x.com/..." }, ...]
+  customLinks      Json     @default("[]") @map("custom_links")
+  // Format: [{ title: "My Server", url: "https://discord.gg/..." }, ...] (max 10)
 
   // Monetization
   plan             Plan     @default(FREE)

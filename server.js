@@ -76,16 +76,6 @@ app.use(session({
 // ── Static Files ─────────────────────────────────────────────────────────────
 app.use(express.static(path.join(__dirname, 'public')));
 
-// ── Debug Route ───────────────────────────────────────────────────────────────
-app.get('/api/auth/debug', async (req, res) => {
-  try {
-    const result = await db.query('SELECT sid, sess FROM user_sessions ORDER BY expire DESC LIMIT 5');
-    res.json(result.rows);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
 // ── Token Auth ────────────────────────────────────────────────────────────────
 app.get('/api/auth/token', async (req, res) => {
   const { sid } = req.query;
@@ -247,7 +237,7 @@ app.get('/api/profile/:slug', async (req, res) => {
     const userResult = await db.query(`
       SELECT
         u.id, u.discord_id, u.discord_username, u.display_name, u.bio,
-        u.avatar_hash, u.avatar_url, u.banner_url, u.social_links, u.plan,
+        u.avatar_hash, u.avatar_url, u.banner_url, u.social_links, u.custom_links, u.plan,
         u.email, u.email_verified,
         u.spotify_enabled, u.spotify_public,
         t.background_color, t.accent_color, t.text_color, t.card_color,
@@ -291,6 +281,15 @@ app.get('/api/profile/:slug', async (req, res) => {
       ]).catch(() => {});
     }
 
+    let viewCount = 0;
+    try {
+      const vc = await db.query(
+        `SELECT COUNT(*) AS c FROM analytics_events WHERE user_id = $1 AND type = 'profile_view'`,
+        [user.id]
+      );
+      viewCount = Number(vc.rows[0]?.c || 0);
+    } catch { /* non-critical */ }
+
     res.json({
       profile: {
         slug,
@@ -303,12 +302,14 @@ app.get('/api/profile/:slug', async (req, res) => {
             : null),
         bannerUrl:   user.banner_url,
         socialLinks: user.social_links,
+        customLinks: user.custom_links || [],
         email:       user.email,
         emailVerified: user.email_verified || false,
         plan:        user.plan,
         spotify: {
           public: !!(user.spotify_enabled && user.spotify_public),
         },
+        viewCount,
       },
       theme: {
         backgroundColor: user.background_color || '#0d0d0d',
@@ -363,6 +364,7 @@ app.post('/api/profile', async (req, res) => {
       bio,
       bannerUrl,
       social_links,
+      custom_links,
       email,
       theme = {}
     } = req.body;
@@ -370,6 +372,15 @@ app.post('/api/profile', async (req, res) => {
     if (!slug || !display_name) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
+
+    // Sanitize custom links: max 10, each needs a title + http(s) URL
+    const cleanLinks = (Array.isArray(custom_links) ? custom_links : [])
+      .slice(0, 10)
+      .map(l => ({
+        title: String(l?.title || '').trim().slice(0, 60),
+        url: String(l?.url || '').trim().slice(0, 500),
+      }))
+      .filter(l => l.title && /^https?:\/\//i.test(l.url));
 
     const conflict = await db.query(
       'SELECT id FROM users WHERE slug = $1 AND id != $2',
@@ -387,10 +398,11 @@ app.post('/api/profile', async (req, res) => {
         bio = $3,
         banner_url = $4,
         social_links = $5,
-        email = NULLIF(TRIM($6), ''),
+        custom_links = $6,
+        email = NULLIF(TRIM($7), ''),
         updated_at = NOW()
-      WHERE id = $7
-    `, [display_name, slug, bio, bannerUrl, social_links, email || '', userId]);
+      WHERE id = $8
+    `, [display_name, slug, bio, bannerUrl, social_links, JSON.stringify(cleanLinks), email || '', userId]);
 
     const themeRow = await db.query(`
       SELECT t.id, t.is_preset
@@ -570,6 +582,167 @@ app.get('/api/auth/verify-email', async (req, res) => {
   } catch (err) {
     console.error('[server] /api/auth/verify-email error:', err);
     res.redirect('https://dashboard.cordfol.org/dashboard.html?email=error');
+  }
+});
+
+// ── Analytics ─────────────────────────────────────────────────────────────────
+async function resolveUserId(req) {
+  if (req.session?.userId) return req.session.userId;
+  const { sid } = req.query;
+  if (!sid) return null;
+  try {
+    const result = await db.query('SELECT sess FROM user_sessions WHERE sid = $1', [sid]);
+    if (result.rowCount > 0 && result.rows[0].sess?.userId) {
+      return result.rows[0].sess.userId;
+    }
+  } catch (err) {
+    console.error('[analytics] sid lookup error:', err);
+  }
+  return null;
+}
+
+function referrerLabel(raw) {
+  if (!raw) return 'Direct link';
+  try {
+    const host = new URL(raw).hostname.replace(/^www\./, '');
+    if (host.includes('discord')) return 'Discord';
+    if (host === 't.co' || host.includes('twitter') || host === 'x.com') return 'Twitter / X';
+    if (host.includes('instagram')) return 'Instagram';
+    if (host.includes('tiktok')) return 'TikTok';
+    if (host.includes('youtube') || host === 'youtu.be') return 'YouTube';
+    if (host.includes('reddit')) return 'Reddit';
+    if (host.includes('cordfol')) return 'Cordfol';
+    if (host.includes('google')) return 'Google';
+    return host;
+  } catch {
+    return 'Direct link';
+  }
+}
+
+app.get('/api/analytics', async (req, res) => {
+  try {
+    const userId = await resolveUserId(req);
+    if (!userId) return res.status(401).json({ error: 'Not authenticated' });
+
+    const [totals, daily, referrers, topClicks] = await Promise.all([
+      db.query(`
+        SELECT
+          COUNT(*) FILTER (WHERE type = 'profile_view')                                        AS views_all,
+          COUNT(*) FILTER (WHERE type = 'profile_view' AND created_at >= NOW() - INTERVAL '7 days')  AS views_7d,
+          COUNT(*) FILTER (WHERE type = 'profile_view' AND created_at >= NOW() - INTERVAL '14 days'
+                                                       AND created_at <  NOW() - INTERVAL '7 days')  AS views_prev_7d,
+          COUNT(*) FILTER (WHERE type = 'link_click')                                          AS link_clicks,
+          COUNT(*) FILTER (WHERE type = 'role_click')                                          AS role_clicks
+        FROM analytics_events
+        WHERE user_id = $1
+      `, [userId]),
+      db.query(`
+        SELECT date_trunc('day', created_at) AS day, COUNT(*) AS views
+        FROM analytics_events
+        WHERE user_id = $1 AND type = 'profile_view'
+          AND created_at >= NOW() - INTERVAL '7 days'
+        GROUP BY 1 ORDER BY 1
+      `, [userId]),
+      db.query(`
+        SELECT COALESCE(metadata->>'referrer', '') AS referrer, COUNT(*) AS cnt
+        FROM analytics_events
+        WHERE user_id = $1 AND type = 'profile_view'
+          AND created_at >= NOW() - INTERVAL '30 days'
+        GROUP BY 1 ORDER BY cnt DESC
+        LIMIT 50
+      `, [userId]),
+      db.query(`
+        SELECT type, COALESCE(metadata->>'label', metadata->>'platform', 'Unknown') AS label, COUNT(*) AS cnt
+        FROM analytics_events
+        WHERE user_id = $1 AND type IN ('link_click', 'role_click')
+          AND created_at >= NOW() - INTERVAL '30 days'
+        GROUP BY 1, 2 ORDER BY cnt DESC
+        LIMIT 10
+      `, [userId]),
+    ]);
+
+    // Collapse raw referrer URLs into friendly labels
+    const refMap = new Map();
+    for (const row of referrers.rows) {
+      const label = referrerLabel(row.referrer);
+      refMap.set(label, (refMap.get(label) || 0) + Number(row.cnt));
+    }
+    const refTotal = [...refMap.values()].reduce((a, b) => a + b, 0);
+    const topReferrers = [...refMap.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([label, cnt]) => ({
+        label,
+        count: cnt,
+        pct: refTotal ? Math.round((cnt / refTotal) * 100) : 0,
+      }));
+
+    // Fill last-7-days series including zero days
+    const dayMs = 24 * 60 * 60 * 1000;
+    const series = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(Date.now() - i * dayMs);
+      const key = d.toISOString().slice(0, 10);
+      const match = daily.rows.find(r => new Date(r.day).toISOString().slice(0, 10) === key);
+      series.push({
+        date: key,
+        day: d.toLocaleDateString('en-US', { weekday: 'short' }),
+        views: match ? Number(match.views) : 0,
+      });
+    }
+
+    const t = totals.rows[0];
+    const views7d = Number(t.views_7d);
+    const viewsPrev = Number(t.views_prev_7d);
+    const deltaPct = viewsPrev > 0
+      ? Math.round(((views7d - viewsPrev) / viewsPrev) * 100)
+      : (views7d > 0 ? 100 : 0);
+
+    res.json({
+      totals: {
+        views: Number(t.views_all),
+        views7d,
+        viewsDeltaPct: deltaPct,
+        linkClicks: Number(t.link_clicks),
+        roleClicks: Number(t.role_clicks),
+      },
+      daily: series,
+      referrers: topReferrers,
+      topClicks: topClicks.rows.map(r => ({
+        type: r.type,
+        label: r.label,
+        count: Number(r.cnt),
+      })),
+    });
+  } catch (err) {
+    console.error('[server] /api/analytics error:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Public event tracking from profile pages (link/role clicks)
+app.post('/api/analytics/event', async (req, res) => {
+  try {
+    const { slug, type, label, platform } = req.body || {};
+    if (!slug || !['link_click', 'role_click', 'share'].includes(type)) {
+      return res.status(400).json({ error: 'Invalid event' });
+    }
+    await db.query(`
+      INSERT INTO analytics_events (id, user_id, type, metadata, created_at)
+      SELECT gen_random_uuid(), u.id, $1, $2::jsonb, NOW()
+      FROM users u WHERE u.slug = $3
+    `, [
+      type,
+      JSON.stringify({
+        label: String(label || '').slice(0, 100) || null,
+        platform: String(platform || '').slice(0, 50) || null,
+      }),
+      String(slug).slice(0, 64),
+    ]);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('[server] /api/analytics/event error:', err);
+    res.status(500).json({ error: 'Server error' });
   }
 });
 
@@ -776,13 +949,72 @@ app.get('/status', (req, res) => {
 
 app.use('/api/admin', adminRouter);
 
-// ── Public Profile Page ───────────────────────────────────────────────────────
-app.get('/:slug', (req, res) => {
+// ── Public Profile Page (with per-user OG tags for link previews) ────────────
+const fs = require('fs');
+let profileTemplate = null;
+function getProfileTemplate() {
+  if (!profileTemplate) {
+    profileTemplate = fs.readFileSync(path.join(__dirname, 'public', 'profile.html'), 'utf8');
+  }
+  return profileTemplate;
+}
+
+function escapeAttr(s) {
+  return String(s || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+app.get('/:slug', async (req, res) => {
   const reserved = ['api', 'dashboard', 'login', 'logout', 'static', 'status', 'admin'];
-  if (reserved.includes(req.params.slug)) {
+  const slug = String(req.params.slug || '').toLowerCase();
+  if (reserved.includes(slug)) {
     return res.status(404).send('Not found');
   }
-  res.sendFile(path.join(__dirname, 'public', 'profile.html'));
+
+  let html = getProfileTemplate();
+  try {
+    const row = await db.query(`
+      SELECT discord_id, discord_username, display_name, bio, avatar_hash, avatar_url
+      FROM users WHERE slug = $1
+    `, [slug]);
+
+    if (row.rowCount > 0) {
+      const u = row.rows[0];
+      const name = u.display_name || u.discord_username || slug;
+      const bio = (u.bio || `${name}'s verified Discord profile on Cordfol.`).slice(0, 200);
+      const avatar = u.avatar_url ||
+        (u.avatar_hash
+          ? `https://cdn.discordapp.com/avatars/${u.discord_id}/${u.avatar_hash}.png?size=512`
+          : 'https://cdn.discordapp.com/embed/avatars/0.png');
+      const pageUrl = `https://cordfol.org/${slug}`;
+
+      const meta = [
+        `<title>${escapeAttr(name)} — Cordfol</title>`,
+        `<meta name="description" content="${escapeAttr(bio)}"/>`,
+        `<link rel="canonical" href="${escapeAttr(pageUrl)}"/>`,
+        `<meta property="og:type" content="profile"/>`,
+        `<meta property="og:site_name" content="Cordfol"/>`,
+        `<meta property="og:title" content="${escapeAttr(name)} — Cordfol"/>`,
+        `<meta property="og:description" content="${escapeAttr(bio)}"/>`,
+        `<meta property="og:url" content="${escapeAttr(pageUrl)}"/>`,
+        `<meta property="og:image" content="${escapeAttr(avatar)}"/>`,
+        `<meta name="twitter:card" content="summary"/>`,
+        `<meta name="twitter:title" content="${escapeAttr(name)} — Cordfol"/>`,
+        `<meta name="twitter:description" content="${escapeAttr(bio)}"/>`,
+        `<meta name="twitter:image" content="${escapeAttr(avatar)}"/>`,
+        `<meta name="theme-color" content="#5865F2"/>`,
+      ].join('\n  ');
+
+      html = html.replace('<title>Cordfol Profile</title>', meta);
+    }
+  } catch (err) {
+    console.error('[server] profile OG injection error:', err);
+  }
+
+  res.type('html').send(html);
 });
 
 // ── Start Server ──────────────────────────────────────────────────────────────

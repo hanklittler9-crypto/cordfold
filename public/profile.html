@@ -521,6 +521,31 @@
     .social-link.website:hover { background: rgba(var(--accent-rgb, 88, 101, 242), 0.1); }
 
     /* ── Spotify now playing ── */
+    .custom-links { display: flex; flex-direction: column; gap: 10px; margin-top: 18px; }
+    .custom-link-block {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 13px 18px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.04);
+      color: var(--text);
+      text-decoration: none;
+      font-weight: 500;
+      font-size: 14.5px;
+      transition: transform 0.15s ease, background 0.2s ease, border-color 0.2s ease;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+    .custom-link-block:hover {
+      transform: translateY(-2px);
+      background: rgba(var(--accent-rgb, 88, 101, 242), 0.12);
+      border-color: rgba(var(--accent-rgb, 88, 101, 242), 0.4);
+    }
+
     .spotify-widget {
       display: flex;
       align-items: center;
@@ -1080,12 +1105,34 @@ const CLAIM_COOKIE_NAME = 'cordfol_claim_slug';
 let audio = null;
 let isPlaying = false;
 
+function trackEvent(type, label, platform) {
+  const slug = window._profileSlug;
+  if (!slug) return;
+  const payload = JSON.stringify({ slug, type, label, platform });
+  try {
+    navigator.sendBeacon(`${API_BASE}/analytics/event`, new Blob([payload], { type: 'application/json' }));
+  } catch {
+    fetch(`${API_BASE}/analytics/event`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: payload,
+      keepalive: true,
+    }).catch(() => {});
+  }
+}
+
 function escapeHtml(str) {
   return String(str || '')
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;');
+}
+
+function formatCount(n) {
+  if (n >= 1000000) return (n / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
+  if (n >= 1000) return (n / 1000).toFixed(1).replace(/\.0$/, '') + 'K';
+  return String(n);
 }
 
 function hexToRgb(hex) {
@@ -1338,6 +1385,7 @@ async function renderProfile() {
   }
 
   const p = data.profile;
+  window._profileSlug = p.slug || slug;
   const t = data.theme || {};
   const roles = data.roles || [];
   const activeRoleCount = roles.length;
@@ -1354,10 +1402,13 @@ async function renderProfile() {
   };
 
   // Setup action buttons
-  document.getElementById('copyBtn').onclick = () => copyToClipboard(`cordfol.org/${p.slug}`);
+  document.getElementById('copyBtn').onclick = () => {
+    copyToClipboard(`cordfol.org/${p.slug}`);
+    trackEvent('share', 'Copy link');
+  };
   document.getElementById('shareBtn').onclick = () => {
     const url = `${window.location.origin}/${p.slug}`;
-    const text = `Check out my Discord profile on Cordfol: ${url}`;
+    trackEvent('share', 'Share button');
     if (navigator.share) {
       navigator.share({ title: `${p.displayName}'s Cordfol`, url });
     } else {
@@ -1465,10 +1516,20 @@ async function renderProfile() {
     <div class="divider"></div>
     <div class="socials">
       ${socialEntries.map(([k, url]) => `
-        <a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer" class="social-link ${k}" title="${SOCIAL_NAMES[k] || 'Link'}">
+        <a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer" class="social-link ${k}" title="${SOCIAL_NAMES[k] || 'Link'}" onclick="trackEvent('link_click','${escapeHtml(SOCIAL_NAMES[k] || k)}','${escapeHtml(k)}')">
           <span>${SOCIAL_ICONS[k] || '🔗'}</span>
           <span>${SOCIAL_NAMES[k] || 'Link'}</span>
         </a>
+      `).join('')}
+    </div>
+  ` : '';
+
+  // Custom link blocks
+  const customLinks = Array.isArray(p.customLinks) ? p.customLinks.filter(l => l && l.title && l.url) : [];
+  const customLinksHtml = customLinks.length ? `
+    <div class="custom-links">
+      ${customLinks.map(l => `
+        <a class="custom-link-block" href="${escapeHtml(l.url)}" target="_blank" rel="noopener noreferrer" onclick="trackEvent('link_click','${escapeHtml(l.title)}','custom')">${escapeHtml(l.title)}</a>
       `).join('')}
     </div>
   ` : '';
@@ -1493,7 +1554,9 @@ async function renderProfile() {
       </div>
       ${p.bio ? `<div class="profile-bio">${escapeHtml(p.bio)}</div>` : ''}
       <div id="spotifySlot"></div>
+      ${customLinksHtml}
       <div class="profile-summary">
+        ${p.viewCount ? `<div class="summary-chip"><strong>${formatCount(p.viewCount)}</strong> Views</div>` : ''}
         <div class="summary-chip"><strong>${activeRoleCount}</strong> Active roles</div>
         <div class="summary-chip"><strong>${botVerifiedCount}</strong> Bot proof</div>
         <div class="summary-chip"><strong>${oauthVerifiedCount}</strong> OAuth proof</div>
