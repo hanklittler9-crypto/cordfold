@@ -424,6 +424,25 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
             <button class="btn btn-ghost" type="button" onclick="addCustomLink()" id="addLinkBtn">+ Add link</button>
           </div>
 
+          <!-- DISPLAY OPTIONS -->
+          <div class="card">
+            <div class="card-title">What shows on your profile</div>
+            <div class="hint-text" style="margin-bottom:14px">Turn off anything you don't want visitors to see — stats, presence, links, etc.</div>
+            <div class="fx-grid">
+              <div class="fx-card active" id="disp-showVerifiedBadge" onclick="toggleDisplayOpt('showVerifiedBadge')"><div><div class="fx-label">Verified badge</div><div class="fx-sub">"Verified by Cordfol" stamp</div></div><div class="toggle on" id="disp-toggle-showVerifiedBadge"></div></div>
+              <div class="fx-card active" id="disp-showHandle" onclick="toggleDisplayOpt('showHandle')"><div><div class="fx-label">Profile link</div><div class="fx-sub">cordfol.org/yourname tag</div></div><div class="toggle on" id="disp-toggle-showHandle"></div></div>
+              <div class="fx-card active" id="disp-showPresence" onclick="toggleDisplayOpt('showPresence')"><div><div class="fx-label">Discord presence</div><div class="fx-sub">Status dot + activity text</div></div><div class="toggle on" id="disp-toggle-showPresence"></div></div>
+              <div class="fx-card active" id="disp-showBio" onclick="toggleDisplayOpt('showBio')"><div><div class="fx-label">Bio</div><div class="fx-sub">Your bio paragraph</div></div><div class="toggle on" id="disp-toggle-showBio"></div></div>
+              <div class="fx-card active" id="disp-showCustomLinks" onclick="toggleDisplayOpt('showCustomLinks')"><div><div class="fx-label">Custom links</div><div class="fx-sub">Link buttons you added above</div></div><div class="toggle on" id="disp-toggle-showCustomLinks"></div></div>
+              <div class="fx-card active" id="disp-showViews" onclick="toggleDisplayOpt('showViews')"><div><div class="fx-label">View count</div><div class="fx-sub">"747 Views" chip</div></div><div class="toggle on" id="disp-toggle-showViews"></div></div>
+              <div class="fx-card active" id="disp-showMemberSince" onclick="toggleDisplayOpt('showMemberSince')"><div><div class="fx-label">Member since</div><div class="fx-sub">"Jul 2023 on Discord" chip</div></div><div class="toggle on" id="disp-toggle-showMemberSince"></div></div>
+              <div class="fx-card active" id="disp-showRoleStats" onclick="toggleDisplayOpt('showRoleStats')"><div><div class="fx-label">Role stat chips</div><div class="fx-sub">Active roles · Bot · OAuth counts</div></div><div class="toggle on" id="disp-toggle-showRoleStats"></div></div>
+              <div class="fx-card active" id="disp-showRoles" onclick="toggleDisplayOpt('showRoles')"><div><div class="fx-label">Verified roles list</div><div class="fx-sub">Full role cards section</div></div><div class="toggle on" id="disp-toggle-showRoles"></div></div>
+              <div class="fx-card active" id="disp-showSocials" onclick="toggleDisplayOpt('showSocials')"><div><div class="fx-label">Social buttons</div><div class="fx-sub">Twitter, GitHub, etc.</div></div><div class="toggle on" id="disp-toggle-showSocials"></div></div>
+              <div class="fx-card active" id="disp-showSpotifyWidget" onclick="toggleDisplayOpt('showSpotifyWidget')"><div><div class="fx-label">Spotify widget</div><div class="fx-sub">Now playing on profile</div></div><div class="toggle on" id="disp-toggle-showSpotifyWidget"></div></div>
+            </div>
+          </div>
+
           <!-- BANNER PICKER -->
           <div class="card">
             <div class="card-title">Profile Banner</div>
@@ -871,6 +890,37 @@ const THEME_PRESETS=[
    fx:{music:0,anim:1,particles:1,glassmorphism:1,blur:1,splash:1,typewriter:1,tilt:1}},
 ];
 let activeThemePreset=null;
+
+const DEFAULT_DISPLAY_OPTS={
+  showVerifiedBadge:true,showHandle:true,showPresence:true,showBio:true,
+  showCustomLinks:true,showViews:true,showMemberSince:true,showRoleStats:true,
+  showRoles:true,showSocials:true,showSpotifyWidget:true,
+};
+let displayOpts={...DEFAULT_DISPLAY_OPTS};
+
+function syncDisplayToggleUI(key){
+  const card=document.getElementById('disp-'+key);
+  const toggle=document.getElementById('disp-toggle-'+key);
+  if(card&&toggle){
+    card.classList.toggle('active',!!displayOpts[key]);
+    toggle.classList.toggle('on',!!displayOpts[key]);
+  }
+}
+
+function setDisplayOptions(opts){
+  displayOpts={...DEFAULT_DISPLAY_OPTS,...(opts||{})};
+  Object.keys(DEFAULT_DISPLAY_OPTS).forEach(syncDisplayToggleUI);
+}
+
+function toggleDisplayOpt(key){
+  displayOpts[key]=!displayOpts[key];
+  syncDisplayToggleUI(key);
+  markProfileDirty();
+}
+
+function collectDisplayOptions(){
+  return {...displayOpts};
+}
 
 function initThemePresets(){
   const grid=document.getElementById('themePresetGrid');
@@ -1586,6 +1636,7 @@ async function loadProfile(user){
     document.getElementById('tiktokInput').value=data.profile.socialLinks?.tiktok||'';
     document.getElementById('instagramInput').value=data.profile.socialLinks?.instagram||'';
     setCustomLinks(data.profile.customLinks);
+    setDisplayOptions(data.profile.displayOptions);
     document.getElementById('emailInput').value=data.profile.email||'';
     if(data.profile.emailVerified){
       document.getElementById('emailVerifiedBadge').style.display='inline-flex';
@@ -1693,6 +1744,7 @@ async function saveProfile(){
       tiktok:document.getElementById('tiktokInput').value,instagram:document.getElementById('instagramInput').value,
     },
     custom_links:collectCustomLinks(),
+    display_options:collectDisplayOptions(),
     theme:{
       accentColor:document.getElementById('accentColorInput').value,textColor:document.getElementById('textColorInput').value,
       cardColor:document.getElementById('cardColorInput').value,cardOpacity:document.getElementById('cardOpacityInput').value,
@@ -1730,7 +1782,7 @@ function initDirtyTracking(){
   tab.addEventListener('input',markProfileDirty);
   tab.addEventListener('change',markProfileDirty);
   tab.addEventListener('click',e=>{
-    if(e.target.closest('.fx-card,.layout-btn,.font-btn,.bg-type-btn,.toggle,.preset-item,.theme-preset-btn')) markProfileDirty();
+    if(e.target.closest('.fx-card,.layout-btn,.font-btn,.bg-type-btn,.toggle,.preset-item,.theme-preset-btn,[id^="disp-"]')) markProfileDirty();
   });
 }
 window.addEventListener('beforeunload',e=>{

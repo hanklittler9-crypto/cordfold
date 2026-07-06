@@ -1543,6 +1543,19 @@ async function renderProfile() {
   const p = data.profile;
   window._profileSlug = p.slug || slug;
   const t = data.theme || {};
+  const disp = Object.assign({
+    showVerifiedBadge: true,
+    showHandle: true,
+    showPresence: true,
+    showBio: true,
+    showCustomLinks: true,
+    showViews: true,
+    showMemberSince: true,
+    showRoleStats: true,
+    showRoles: true,
+    showSocials: true,
+    showSpotifyWidget: true,
+  }, p.displayOptions || {});
   const roles = data.roles || [];
   const activeRoleCount = roles.length;
   const botVerifiedCount = roles.filter(r => r.proofType === 'BOT').length;
@@ -1644,7 +1657,7 @@ async function renderProfile() {
   }
 
   // Roles HTML
-  const rolesHtml = roles.length ? `
+  const rolesHtml = (disp.showRoles && roles.length) ? `
     <div class="divider"></div>
     <div class="roles-title">Verified Roles</div>
     <div class="roles-list">
@@ -1675,7 +1688,7 @@ async function renderProfile() {
     .map(([k, v]) => [k, buildSocialUrl(k, v)])
     .filter(([, url]) => url);
 
-  const socialsHtml = socialEntries.length ? `
+  const socialsHtml = (disp.showSocials && socialEntries.length) ? `
     <div class="divider"></div>
     <div class="socials">
       ${socialEntries.map(([k, url]) => `
@@ -1689,7 +1702,7 @@ async function renderProfile() {
 
   // Custom link blocks
   const customLinks = Array.isArray(p.customLinks) ? p.customLinks.filter(l => l && l.title && l.url) : [];
-  const customLinksHtml = customLinks.length ? `
+  const customLinksHtml = (disp.showCustomLinks && customLinks.length) ? `
     <div class="custom-links">
       ${customLinks.map(l => `
         <a class="custom-link-block" href="${escapeHtml(l.url)}" target="_blank" rel="noopener noreferrer" onclick="trackEvent('link_click','${escapeHtml(l.title)}','custom')">${escapeHtml(l.title)}</a>
@@ -1699,13 +1712,29 @@ async function renderProfile() {
 
   const bannerHtml = buildBannerHtml(p.bannerUrl, t.accentColor);
 
-  const presence = (data.presence && !data.presence.stale) ? data.presence : null;
+  const presence = (disp.showPresence && data.presence && !data.presence.stale) ? data.presence : null;
   const presenceTitles = { online: 'Online', idle: 'Idle', dnd: 'Do Not Disturb', offline: 'Offline' };
   const presenceDotHtml = presence
     ? `<div class="presence-dot presence-${escapeHtml(presence.status)}" title="${presenceTitles[presence.status] || ''}"></div>`
     : '';
   const presenceActivityHtml = (presence && presence.activity && presence.status !== 'offline')
     ? `<div class="presence-activity"><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" style="flex-shrink:0"><path d="M21.58 16.09l-1.09-7.66A4.996 4.996 0 0 0 15.54 4H8.46C6 4 3.9 5.83 3.51 8.43l-1.09 7.66a3.16 3.16 0 0 0 5.35 2.72L10.17 16h3.66l2.4 2.81a3.16 3.16 0 0 0 5.35-2.72zM11 11H9v2H8v-2H6v-1h2V8h1v2h2v1zm4-1.5a1 1 0 1 1 2 0 1 1 0 0 1-2 0zm2 3.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2z"/></svg> ${escapeHtml(presence.activity)}</div>`
+    : '';
+
+  const summaryChips = [];
+  if (disp.showViews && p.viewCount) {
+    summaryChips.push(`<div class="summary-chip"><strong id="viewCountNum">0</strong> Views</div>`);
+  }
+  if (disp.showMemberSince && p.memberSince) {
+    summaryChips.push(`<div class="summary-chip"><strong>${escapeHtml(p.memberSince)}</strong> on Discord</div>`);
+  }
+  if (disp.showRoleStats) {
+    summaryChips.push(`<div class="summary-chip"><strong>${activeRoleCount}</strong> Active roles</div>`);
+    summaryChips.push(`<div class="summary-chip"><strong>${botVerifiedCount}</strong> Bot proof</div>`);
+    summaryChips.push(`<div class="summary-chip"><strong>${oauthVerifiedCount}</strong> OAuth proof</div>`);
+  }
+  const summaryHtml = summaryChips.length
+    ? `<div class="profile-summary">${summaryChips.join('')}</div>`
     : '';
 
   document.getElementById('card').innerHTML = `
@@ -1717,46 +1746,40 @@ async function renderProfile() {
     <div class="card-body">
       <div class="profile-header">
         <div class="profile-heading">
-          <div class="profile-kicker"><span class="cf-verified-mark">✓</span> Verified by Cordfol</div>
+          ${disp.showVerifiedBadge ? '<div class="profile-kicker"><span class="cf-verified-mark">✓</span> Verified by Cordfol</div>' : ''}
           <div class="profile-name">
             ${escapeHtml(p.displayName)}
             ${p.discordId === EXCLUSIVE_USER_ID ? '<div class="verified-crown" title="Cordfol Creator">👑</div>' : ''}
           </div>
-          <div class="profile-tag" id="profileTag" title="Click to copy link">cordfol.org/${escapeHtml(p.slug)}</div>
+          ${disp.showHandle ? `<div class="profile-tag" id="profileTag" title="Click to copy link">cordfol.org/${escapeHtml(p.slug)}</div>` : ''}
           ${presenceActivityHtml}
         </div>
       </div>
-      ${p.bio ? `<div class="profile-bio" id="profileBio">${escapeHtml(p.bio)}</div>` : ''}
+      ${disp.showBio && p.bio ? `<div class="profile-bio" id="profileBio">${escapeHtml(p.bio)}</div>` : ''}
       <div id="spotifySlot"></div>
       ${customLinksHtml}
-      <div class="profile-summary">
-        ${p.viewCount ? `<div class="summary-chip"><strong id="viewCountNum">0</strong> Views</div>` : ''}
-        ${p.memberSince ? `<div class="summary-chip"><strong>${escapeHtml(p.memberSince)}</strong> on Discord</div>` : ''}
-        <div class="summary-chip"><strong>${activeRoleCount}</strong> Active roles</div>
-        <div class="summary-chip"><strong>${botVerifiedCount}</strong> Bot proof</div>
-        <div class="summary-chip"><strong>${oauthVerifiedCount}</strong> OAuth proof</div>
-      </div>
+      ${summaryHtml}
       ${rolesHtml}
       ${socialsHtml}
     </div>
   `;
 
-  if (p.spotify?.public) {
+  if (disp.showSpotifyWidget && p.spotify?.public) {
     initSpotifyWidget(p.slug);
   }
 
-  if (t.typewriterBio && p.bio) initTypewriter(p.bio);
+  if (t.typewriterBio && disp.showBio && p.bio) initTypewriter(p.bio);
   if (t.tiltCard) initTilt();
   if (t.entrySplash) showEntrySplash(p, !!t.musicAutoplay);
 
   const tagEl = document.getElementById('profileTag');
-  if (tagEl) {
+  if (tagEl && disp.showHandle) {
     tagEl.addEventListener('click', () => {
       copyToClipboard(`cordfol.org/${p.slug}`);
       trackEvent('share', 'Copy handle');
     });
   }
-  if (p.viewCount) animateViewCount(document.getElementById('viewCountNum'), p.viewCount);
+  if (disp.showViews && p.viewCount) animateViewCount(document.getElementById('viewCountNum'), p.viewCount);
 }
 
 // ── Entry splash ("click to enter") ──

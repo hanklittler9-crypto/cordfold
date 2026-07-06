@@ -24,6 +24,7 @@ const MIGRATIONS = [
   `ALTER TABLE users ADD COLUMN IF NOT EXISTS presence_status VARCHAR(10)`,
   `ALTER TABLE users ADD COLUMN IF NOT EXISTS presence_activity TEXT`,
   `ALTER TABLE users ADD COLUMN IF NOT EXISTS presence_updated_at TIMESTAMPTZ`,
+  `ALTER TABLE users ADD COLUMN IF NOT EXISTS display_options JSONB DEFAULT '{}'::jsonb`,
 ];
 
 async function runMigrations(db) {

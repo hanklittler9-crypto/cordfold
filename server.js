@@ -247,7 +247,8 @@ app.get('/api/profile/:slug', async (req, res) => {
         t.bg_type, t.bg_value, t.layout, t.font_family,
         t.card_opacity, t.particles_enabled, t.bg_blur_enabled,
         t.entry_splash, t.typewriter_bio, t.tilt_card,
-        u.presence_status, u.presence_activity, u.presence_updated_at
+        u.presence_status, u.presence_activity, u.presence_updated_at,
+        u.display_options
       FROM users u
       LEFT JOIN themes t ON t.id = u.theme_id
       WHERE u.slug = $1
@@ -318,6 +319,7 @@ app.get('/api/profile/:slug', async (req, res) => {
           public: !!(user.spotify_enabled && user.spotify_public),
         },
         viewCount,
+        displayOptions: normalizeDisplayOptions(user.display_options),
       },
       theme: {
         backgroundColor: user.background_color || '#0d0d0d',
@@ -388,6 +390,7 @@ app.post('/api/profile', async (req, res) => {
       social_links,
       custom_links,
       email,
+      display_options,
       theme = {}
     } = req.body;
 
@@ -413,6 +416,8 @@ app.post('/api/profile', async (req, res) => {
       return res.status(409).json({ error: 'Slug already taken' });
     }
 
+    const cleanDisplay = normalizeDisplayOptions(display_options);
+
     await db.query(`
       UPDATE users SET
         display_name = $1,
@@ -422,9 +427,10 @@ app.post('/api/profile', async (req, res) => {
         social_links = $5,
         custom_links = $6,
         email = NULLIF(TRIM($7), ''),
+        display_options = $8,
         updated_at = NOW()
-      WHERE id = $8
-    `, [display_name, slug, bio, bannerUrl, social_links, JSON.stringify(cleanLinks), email || '', userId]);
+      WHERE id = $9
+    `, [display_name, slug, bio, bannerUrl, social_links, JSON.stringify(cleanLinks), email || '', JSON.stringify(cleanDisplay), userId]);
 
     const themeRow = await db.query(`
       SELECT t.id, t.is_preset
@@ -716,6 +722,29 @@ function isBlockedMusicUrl(url) {
   const u = String(url || '').toLowerCase();
   return u.includes('youtube.com') || u.includes('youtu.be')
     || u.includes('spotify.com') || u.includes('open.spotify.com');
+}
+
+const DEFAULT_DISPLAY_OPTIONS = {
+  showVerifiedBadge: true,
+  showHandle: true,
+  showPresence: true,
+  showBio: true,
+  showCustomLinks: true,
+  showViews: true,
+  showMemberSince: true,
+  showRoleStats: true,
+  showRoles: true,
+  showSocials: true,
+  showSpotifyWidget: true,
+};
+
+function normalizeDisplayOptions(raw) {
+  const src = raw && typeof raw === 'object' && !Array.isArray(raw) ? raw : {};
+  const out = {};
+  for (const key of Object.keys(DEFAULT_DISPLAY_OPTIONS)) {
+    out[key] = src[key] !== undefined ? !!src[key] : DEFAULT_DISPLAY_OPTIONS[key];
+  }
+  return out;
 }
 
 function referrerLabel(raw) {
