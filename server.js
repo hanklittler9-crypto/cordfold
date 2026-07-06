@@ -9,6 +9,7 @@ const session      = require('express-session');
 const connectPg    = require('connect-pg-simple');
 const { Pool }     = require('pg');
 const path         = require('path');
+const fs           = require('fs');
 const cors         = require('cors');
 const cookieParser = require('cookie-parser');
 
@@ -441,7 +442,12 @@ app.post('/api/profile', async (req, res) => {
     let musicUrl = theme.musicUrl || null;
     if (musicUrl && String(musicUrl).startsWith('data:')) {
       return res.status(400).json({
-        error: 'Music must be a direct URL (e.g. catbox.moe). Embedded uploads slow down every profile load.',
+        error: 'Use the MP3 upload picker or paste a direct file URL — embedded data URLs are not allowed.',
+      });
+    }
+    if (musicUrl && isBlockedMusicUrl(musicUrl)) {
+      return res.status(400).json({
+        error: 'YouTube and Spotify page links cannot play as background music. Upload an MP3 or use the Spotify tab for now playing.',
       });
     }
     if (musicUrl && String(musicUrl).length > 2000) {
@@ -546,6 +552,41 @@ app.post('/api/profile', async (req, res) => {
   } catch (err) {
     console.error('[server] /api/profile POST error:', err);
     res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// ── Music file upload (stored as file, not in DB) ─────────────────────────────
+app.post('/api/profile/music-upload', async (req, res) => {
+  try {
+    const userId = req.session?.userId;
+    if (!userId) return res.status(401).json({ error: 'Not authenticated' });
+
+    const { data, filename } = req.body || {};
+    if (!data) return res.status(400).json({ error: 'No file data' });
+
+    const b64 = String(data).replace(/^data:audio\/[^;]+;base64,/, '');
+    let buf;
+    try {
+      buf = Buffer.from(b64, 'base64');
+    } catch {
+      return res.status(400).json({ error: 'Invalid audio data' });
+    }
+
+    if (!buf.length) return res.status(400).json({ error: 'Empty file' });
+    if (buf.length > MAX_MUSIC_BYTES) {
+      return res.status(400).json({ error: 'File too large (max 5MB)' });
+    }
+
+    const ext = filename && /\.(mp3|wav|ogg|m4a)$/i.test(filename)
+      ? path.extname(filename).toLowerCase()
+      : '.mp3';
+    const safeName = `${String(userId).replace(/[^a-zA-Z0-9-]/g, '')}${ext}`;
+    await fs.promises.writeFile(path.join(MUSIC_UPLOAD_DIR, safeName), buf);
+
+    res.json({ url: `${PUBLIC_ORIGIN}/uploads/music/${safeName}` });
+  } catch (err) {
+    console.error('[server] /api/profile/music-upload error:', err);
+    res.status(500).json({ error: 'Upload failed' });
   }
 });
 
@@ -658,6 +699,22 @@ function discordMemberSince(discordId) {
   } catch {
     return null;
   }
+}
+
+const MUSIC_UPLOAD_DIR = path.join(__dirname, 'public', 'uploads', 'music');
+const PUBLIC_ORIGIN = process.env.PUBLIC_ORIGIN || 'https://cordfol.org';
+const MAX_MUSIC_BYTES = 5 * 1024 * 1024;
+
+try {
+  fs.mkdirSync(MUSIC_UPLOAD_DIR, { recursive: true });
+} catch (err) {
+  console.error('[music] Could not create upload dir:', err.message);
+}
+
+function isBlockedMusicUrl(url) {
+  const u = String(url || '').toLowerCase();
+  return u.includes('youtube.com') || u.includes('youtu.be')
+    || u.includes('spotify.com') || u.includes('open.spotify.com');
 }
 
 function referrerLabel(raw) {
@@ -1086,7 +1143,6 @@ app.get('/og/:slug.png', createOgRoute(db));
 app.get('/og/:slug', createOgRoute(db));
 
 // ── Public Profile Page (with per-user OG tags for link previews) ────────────
-const fs = require('fs');
 let profileTemplate = null;
 function getProfileTemplate() {
   if (!profileTemplate) {

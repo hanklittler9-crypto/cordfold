@@ -529,7 +529,7 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
             <div class="card-title">Effects & Features</div>
             <div class="fx-grid">
               <div class="fx-card" id="fx-music" onclick="toggleFx('music')">
-                <div><div class="fx-label">🎵 Background Music</div><div class="fx-sub">Auto-plays when profile loads</div></div>
+                <div><div class="fx-label">🎵 Background Music</div><div class="fx-sub">Your own MP3 on the profile — toggle on to show uploader</div></div>
                 <div class="toggle" id="fx-toggle-music"></div>
               </div>
               <div class="fx-card" id="fx-anim" onclick="toggleFx('anim')">
@@ -566,10 +566,16 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
               </div>
             </div>
             <div id="music-section" style="display:none;margin-top:16px">
-              <div class="section-divider"><span>Music Source</span></div>
-              <div class="field"><div class="field-label">Music URL</div><input class="field-input" id="musicUrlInput" placeholder="https://files.catbox.moe/yourtrack.mp3" oninput="updatePreview()"/><div class="field-hint">Direct MP3/WAV/OGG link only — host on catbox.moe, Dropbox, or your CDN. No YouTube.</div></div>
-              <div class="field" id="musicLegacyWarn" style="display:none"><div class="field-hint" style="color:var(--amber)">Your old uploaded track was removed from the API — paste a URL and save to restore music.</div></div>
-              <div class="field"><label class="field-label"><input type="checkbox" id="musicAutoplayInput"/> Autoplay (muted until interaction)</label></div>
+              <div class="section-divider"><span>Background Music</span></div>
+              <div class="hint-text" style="margin-bottom:12px">This plays <strong>your</strong> track on the profile. For <strong>what you're listening to on Spotify</strong>, use the <a href="#" onclick="switchTab('spotify');return false;" style="color:var(--neon)">Spotify tab</a> instead. YouTube/Spotify <em>links</em> won't work here — browsers need a direct audio file.</div>
+              <div class="field">
+                <div class="field-label">Upload MP3</div>
+                <input class="field-input" type="file" id="musicFileInput" accept=".mp3,.wav,.ogg,.m4a,audio/*" onchange="handleMusicUpload(event)"/>
+                <div class="field-hint" id="uploadStatus">Max 5MB · MP3, WAV, OGG, M4A</div>
+              </div>
+              <div class="field"><div class="field-label">Or paste direct file URL</div><input class="field-input" id="musicUrlInput" placeholder="https://files.catbox.moe/yourtrack.mp3" oninput="validateMusicUrlInput();updatePreview()"/><div class="field-hint" id="musicUrlHint">Direct MP3/WAV/OGG link only — not YouTube or Spotify pages.</div></div>
+              <div class="field" id="musicLegacyWarn" style="display:none"><div class="field-hint" style="color:var(--amber)">Your old embedded track was cleared for speed — re-upload an MP3 above, then Save.</div></div>
+              <div class="field"><label class="field-label"><input type="checkbox" id="musicAutoplayInput"/> Autoplay (use Entry Screen effect if browsers block autoplay)</label></div>
             </div>
           </div>
 
@@ -1708,6 +1714,51 @@ function initDirtyTracking(){
 window.addEventListener('beforeunload',e=>{
   if(window._profileDirty){e.preventDefault();e.returnValue='';}
 });
+
+function validateMusicUrlInput(){
+  const v=(document.getElementById('musicUrlInput')?.value||'').trim().toLowerCase();
+  const hint=document.getElementById('musicUrlHint');
+  if(!hint) return;
+  if(!v){hint.textContent='Direct MP3/WAV/OGG link only — not YouTube or Spotify pages.';hint.style.color='';return;}
+  if(v.includes('youtube.com')||v.includes('youtu.be')){hint.textContent='YouTube page links cannot play as audio — upload an MP3 above or use a direct file URL.';hint.style.color='var(--hot)';return;}
+  if(v.includes('spotify.com')){hint.textContent='Spotify links show in the Spotify tab (now playing), not background music — upload an MP3 here.';hint.style.color='var(--hot)';return;}
+  hint.textContent='Looks good — remember to Save Changes.';hint.style.color='var(--neon)';
+}
+
+async function handleMusicUpload(event){
+  const file=event.target.files[0];
+  if(!file) return;
+  const statusEl=document.getElementById('uploadStatus');
+  const max=5*1024*1024;
+  if(file.size>max){statusEl.textContent='File too large (max 5MB)';statusEl.style.color='var(--hot)';return;}
+  statusEl.textContent='Uploading…';statusEl.style.color='var(--muted2)';
+  try{
+    const dataUrl=await new Promise((resolve,reject)=>{
+      const reader=new FileReader();
+      reader.onload=e=>resolve(e.target.result);
+      reader.onerror=reject;
+      reader.readAsDataURL(file);
+    });
+    const sid=restoreAuthSid();
+    const url=sid?`${API_BASE}/profile/music-upload?sid=${encodeURIComponent(sid)}`:`${API_BASE}/profile/music-upload`;
+    const res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},credentials:'include',body:JSON.stringify({data:dataUrl,filename:file.name})});
+    const json=await res.json().catch(()=>({}));
+    if(!res.ok) throw new Error(json.error||'Upload failed');
+    document.getElementById('musicUrlInput').value=json.url;
+    validateMusicUrlInput();
+    statusEl.textContent=`${file.name} uploaded — click Save Changes`;
+    statusEl.style.color='var(--neon)';
+    activeFx.music=true;
+    document.getElementById('fx-music')?.classList.add('active');
+    document.getElementById('fx-toggle-music')?.classList.add('on');
+    document.getElementById('music-section').style.display='block';
+    markProfileDirty();
+    updatePreview();
+  }catch(err){
+    statusEl.textContent=err.message||'Upload failed';
+    statusEl.style.color='var(--hot)';
+  }
+}
 
 function spotifyApiUrl(path){
   const sid=restoreAuthSid();
