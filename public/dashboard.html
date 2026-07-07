@@ -433,6 +433,7 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
             <div class="card-title">What shows on your profile</div>
             <div class="hint-text" style="margin-bottom:14px">Turn off anything you don't want visitors to see — stats, presence, links, etc.</div>
             <div class="fx-grid">
+              <div class="fx-card active" id="disp-showBadges" onclick="toggleDisplayOpt('showBadges')"><div><div class="fx-label">Profile badges</div><div class="fx-sub">Earned icons next to your name</div></div><div class="toggle on" id="disp-toggle-showBadges"></div></div>
               <div class="fx-card active" id="disp-showVerifiedBadge" onclick="toggleDisplayOpt('showVerifiedBadge')"><div><div class="fx-label">Verified badge</div><div class="fx-sub">"Verified by Cordfol" stamp</div></div><div class="toggle on" id="disp-toggle-showVerifiedBadge"></div></div>
               <div class="fx-card active" id="disp-showHandle" onclick="toggleDisplayOpt('showHandle')"><div><div class="fx-label">Profile link</div><div class="fx-sub">cordfol.org/yourname tag</div></div><div class="toggle on" id="disp-toggle-showHandle"></div></div>
               <div class="fx-card active" id="disp-showPresence" onclick="toggleDisplayOpt('showPresence')"><div><div class="fx-label">Discord presence</div><div class="fx-sub">Status dot + activity text</div></div><div class="toggle on" id="disp-toggle-showPresence"></div></div>
@@ -440,6 +441,7 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
               <div class="fx-card active" id="disp-showCustomLinks" onclick="toggleDisplayOpt('showCustomLinks')"><div><div class="fx-label">Custom links</div><div class="fx-sub">Link buttons you added above</div></div><div class="toggle on" id="disp-toggle-showCustomLinks"></div></div>
               <div class="fx-card active" id="disp-showViews" onclick="toggleDisplayOpt('showViews')"><div><div class="fx-label">View count</div><div class="fx-sub">"747 Views" chip</div></div><div class="toggle on" id="disp-toggle-showViews"></div></div>
               <div class="fx-card active" id="disp-showMemberSince" onclick="toggleDisplayOpt('showMemberSince')"><div><div class="fx-label">Member since</div><div class="fx-sub">"Jul 2023 on Discord" chip</div></div><div class="toggle on" id="disp-toggle-showMemberSince"></div></div>
+              <div class="fx-card active" id="disp-showLocalTime" onclick="toggleDisplayOpt('showLocalTime')"><div><div class="fx-label">Local time</div><div class="fx-sub">Your current time-of-day chip</div></div><div class="toggle on" id="disp-toggle-showLocalTime"></div></div>
               <div class="fx-card active" id="disp-showRoleStats" onclick="toggleDisplayOpt('showRoleStats')"><div><div class="fx-label">Role stat chips</div><div class="fx-sub">Active roles · Bot · OAuth counts</div></div><div class="toggle on" id="disp-toggle-showRoleStats"></div></div>
               <div class="fx-card active" id="disp-showRoles" onclick="toggleDisplayOpt('showRoles')"><div><div class="fx-label">Verified roles list</div><div class="fx-sub">Full role cards section</div></div><div class="toggle on" id="disp-toggle-showRoles"></div></div>
               <div class="fx-card active" id="disp-showSocials" onclick="toggleDisplayOpt('showSocials')"><div><div class="fx-label">Social buttons</div><div class="fx-sub">Twitter, GitHub, etc.</div></div><div class="toggle on" id="disp-toggle-showSocials"></div></div>
@@ -526,6 +528,14 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
               <div class="font-btn" style="font-family:'Instrument Serif',serif;font-size:15px" onclick="setFont('Instrument Serif',this)">Serif<br><span style="font-size:10px;opacity:0.5;font-family:'DM Sans'">Editorial</span></div>
               <div class="font-btn" style="font-family:'Syne',sans-serif;font-weight:600" onclick="setFont('Syne',this)">Syne<br><span style="font-size:10px;opacity:0.5;font-family:'DM Sans'">Designer</span></div>
               <div class="font-btn" style="font-family:'IBM Plex Mono',monospace;font-size:12px" onclick="setFont('IBM Plex Mono',this)">Plex<br><span style="font-size:10px;opacity:0.5;font-family:'DM Sans'">Dev</span></div>
+            </div>
+            <div class="field-label" style="margin-bottom:10px">Name Effect</div>
+            <div class="font-options" style="margin-bottom:18px" id="nameEffectRow">
+              <div class="font-btn selected" data-effect="none" onclick="setNameEffect('none',this)">None<br><span style="font-size:10px;opacity:0.5">Plain</span></div>
+              <div class="font-btn" data-effect="glow" style="text-shadow:0 0 8px rgba(88,101,242,0.9)" onclick="setNameEffect('glow',this)">Glow<br><span style="font-size:10px;opacity:0.5">Accent halo</span></div>
+              <div class="font-btn" data-effect="gradient" style="background:linear-gradient(90deg,#5865F2,#fff);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent" onclick="setNameEffect('gradient',this)">Gradient<br><span style="font-size:10px;opacity:0.5;-webkit-text-fill-color:rgba(255,255,255,0.5)">Two-tone</span></div>
+              <div class="font-btn" data-effect="rainbow" style="background:linear-gradient(90deg,#ff5f6d,#ffc371,#47e891,#4facfe,#b06ab3);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent" onclick="setNameEffect('rainbow',this)">Rainbow<br><span style="font-size:10px;opacity:0.5;-webkit-text-fill-color:rgba(255,255,255,0.5)">Animated</span></div>
+              <div class="font-btn" data-effect="sparkle" onclick="setNameEffect('sparkle',this)">✦ Sparkle<br><span style="font-size:10px;opacity:0.5">Pulsing shine</span></div>
             </div>
             <div class="grid-2">
               <div class="field">
@@ -848,6 +858,7 @@ let currentBgData={type:'gradient',value:''};
 let activeFx={music:false,anim:false,particles:false,glassmorphism:false,blur:false,cursor:false,splash:false,typewriter:false,tilt:false};
 let currentLayout='centered';
 let currentFont='DM Sans';
+let currentNameEffect='none';
 let pendingMediaType='banner';
 let pendingMediaValue='';
 
@@ -896,8 +907,8 @@ const THEME_PRESETS=[
 let activeThemePreset=null;
 
 const DEFAULT_DISPLAY_OPTS={
-  showVerifiedBadge:true,showHandle:true,showPresence:true,showBio:true,
-  showCustomLinks:true,showViews:true,showMemberSince:true,showRoleStats:true,
+  showBadges:true,showVerifiedBadge:true,showHandle:true,showPresence:true,showBio:true,
+  showCustomLinks:true,showViews:true,showMemberSince:true,showLocalTime:true,showRoleStats:true,
   showRoles:true,showSocials:true,showSpotifyWidget:true,
 };
 let displayOpts={...DEFAULT_DISPLAY_OPTS};
@@ -987,7 +998,7 @@ function applyThemePreset(id){
   document.getElementById('previewLayoutState').textContent=p.layout.charAt(0).toUpperCase()+p.layout.slice(1);
 
   currentFont=p.font;
-  document.querySelectorAll('.font-btn').forEach(btn=>{
+  document.querySelectorAll('.font-btn:not([data-effect])').forEach(btn=>{
     btn.classList.toggle('selected',btn.textContent.trim().startsWith(p.font.split(' ')[0]));
   });
 
@@ -1071,9 +1082,16 @@ function setFont(font,btn){
   currentFont=font;
   activeThemePreset=null;
   document.querySelectorAll('.theme-preset-btn').forEach(b=>b.classList.remove('active'));
-  document.querySelectorAll('.font-btn').forEach(b=>b.classList.remove('selected'));
+  document.querySelectorAll('.font-btn:not([data-effect])').forEach(b=>b.classList.remove('selected'));
   btn.classList.add('selected');
   updatePreview();
+}
+
+function setNameEffect(effect,btn){
+  currentNameEffect=effect;
+  document.querySelectorAll('#nameEffectRow .font-btn').forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected');
+  markProfileDirty();
 }
 
 function toggleFx(key){
@@ -1698,8 +1716,12 @@ async function loadProfile(user){
       btn.classList.toggle('selected',match);
     });
     currentFont=th.font||'DM Sans';
-    document.querySelectorAll('.font-btn').forEach(btn=>{
+    document.querySelectorAll('.font-btn:not([data-effect])').forEach(btn=>{
       btn.classList.toggle('selected',btn.textContent.trim().startsWith(currentFont.split(' ')[0]));
+    });
+    currentNameEffect=th.nameEffect||'none';
+    document.querySelectorAll('#nameEffectRow .font-btn').forEach(btn=>{
+      btn.classList.toggle('selected',btn.dataset.effect===currentNameEffect);
     });
     document.querySelectorAll('.theme-preset-btn').forEach(b=>b.classList.remove('active'));
     activeThemePreset=null;
@@ -1764,6 +1786,7 @@ async function saveProfile(){
     custom_links:collectCustomLinks(),
     display_options:collectDisplayOptions(),
     email_role_alerts:emailRoleAlerts,
+    timezone:(()=>{try{return Intl.DateTimeFormat().resolvedOptions().timeZone||'';}catch{return '';}})(),
     theme:{
       accentColor:document.getElementById('accentColorInput').value,textColor:document.getElementById('textColorInput').value,
       cardColor:document.getElementById('cardColorInput').value,cardOpacity:document.getElementById('cardOpacityInput').value,
@@ -1772,6 +1795,7 @@ async function saveProfile(){
       animatedBg:activeFx.anim,glassmorphism:activeFx.glassmorphism,particles:activeFx.particles,
       bgBlur:activeFx.blur,entrySplash:activeFx.splash,typewriterBio:activeFx.typewriter,tiltCard:activeFx.tilt,
       bgType:currentBgType,bgValue:currentBgData.value||document.getElementById('backgroundColorInput')?.value||'',layout:currentLayout,font:currentFont,
+      nameEffect:currentNameEffect,
     }
   };
   try{

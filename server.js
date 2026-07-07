@@ -239,6 +239,7 @@ app.get('/api/profile/:slug', async (req, res) => {
       SELECT
         u.id, u.discord_id, u.discord_username, u.display_name, u.bio,
         u.avatar_hash, u.avatar_url, u.banner_url, u.social_links, u.custom_links, u.plan,
+        u.created_at, u.timezone,
         u.email, u.email_verified, u.email_role_alerts,
         u.spotify_enabled, u.spotify_public,
         t.background_color, t.accent_color, t.text_color, t.card_color,
@@ -246,7 +247,7 @@ app.get('/api/profile/:slug', async (req, res) => {
         t.music_url, t.music_autoplay, t.custom_css,
         t.bg_type, t.bg_value, t.layout, t.font_family,
         t.card_opacity, t.particles_enabled, t.bg_blur_enabled,
-        t.entry_splash, t.typewriter_bio, t.tilt_card,
+        t.entry_splash, t.typewriter_bio, t.tilt_card, t.name_effect,
         u.presence_status, u.presence_activity, u.presence_updated_at,
         u.display_options
       FROM users u
@@ -297,6 +298,26 @@ app.get('/api/profile/:slug', async (req, res) => {
     const rawMusic = user.music_url || null;
     const musicIsEmbedded = rawMusic && String(rawMusic).startsWith('data:');
 
+    // Profile badges — computed, never self-assigned
+    const badges = [];
+    if (user.discord_id === '1127435524022472805') {
+      badges.push({ id: 'creator', label: 'Cordfol Creator' });
+    }
+    if (String(user.plan).toUpperCase() === 'PRO') {
+      badges.push({ id: 'pro', label: 'Pro Member' });
+    }
+    if (user.created_at && new Date(user.created_at) < new Date('2026-10-01')) {
+      badges.push({ id: 'early', label: 'Early Adopter' });
+    }
+    if (viewCount >= 10000) badges.push({ id: 'views10k', label: '10K Views Club' });
+    else if (viewCount >= 1000) badges.push({ id: 'views1k', label: '1K Views Club' });
+    if (rolesResult.rows.some(r => r.proof_type === 'BOT')) {
+      badges.push({ id: 'bot', label: 'Bot Verified' });
+    }
+    if (user.spotify_enabled && user.spotify_public) {
+      badges.push({ id: 'music', label: 'Music Connected' });
+    }
+
     res.set('Cache-Control', 'private, no-store, must-revalidate');
     res.json({
       profile: {
@@ -307,8 +328,9 @@ app.get('/api/profile/:slug', async (req, res) => {
         bio:         user.bio,
         avatarUrl:   user.avatar_url ||
           (user.avatar_hash
-            ? `https://cdn.discordapp.com/avatars/${user.discord_id}/${user.avatar_hash}.png`
+            ? `https://cdn.discordapp.com/avatars/${user.discord_id}/${user.avatar_hash}.${String(user.avatar_hash).startsWith('a_') ? 'gif' : 'png'}?size=256`
             : null),
+        timezone:    user.timezone || null,
         bannerUrl:   user.banner_url,
         socialLinks: user.social_links,
         customLinks: user.custom_links || [],
@@ -320,6 +342,7 @@ app.get('/api/profile/:slug', async (req, res) => {
           public: !!(user.spotify_enabled && user.spotify_public),
         },
         viewCount,
+        badges,
         displayOptions: normalizeDisplayOptions(user.display_options),
       },
       theme: {
@@ -346,6 +369,7 @@ app.get('/api/profile/:slug', async (req, res) => {
         entrySplash:     user.entry_splash     || false,
         typewriterBio:   user.typewriter_bio   || false,
         tiltCard:        user.tilt_card        || false,
+        nameEffect:      user.name_effect      || 'none',
       },
       presence: user.presence_status ? {
         status:   user.presence_status,
@@ -393,6 +417,7 @@ app.post('/api/profile', async (req, res) => {
       email,
       email_role_alerts,
       display_options,
+      timezone,
       theme = {}
     } = req.body;
 
@@ -431,9 +456,10 @@ app.post('/api/profile', async (req, res) => {
         email = NULLIF(TRIM($7), ''),
         display_options = $8,
         email_role_alerts = $9,
+        timezone = COALESCE(NULLIF(TRIM($10), ''), timezone),
         updated_at = NOW()
-      WHERE id = $10
-    `, [display_name, slug, bio, bannerUrl, social_links, JSON.stringify(cleanLinks), email || '', JSON.stringify(cleanDisplay), email_role_alerts !== false, userId]);
+      WHERE id = $11
+    `, [display_name, slug, bio, bannerUrl, social_links, JSON.stringify(cleanLinks), email || '', JSON.stringify(cleanDisplay), email_role_alerts !== false, String(timezone || '').slice(0, 64), userId]);
 
     const themeRow = await db.query(`
       SELECT t.id, t.is_preset
@@ -472,6 +498,9 @@ app.post('/api/profile', async (req, res) => {
     const layout = ['centered', 'left', 'card', 'magazine'].includes(theme.layout)
       ? theme.layout
       : 'centered';
+    const nameEffect = ['none', 'glow', 'gradient', 'rainbow', 'sparkle'].includes(theme.nameEffect)
+      ? theme.nameEffect
+      : 'none';
 
     const themeFields = [
       backgroundColor,
@@ -495,6 +524,7 @@ app.post('/api/profile', async (req, res) => {
       theme.entrySplash ? true : false,
       theme.typewriterBio ? true : false,
       theme.tiltCard ? true : false,
+      nameEffect,
     ];
 
     if (themeRow.rowCount > 0 && !themeRow.rows[0].is_preset) {
@@ -520,8 +550,9 @@ app.post('/api/profile', async (req, res) => {
           bg_blur_enabled  = $18,
           entry_splash     = $19,
           typewriter_bio   = $20,
-          tilt_card        = $21
-        WHERE id = $22
+          tilt_card        = $21,
+          name_effect      = $22
+        WHERE id = $23
       `, [...themeFields, themeRow.rows[0].id]);
     } else {
       const insertTheme = await db.query(`
@@ -532,7 +563,7 @@ app.post('/api/profile', async (req, res) => {
           music_url, music_autoplay, custom_css,
           bg_type, bg_value, layout, font_family, card_opacity,
           particles_enabled, bg_blur_enabled,
-          entry_splash, typewriter_bio, tilt_card
+          entry_splash, typewriter_bio, tilt_card, name_effect
         ) VALUES (
           gen_random_uuid(), $1, false, false, false,
           $2, $3, $4, $5,
@@ -540,7 +571,7 @@ app.post('/api/profile', async (req, res) => {
           $10, $11, $12,
           $13, $14, $15, $16, $17,
           $18, $19,
-          $20, $21, $22
+          $20, $21, $22, $23
         ) RETURNING id
       `, [
         `Custom theme for user ${userId}`,
@@ -728,6 +759,8 @@ function isBlockedMusicUrl(url) {
 }
 
 const DEFAULT_DISPLAY_OPTIONS = {
+  showBadges: true,
+  showLocalTime: true,
   showVerifiedBadge: true,
   showHandle: true,
   showPresence: true,
@@ -1174,6 +1207,56 @@ app.use('/api/admin', adminRouter);
 const { createOgRoute } = require('./og');
 app.get('/og/:slug.png', createOgRoute(db));
 app.get('/og/:slug', createOgRoute(db));
+
+// ── QR code for profile links ─────────────────────────────────────────────────
+const QRCode = require('qrcode');
+const qrCache = new Map(); // slug:accent -> { buffer, expires }
+app.get('/api/qr/:slug', async (req, res) => {
+  const slug = String(req.params.slug || '').toLowerCase().replace(/\.png$/, '').replace(/[^a-z0-9\-]/g, '').slice(0, 64);
+  if (!slug) return res.status(404).send('Not found');
+
+  try {
+    const row = await db.query(`
+      SELECT u.slug, t.accent_color FROM users u
+      LEFT JOIN themes t ON t.id = u.theme_id
+      WHERE u.slug = $1
+    `, [slug]);
+    if (row.rowCount === 0) return res.status(404).send('Not found');
+
+    const accent = /^#[0-9a-fA-F]{6}$/.test(row.rows[0].accent_color || '')
+      ? row.rows[0].accent_color
+      : '#5865F2';
+
+    const cacheKey = `${slug}:${accent}`;
+    const cached = qrCache.get(cacheKey);
+    if (cached && cached.expires > Date.now()) {
+      res.set('Content-Type', 'image/png');
+      res.set('Cache-Control', 'public, max-age=3600');
+      return res.send(cached.buffer);
+    }
+
+    const buffer = await QRCode.toBuffer(`https://cordfol.org/${slug}`, {
+      type: 'png',
+      width: 480,
+      margin: 2,
+      color: { dark: accent, light: '#0b0b10' },
+      errorCorrectionLevel: 'M',
+    });
+
+    qrCache.set(cacheKey, { buffer, expires: Date.now() + 60 * 60 * 1000 });
+    if (qrCache.size > 300) {
+      const oldest = [...qrCache.entries()].sort((a, b) => a[1].expires - b[1].expires)[0];
+      if (oldest) qrCache.delete(oldest[0]);
+    }
+
+    res.set('Content-Type', 'image/png');
+    res.set('Cache-Control', 'public, max-age=3600');
+    res.send(buffer);
+  } catch (err) {
+    console.error('[qr] generation failed:', err.message);
+    res.status(500).send('QR generation failed');
+  }
+});
 
 // ── Public Profile Page (with per-user OG tags for link previews) ────────────
 let profileTemplate = null;

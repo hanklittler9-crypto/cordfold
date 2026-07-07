@@ -26,6 +26,8 @@ const MIGRATIONS = [
   `ALTER TABLE users ADD COLUMN IF NOT EXISTS presence_updated_at TIMESTAMPTZ`,
   `ALTER TABLE users ADD COLUMN IF NOT EXISTS display_options JSONB DEFAULT '{}'::jsonb`,
   `ALTER TABLE users ADD COLUMN IF NOT EXISTS email_role_alerts BOOLEAN DEFAULT true`,
+  `ALTER TABLE users ADD COLUMN IF NOT EXISTS timezone VARCHAR(64)`,
+  `ALTER TABLE themes ADD COLUMN IF NOT EXISTS name_effect VARCHAR(20) DEFAULT 'none'`,
 ];
 
 async function runMigrations(db) {

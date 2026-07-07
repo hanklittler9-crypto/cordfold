@@ -294,6 +294,171 @@
       gap: 10px;
     }
 
+    /* ── Name effects ── */
+    .fx-name-glow {
+      text-shadow: 0 0 12px rgba(var(--accent-rgb), 0.85), 0 0 34px rgba(var(--accent-rgb), 0.45);
+    }
+    .fx-name-gradient {
+      background: linear-gradient(90deg, var(--accent), var(--text) 55%, var(--accent));
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      color: transparent;
+    }
+    .fx-name-rainbow {
+      background: linear-gradient(90deg, #ff5f6d, #ffc371, #47e891, #4facfe, #b06ab3, #ff5f6d);
+      background-size: 300% 100%;
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      color: transparent;
+      animation: nameRainbow 6s linear infinite;
+    }
+    @keyframes nameRainbow { to { background-position: 300% 0; } }
+    .fx-name-sparkle {
+      text-shadow: 0 0 10px rgba(var(--accent-rgb), 0.6);
+      animation: nameSparkle 2.4s ease-in-out infinite;
+    }
+    @keyframes nameSparkle {
+      0%, 100% { filter: brightness(1); }
+      50% { filter: brightness(1.4); text-shadow: 0 0 18px rgba(var(--accent-rgb), 0.9); }
+    }
+
+    /* ── Profile badges ── */
+    .badge-row {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-left: 4px;
+      vertical-align: middle;
+    }
+    .p-badge {
+      position: relative;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      border: 1px solid rgba(255,255,255,0.14);
+      background: rgba(255,255,255,0.06);
+      cursor: default;
+      transition: transform 0.15s;
+    }
+    .p-badge:hover { transform: translateY(-2px) scale(1.12); }
+    .p-badge::after {
+      content: attr(data-label);
+      position: absolute;
+      bottom: calc(100% + 8px);
+      left: 50%;
+      transform: translateX(-50%);
+      white-space: nowrap;
+      background: #1b1c26;
+      border: 1px solid rgba(255,255,255,0.12);
+      color: #f5f7fb;
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.5px;
+      padding: 5px 9px;
+      border-radius: 8px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.15s;
+      z-index: 30;
+    }
+    .p-badge:hover::after { opacity: 1; }
+    .p-badge.b-creator { background: linear-gradient(135deg, #FFD700, #FF8C00); border-color: rgba(255,215,0,0.5); }
+    .p-badge.b-pro { background: linear-gradient(135deg, #7c5cff, #5865F2); border-color: rgba(124,92,255,0.5); }
+    .p-badge.b-early { background: linear-gradient(135deg, #00FFB2, #00bf8f); border-color: rgba(0,255,178,0.4); }
+    .p-badge.b-views1k, .p-badge.b-views10k { background: linear-gradient(135deg, #FF3366, #FF8C00); border-color: rgba(255,51,102,0.45); }
+    .p-badge.b-bot { background: linear-gradient(135deg, #5865F2, #3b4170); border-color: rgba(88,101,242,0.5); }
+    .p-badge.b-music { background: linear-gradient(135deg, #1DB954, #14833b); border-color: rgba(29,185,84,0.45); }
+
+    /* ── Avatar accent ring ── */
+    .avatar-ring {
+      position: absolute;
+      inset: -5px;
+      border-radius: 33px;
+      background: conic-gradient(from 0deg, var(--accent), transparent 30%, var(--accent) 55%, transparent 80%, var(--accent));
+      animation: ringSpin 6s linear infinite;
+      z-index: -1;
+      opacity: 0.85;
+    }
+    .avatar-holder { position: relative; display: inline-block; }
+    @keyframes ringSpin { to { transform: rotate(360deg); } }
+    @media (prefers-reduced-motion: reduce) { .avatar-ring { animation: none; } }
+
+    /* ── Share modal ── */
+    .share-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 200;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(5,5,8,0.78);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      padding: 20px;
+    }
+    .share-modal.open { display: flex; }
+    .share-card {
+      width: 100%;
+      max-width: 340px;
+      background: #14151d;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 22px;
+      padding: 26px;
+      text-align: center;
+      animation: cardSlideIn 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .share-card h3 {
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: rgba(245,247,251,0.55);
+      margin-bottom: 18px;
+    }
+    .share-qr {
+      width: 210px;
+      height: 210px;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,0.1);
+      background: #0b0b10;
+      margin: 0 auto 16px;
+      display: block;
+    }
+    .share-url {
+      font-family: 'Space Mono', monospace;
+      font-size: 12px;
+      color: var(--accent);
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 10px;
+      padding: 10px 12px;
+      margin-bottom: 14px;
+      word-break: break-all;
+    }
+    .share-actions { display: flex; gap: 8px; }
+    .share-btn2 {
+      flex: 1;
+      padding: 11px 0;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.05);
+      color: #f5f7fb;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .share-btn2:hover { background: rgba(255,255,255,0.1); }
+    .share-btn2.primary { background: var(--accent); border-color: transparent; }
+    .share-btn2.primary:hover { filter: brightness(1.12); }
+
     .verified-crown {
       display: inline-flex;
       align-items: center;
@@ -1197,6 +1362,19 @@
   </div>
 </div>
 
+<!-- Share modal -->
+<div class="share-modal" id="shareModal">
+  <div class="share-card">
+    <h3>Share this profile</h3>
+    <img class="share-qr" id="shareQr" alt="QR code" loading="lazy"/>
+    <div class="share-url" id="shareUrl"></div>
+    <div class="share-actions">
+      <button class="share-btn2" id="shareCopyBtn" type="button">Copy Link</button>
+      <button class="share-btn2 primary" id="shareNativeBtn" type="button">Share</button>
+    </div>
+  </div>
+</div>
+
 <!-- Action Bar -->
 <div class="profile-actions" id="actionBar">
   <button class="action-btn" id="copyBtn" title="Copy Handle">
@@ -1518,7 +1696,62 @@ function toggleMusic() {
       isPlaying = true;
       document.getElementById('musicBtn').textContent = '⏸';
       document.querySelectorAll('.music-bar').forEach(b => b.classList.remove('paused'));
+      startVisualizer();
     }).catch(err => console.error('Audio play failed:', err));
+  }
+}
+
+// ── Local time chip ──
+function localTimeIn(tz) {
+  try {
+    return new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: '2-digit', timeZone: tz }).format(new Date());
+  } catch { return null; }
+}
+function startLocalClock(tz) {
+  setInterval(() => {
+    const el = document.getElementById('localTimeVal');
+    const now = localTimeIn(tz);
+    if (el && now) el.textContent = now;
+  }, 30000);
+}
+
+// ── Audio visualizer: bars react to the actual music ──
+let _viz = null;
+let _vizCtx = null;
+function startVisualizer() {
+  if (!audio || _viz) return;
+  try {
+    if (!_vizCtx) _vizCtx = new (window.AudioContext || window.webkitAudioContext)();
+    // Only reroute the audio once the context is running, otherwise the
+    // MediaElementSource would silence playback on autoplay-restricted pages.
+    if (_vizCtx.state !== 'running') {
+      _vizCtx.resume().then(() => { if (_vizCtx.state === 'running') startVisualizer(); }).catch(() => {});
+      document.addEventListener('pointerdown', () => {
+        _vizCtx.resume().then(() => { if (_vizCtx.state === 'running') startVisualizer(); }).catch(() => {});
+      }, { once: true });
+      return;
+    }
+    const src = _vizCtx.createMediaElementSource(audio);
+    const analyser = _vizCtx.createAnalyser();
+    analyser.fftSize = 64;
+    src.connect(analyser);
+    analyser.connect(_vizCtx.destination);
+    _viz = { analyser, data: new Uint8Array(analyser.frequencyBinCount) };
+    const bars = Array.from(document.querySelectorAll('.music-bar'));
+    bars.forEach(b => { b.style.animation = 'none'; b.style.transition = 'height 0.08s linear'; });
+    (function frame() {
+      requestAnimationFrame(frame);
+      if (!isPlaying) return;
+      _viz.analyser.getByteFrequencyData(_viz.data);
+      const step = Math.floor(_viz.data.length / bars.length) || 1;
+      bars.forEach((b, i) => {
+        const v = _viz.data[i * step] / 255;
+        b.style.height = `${Math.max(3, Math.round(3 + v * 13))}px`;
+      });
+    })();
+  } catch (err) {
+    // CORS or unsupported browser: keep the CSS-animated bars
+    console.warn('[profile] Visualizer unavailable:', err.message);
   }
 }
 
@@ -1578,12 +1811,28 @@ async function renderProfile() {
   document.getElementById('shareBtn').onclick = () => {
     const url = `${window.location.origin}/${p.slug}`;
     trackEvent('share', 'Share button');
-    if (navigator.share) {
-      navigator.share({ title: `${p.displayName}'s Cordfol`, url });
-    } else {
+    const modal = document.getElementById('shareModal');
+    document.getElementById('shareQr').src = `${API_BASE}/qr/${encodeURIComponent(p.slug)}`;
+    document.getElementById('shareUrl').textContent = `cordfol.org/${p.slug}`;
+    document.getElementById('shareCopyBtn').onclick = () => {
       copyToClipboard(url);
+      trackEvent('share', 'Copy link (modal)');
+    };
+    const nativeBtn = document.getElementById('shareNativeBtn');
+    if (navigator.share) {
+      nativeBtn.style.display = '';
+      nativeBtn.onclick = () => navigator.share({ title: `${p.displayName}'s Cordfol`, url }).catch(() => {});
+    } else {
+      nativeBtn.style.display = 'none';
     }
+    modal.classList.add('open');
   };
+  document.getElementById('shareModal').addEventListener('click', e => {
+    if (e.target === e.currentTarget) e.currentTarget.classList.remove('open');
+  });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') document.getElementById('shareModal').classList.remove('open');
+  });
 
   // Apply theme
   const root = document.documentElement;
@@ -1634,6 +1883,7 @@ async function renderProfile() {
           isPlaying = true;
           document.getElementById('musicBtn').textContent = '⏸';
           document.querySelectorAll('.music-bar').forEach(b => b.classList.remove('paused'));
+          startVisualizer();
           console.log('[profile] Audio autoplay started');
         }).catch(err => console.error('Autoplay failed:', err));
       }
@@ -1721,12 +1971,33 @@ async function renderProfile() {
     ? `<div class="presence-activity"><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" style="flex-shrink:0"><path d="M21.58 16.09l-1.09-7.66A4.996 4.996 0 0 0 15.54 4H8.46C6 4 3.9 5.83 3.51 8.43l-1.09 7.66a3.16 3.16 0 0 0 5.35 2.72L10.17 16h3.66l2.4 2.81a3.16 3.16 0 0 0 5.35-2.72zM11 11H9v2H8v-2H6v-1h2V8h1v2h2v1zm4-1.5a1 1 0 1 1 2 0 1 1 0 0 1-2 0zm2 3.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2z"/></svg> ${escapeHtml(presence.activity)}</div>`
     : '';
 
+  // Profile badges (computed server-side)
+  const BADGE_ICONS = {
+    creator: '👑',
+    pro: '⚡',
+    early: '🌱',
+    views1k: '🔥',
+    views10k: '💎',
+    bot: '🤖',
+    music: '🎵',
+  };
+  const badgeList = (disp.showBadges !== false && Array.isArray(p.badges)) ? p.badges : [];
+  const badgesHtml = badgeList.length ? `
+    <span class="badge-row">
+      ${badgeList.map(b => `<span class="p-badge b-${escapeHtml(b.id)}" data-label="${escapeHtml(b.label)}">${BADGE_ICONS[b.id] || '★'}</span>`).join('')}
+    </span>
+  ` : '';
+
   const summaryChips = [];
   if (disp.showViews && p.viewCount) {
     summaryChips.push(`<div class="summary-chip"><strong id="viewCountNum">0</strong> Views</div>`);
   }
   if (disp.showMemberSince && p.memberSince) {
     summaryChips.push(`<div class="summary-chip"><strong>${escapeHtml(p.memberSince)}</strong> on Discord</div>`);
+  }
+  if (disp.showLocalTime !== false && p.timezone) {
+    const localNow = localTimeIn(p.timezone);
+    if (localNow) summaryChips.push(`<div class="summary-chip"><strong id="localTimeVal">${escapeHtml(localNow)}</strong> local time</div>`);
   }
   if (disp.showRoleStats) {
     summaryChips.push(`<div class="summary-chip"><strong>${activeRoleCount}</strong> Active roles</div>`);
@@ -1740,16 +2011,19 @@ async function renderProfile() {
   document.getElementById('card').innerHTML = `
     ${bannerHtml}
     <div class="avatar-wrap">
-      <img class="avatar" src="${escapeHtml(p.avatarUrl || '')}" alt="avatar" onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'"/>
-      ${presenceDotHtml}
+      <div class="avatar-holder">
+        <div class="avatar-ring"></div>
+        <img class="avatar" src="${escapeHtml(p.avatarUrl || '')}" alt="avatar" onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'"/>
+        ${presenceDotHtml}
+      </div>
     </div>
     <div class="card-body">
       <div class="profile-header">
         <div class="profile-heading">
           ${disp.showVerifiedBadge ? '<div class="profile-kicker"><span class="cf-verified-mark">✓</span> Verified by Cordfol</div>' : ''}
           <div class="profile-name">
-            ${escapeHtml(p.displayName)}
-            ${p.discordId === EXCLUSIVE_USER_ID ? '<div class="verified-crown" title="Cordfol Creator">👑</div>' : ''}
+            <span class="${t.nameEffect && t.nameEffect !== 'none' ? `fx-name-${escapeHtml(t.nameEffect)}` : ''}">${escapeHtml(p.displayName)}</span>
+            ${badgesHtml}
           </div>
           ${disp.showHandle ? `<div class="profile-tag" id="profileTag" title="Click to copy link">cordfol.org/${escapeHtml(p.slug)}</div>` : ''}
           ${presenceActivityHtml}
@@ -1780,6 +2054,7 @@ async function renderProfile() {
     });
   }
   if (disp.showViews && p.viewCount) animateViewCount(document.getElementById('viewCountNum'), p.viewCount);
+  if (disp.showLocalTime !== false && p.timezone) startLocalClock(p.timezone);
 }
 
 // ── Entry splash ("click to enter") ──
@@ -1801,6 +2076,7 @@ function showEntrySplash(p, playMusicOnEnter) {
         const btn = document.getElementById('musicBtn');
         if (btn) btn.textContent = '⏸';
         document.querySelectorAll('.music-bar').forEach(b => b.classList.remove('paused'));
+        startVisualizer();
       }).catch(() => {});
     }
   }, { once: true });
