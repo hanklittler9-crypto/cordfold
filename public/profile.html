@@ -184,6 +184,27 @@
       90% { opacity: 0.6; }
       100% { transform: translateY(-10vh) scale(1); opacity: 0; }
     }
+    /* Falling styles: snow / rain / sakura */
+    .particle.fall {
+      animation-name: particleFall;
+    }
+    @keyframes particleFall {
+      0% { transform: translateY(-8vh) translateX(0) rotate(0deg); opacity: 0; }
+      10% { opacity: var(--p-opacity, 0.8); }
+      100% { transform: translateY(110vh) translateX(var(--sway, 30px)) rotate(var(--spin, 0deg)); opacity: 0.2; }
+    }
+    .particle.firefly {
+      animation-name: fireflyDrift;
+      animation-timing-function: ease-in-out;
+      animation-direction: alternate;
+    }
+    @keyframes fireflyDrift {
+      0%   { transform: translate(0, 0); opacity: 0.1; }
+      25%  { opacity: 0.9; }
+      50%  { transform: translate(var(--dx, 40px), var(--dy, -60px)); opacity: 0.25; }
+      75%  { opacity: 1; }
+      100% { transform: translate(calc(var(--dx, 40px) * -0.6), calc(var(--dy, -60px) * 0.4)); opacity: 0.15; }
+    }
 
     /* ── Card glass ── */
     .card.glass {
@@ -323,6 +344,117 @@
       0%, 100% { filter: brightness(1); }
       50% { filter: brightness(1.4); text-shadow: 0 0 18px rgba(var(--accent-rgb), 0.9); }
     }
+
+    /* ── Featured Discord server card ── */
+    .server-card {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-top: 18px;
+      padding: 14px 16px;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,0.1);
+      background: rgba(var(--accent-rgb), 0.07);
+      text-align: left;
+    }
+    .server-card-icon {
+      width: 48px; height: 48px;
+      border-radius: 14px;
+      flex-shrink: 0;
+      object-fit: cover;
+      background: rgba(255,255,255,0.08);
+    }
+    .server-card-name {
+      font-weight: 700;
+      font-size: 0.95rem;
+      margin-bottom: 3px;
+    }
+    .server-card-meta {
+      font-size: 0.75rem;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .server-online-dot {
+      display: inline-block;
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: #3ba55d;
+      margin-right: 4px;
+    }
+    .server-join-btn {
+      margin-left: auto;
+      flex-shrink: 0;
+      padding: 9px 16px;
+      border-radius: 12px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-decoration: none;
+      color: #fff;
+      background: var(--accent);
+      transition: transform 0.15s, filter 0.15s;
+    }
+    .server-join-btn:hover { transform: translateY(-1px); filter: brightness(1.15); }
+
+    /* ── Guestbook ── */
+    .gb-list { display: flex; flex-direction: column; gap: 10px; margin-top: 14px; text-align: left; }
+    .gb-entry {
+      display: flex;
+      gap: 10px;
+      padding: 11px 13px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.03);
+      position: relative;
+    }
+    .gb-entry.pinned { border-color: rgba(var(--accent-rgb), 0.5); background: rgba(var(--accent-rgb), 0.07); }
+    .gb-avatar { width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0; object-fit: cover; }
+    .gb-body { min-width: 0; flex: 1; }
+    .gb-author { font-size: 0.78rem; font-weight: 700; display: flex; align-items: center; gap: 6px; }
+    .gb-author a { color: var(--text); text-decoration: none; }
+    .gb-author a:hover { color: var(--accent); }
+    .gb-time { font-size: 0.66rem; color: var(--muted); font-weight: 400; }
+    .gb-msg { font-size: 0.83rem; color: var(--text); opacity: 0.9; margin-top: 3px; word-wrap: break-word; }
+    .gb-pin-tag { font-size: 0.62rem; color: var(--accent); font-weight: 700; letter-spacing: 0.5px; }
+    .gb-actions { display: flex; gap: 6px; align-items: flex-start; }
+    .gb-action-btn {
+      background: none; border: none; cursor: pointer;
+      color: var(--muted); font-size: 0.75rem; padding: 2px 4px;
+      border-radius: 6px; transition: color 0.15s;
+    }
+    .gb-action-btn:hover { color: var(--text); }
+    .gb-form { display: flex; gap: 8px; margin-top: 14px; }
+    .gb-input {
+      flex: 1;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 12px;
+      color: var(--text);
+      padding: 10px 13px;
+      font-size: 0.85rem;
+      font-family: inherit;
+      outline: none;
+    }
+    .gb-input:focus { border-color: var(--accent); }
+    .gb-submit, .gb-signin {
+      padding: 10px 16px;
+      border-radius: 12px;
+      border: none;
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: #fff;
+      background: var(--accent);
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: transform 0.15s, filter 0.15s;
+    }
+    .gb-submit:hover, .gb-signin:hover { transform: translateY(-1px); filter: brightness(1.15); }
+    .gb-signin-row { margin-top: 14px; display: flex; justify-content: center; }
+    .gb-empty { font-size: 0.8rem; color: var(--muted); margin-top: 12px; }
 
     /* ── Profile badges ── */
     .badge-row {
@@ -1584,7 +1716,7 @@ function applyCardTheme(theme) {
   }
 }
 
-function initParticles(enabled, accent) {
+function initParticles(enabled, accent, style) {
   const el = document.getElementById('particlesEl');
   el.innerHTML = '';
   if (!enabled) {
@@ -1592,16 +1724,67 @@ function initParticles(enabled, accent) {
     return;
   }
   el.style.display = 'block';
-  for (let i = 0; i < 28; i++) {
+  style = style || 'dots';
+  const count = style === 'rain' ? 44 : 28;
+
+  for (let i = 0; i < count; i++) {
     const p = document.createElement('div');
     p.className = 'particle';
-    const size = 2 + Math.random() * 4;
-    p.style.width = `${size}px`;
-    p.style.height = `${size}px`;
     p.style.left = `${Math.random() * 100}%`;
-    p.style.background = accent || 'rgba(255,255,255,0.35)';
-    p.style.animationDuration = `${8 + Math.random() * 14}s`;
+
+    if (style === 'snow') {
+      const size = 3 + Math.random() * 4;
+      p.classList.add('fall');
+      p.style.width = `${size}px`;
+      p.style.height = `${size}px`;
+      p.style.background = 'rgba(255,255,255,0.85)';
+      p.style.filter = 'blur(0.5px)';
+      p.style.setProperty('--sway', `${-40 + Math.random() * 80}px`);
+      p.style.setProperty('--p-opacity', 0.5 + Math.random() * 0.5);
+      p.style.animationDuration = `${7 + Math.random() * 10}s`;
+    } else if (style === 'rain') {
+      p.classList.add('fall');
+      p.style.width = '1.5px';
+      p.style.height = `${10 + Math.random() * 12}px`;
+      p.style.borderRadius = '2px';
+      p.style.background = 'linear-gradient(to bottom, transparent, rgba(174,194,224,0.6))';
+      p.style.setProperty('--sway', `${-8 + Math.random() * 16}px`);
+      p.style.setProperty('--p-opacity', 0.4 + Math.random() * 0.4);
+      p.style.animationDuration = `${0.7 + Math.random() * 0.9}s`;
+    } else if (style === 'sakura') {
+      const size = 6 + Math.random() * 6;
+      p.classList.add('fall');
+      p.style.width = `${size}px`;
+      p.style.height = `${size * 0.85}px`;
+      p.style.borderRadius = '60% 0 60% 0';
+      p.style.background = ['#ffb7c5', '#ffc9d6', '#f8a1b5'][i % 3];
+      p.style.setProperty('--sway', `${-70 + Math.random() * 140}px`);
+      p.style.setProperty('--spin', `${180 + Math.random() * 540}deg`);
+      p.style.setProperty('--p-opacity', 0.6 + Math.random() * 0.4);
+      p.style.animationDuration = `${8 + Math.random() * 9}s`;
+    } else if (style === 'fireflies') {
+      const size = 3 + Math.random() * 3;
+      p.classList.add('firefly');
+      p.style.width = `${size}px`;
+      p.style.height = `${size}px`;
+      p.style.top = `${Math.random() * 100}%`;
+      const glow = accent || '#ffe28a';
+      p.style.background = '#fff7d6';
+      p.style.boxShadow = `0 0 ${6 + size * 2}px ${glow}`;
+      p.style.setProperty('--dx', `${-70 + Math.random() * 140}px`);
+      p.style.setProperty('--dy', `${-70 + Math.random() * 140}px`);
+      p.style.animationDuration = `${4 + Math.random() * 6}s`;
+      p.style.animationIterationCount = 'infinite';
+    } else {
+      const size = 2 + Math.random() * 4;
+      p.style.width = `${size}px`;
+      p.style.height = `${size}px`;
+      p.style.background = accent || 'rgba(255,255,255,0.35)';
+      p.style.animationDuration = `${8 + Math.random() * 14}s`;
+    }
+
     p.style.animationDelay = `${Math.random() * 10}s`;
+    if (p.classList.contains('fall')) p.style.animationIterationCount = 'infinite';
     el.appendChild(p);
   }
 }
@@ -1755,8 +1938,21 @@ function startVisualizer() {
   }
 }
 
+function getStoredSid() {
+  try { return sessionStorage.getItem('cordfol_sid') || ''; } catch { return ''; }
+}
+
 async function renderProfile() {
   const url = new URL(window.location.href);
+
+  // Coming back from Discord OAuth (guestbook sign-in): stash the sid, clean the URL
+  const sidParam = url.searchParams.get('sid');
+  if (sidParam) {
+    try { sessionStorage.setItem('cordfol_sid', sidParam); } catch {}
+    url.searchParams.delete('sid');
+    history.replaceState({}, '', url.pathname + (url.search || ''));
+  }
+
   const slug = sanitizeSlug(window.location.pathname.replace(/^\/+/, '').split('/')[0] || url.searchParams.get('slug') || '');
   if (!slug) {
     document.getElementById('card').innerHTML = `<div class="not-found"><h1>404</h1><p>Profile not found.</p></div>`;
@@ -1848,7 +2044,7 @@ async function renderProfile() {
   applyLayout(t.layout || 'centered');
   applyBackground(t);
   applyCardTheme(t);
-  initParticles(t.particles, t.accentColor);
+  initParticles(t.particles, t.accentColor, t.particleStyle);
   document.title = `${p.displayName} — Cordfol`;
 
   // Custom CSS
@@ -2008,6 +2204,28 @@ async function renderProfile() {
     ? `<div class="profile-summary">${summaryChips.join('')}</div>`
     : '';
 
+  // Featured Discord server (live counts resolved server-side from the invite)
+  const fs = p.featuredServer;
+  const serverCardHtml = (disp.showServerCard !== false && fs) ? `
+    <div class="server-card">
+      ${fs.iconUrl ? `<img class="server-card-icon" src="${escapeHtml(fs.iconUrl)}" alt=""/>` : `<div class="server-card-icon" style="display:flex;align-items:center;justify-content:center;font-size:20px">💬</div>`}
+      <div style="min-width:0">
+        <div class="server-card-name">${escapeHtml(fs.name)}</div>
+        <div class="server-card-meta">
+          <span><span class="server-online-dot"></span>${formatCount(fs.online)} online</span>
+          <span>${formatCount(fs.members)} members</span>
+        </div>
+      </div>
+      <a class="server-join-btn" href="${escapeHtml(fs.inviteUrl)}" target="_blank" rel="noopener noreferrer" onclick="trackEvent('link_click','Discord Server','discord')">Join</a>
+    </div>
+  ` : '';
+
+  const guestbookShellHtml = (disp.showGuestbook !== false) ? `
+    <div class="divider"></div>
+    <div class="roles-title">Guestbook</div>
+    <div id="gbSection"><div class="gb-empty">Loading…</div></div>
+  ` : '';
+
   document.getElementById('card').innerHTML = `
     ${bannerHtml}
     <div class="avatar-wrap">
@@ -2031,10 +2249,12 @@ async function renderProfile() {
       </div>
       ${disp.showBio && p.bio ? `<div class="profile-bio" id="profileBio">${escapeHtml(p.bio)}</div>` : ''}
       <div id="spotifySlot"></div>
+      ${serverCardHtml}
       ${customLinksHtml}
       ${summaryHtml}
       ${rolesHtml}
       ${socialsHtml}
+      ${guestbookShellHtml}
     </div>
   `;
 
@@ -2055,6 +2275,120 @@ async function renderProfile() {
   }
   if (disp.showViews && p.viewCount) animateViewCount(document.getElementById('viewCountNum'), p.viewCount);
   if (disp.showLocalTime !== false && p.timezone) startLocalClock(p.timezone);
+  if (disp.showGuestbook !== false) initGuestbook(p.slug);
+}
+
+// ── Guestbook ──
+function gbTimeAgo(iso) {
+  const s = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
+  if (s < 60) return 'just now';
+  if (s < 3600) return `${Math.floor(s / 60)}m ago`;
+  if (s < 86400) return `${Math.floor(s / 3600)}h ago`;
+  if (s < 2592000) return `${Math.floor(s / 86400)}d ago`;
+  return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
+function gbFetchOpts() {
+  return { credentials: 'include' };
+}
+function gbUrl(path) {
+  const sid = getStoredSid();
+  return `${API_BASE}${path}${sid ? `${path.includes('?') ? '&' : '?'}sid=${encodeURIComponent(sid)}` : ''}`;
+}
+
+async function initGuestbook(slug) {
+  const el = document.getElementById('gbSection');
+  if (!el) return;
+  try {
+    const res = await fetch(gbUrl(`/guestbook/${encodeURIComponent(slug)}`), gbFetchOpts());
+    if (!res.ok) throw new Error('load failed');
+    const data = await res.json();
+    renderGuestbook(slug, data);
+  } catch {
+    el.innerHTML = '<div class="gb-empty">Could not load the guestbook.</div>';
+  }
+}
+
+function renderGuestbook(slug, data) {
+  const el = document.getElementById('gbSection');
+  if (!el) return;
+  const entries = data.entries || [];
+
+  const listHtml = entries.length ? `
+    <div class="gb-list">
+      ${entries.map(e => `
+        <div class="gb-entry ${e.pinned ? 'pinned' : ''}">
+          <img class="gb-avatar" src="${escapeHtml(e.authorAvatar || 'https://cdn.discordapp.com/embed/avatars/0.png')}" alt="" onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'"/>
+          <div class="gb-body">
+            <div class="gb-author">
+              ${e.authorSlug ? `<a href="/${escapeHtml(e.authorSlug)}">${escapeHtml(e.authorName)}</a>` : escapeHtml(e.authorName)}
+              ${e.pinned ? '<span class="gb-pin-tag">📌 PINNED</span>' : ''}
+              <span class="gb-time">${gbTimeAgo(e.createdAt)}</span>
+            </div>
+            <div class="gb-msg">${escapeHtml(e.message)}</div>
+          </div>
+          <div class="gb-actions">
+            ${data.isOwner ? `<button class="gb-action-btn" title="${e.pinned ? 'Unpin' : 'Pin'}" onclick="gbPin('${escapeHtml(slug)}','${escapeHtml(e.id)}')">📌</button>` : ''}
+            ${(data.isOwner || e.mine) ? `<button class="gb-action-btn" title="Delete" onclick="gbDelete('${escapeHtml(slug)}','${escapeHtml(e.id)}')">✕</button>` : ''}
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  ` : '<div class="gb-empty">No signatures yet — be the first!</div>';
+
+  let formHtml = '';
+  if (data.isOwner) {
+    formHtml = '';
+  } else if (data.viewerSignedIn) {
+    formHtml = `
+      <div class="gb-form">
+        <input class="gb-input" id="gbInput" maxlength="280" placeholder="Leave a message…"/>
+        <button class="gb-submit" onclick="gbPost('${escapeHtml(slug)}')">Sign</button>
+      </div>
+    `;
+  } else {
+    formHtml = `
+      <div class="gb-signin-row">
+        <a class="gb-signin" href="${OAUTH_LOGIN_URL}?return=/${encodeURIComponent(slug)}">Sign in with Discord to sign the guestbook</a>
+      </div>
+    `;
+  }
+
+  el.innerHTML = listHtml + formHtml;
+  const input = document.getElementById('gbInput');
+  if (input) input.addEventListener('keydown', e => { if (e.key === 'Enter') gbPost(slug); });
+}
+
+async function gbPost(slug) {
+  const input = document.getElementById('gbInput');
+  const message = (input?.value || '').trim();
+  if (message.length < 2) { showCopyToast('Message is too short'); return; }
+  try {
+    const res = await fetch(gbUrl(`/guestbook/${encodeURIComponent(slug)}`), {
+      ...gbFetchOpts(),
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) { showCopyToast(data.error || 'Could not sign the guestbook'); return; }
+    showCopyToast('Signed!');
+    initGuestbook(slug);
+  } catch { showCopyToast('Could not sign the guestbook'); }
+}
+
+async function gbDelete(slug, id) {
+  try {
+    await fetch(gbUrl(`/guestbook/entry/${encodeURIComponent(id)}`), { ...gbFetchOpts(), method: 'DELETE' });
+    initGuestbook(slug);
+  } catch {}
+}
+
+async function gbPin(slug, id) {
+  try {
+    await fetch(gbUrl(`/guestbook/entry/${encodeURIComponent(id)}/pin`), { ...gbFetchOpts(), method: 'POST' });
+    initGuestbook(slug);
+  } catch {}
 }
 
 // ── Entry splash ("click to enter") ──

@@ -59,6 +59,17 @@ router.get('/', (req, res) => {
     maxAge: 5 * 60 * 1000
   });
 
+  // Optional "send me back to this profile" flow (e.g. guestbook sign-in)
+  const returnPath = String(req.query.return || '');
+  if (/^\/[a-z0-9\-]{1,64}$/.test(returnPath)) {
+    res.cookie('oauth_return', returnPath, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'none',
+      maxAge: 5 * 60 * 1000
+    });
+  }
+
   const url = [
     'https://discord.com/api/oauth2/authorize',
     `?client_id=${DISCORD_CLIENT_ID}`,
@@ -160,6 +171,11 @@ router.get('/callback', async (req, res) => {
       }
       const sid = req.sessionID;
       console.log('[auth] Session saved, sid:', sid);
+      const returnPath = String(req.cookies?.oauth_return || '');
+      if (/^\/[a-z0-9\-]{1,64}$/.test(returnPath)) {
+        res.clearCookie('oauth_return');
+        return res.redirect(`https://cordfol.org${returnPath}?sid=${sid}`);
+      }
       res.redirect(`https://dashboard.cordfol.org/dashboard.html?sid=${sid}`);
     });
 

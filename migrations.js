@@ -28,6 +28,18 @@ const MIGRATIONS = [
   `ALTER TABLE users ADD COLUMN IF NOT EXISTS email_role_alerts BOOLEAN DEFAULT true`,
   `ALTER TABLE users ADD COLUMN IF NOT EXISTS timezone VARCHAR(64)`,
   `ALTER TABLE themes ADD COLUMN IF NOT EXISTS name_effect VARCHAR(20) DEFAULT 'none'`,
+  `ALTER TABLE themes ADD COLUMN IF NOT EXISTS particle_style VARCHAR(20) DEFAULT 'dots'`,
+  `ALTER TABLE users ADD COLUMN IF NOT EXISTS featured_invite VARCHAR(32)`,
+  `CREATE TABLE IF NOT EXISTS guestbook_entries (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    profile_user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    author_user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    message VARCHAR(280) NOT NULL,
+    pinned BOOLEAN DEFAULT false,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE (profile_user_id, author_user_id)
+  )`,
+  `CREATE INDEX IF NOT EXISTS idx_guestbook_profile ON guestbook_entries (profile_user_id, pinned DESC, created_at DESC)`,
 ];
 
 async function runMigrations(db) {

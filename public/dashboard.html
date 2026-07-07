@@ -428,6 +428,17 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
             <button class="btn btn-ghost" type="button" onclick="addCustomLink()" id="addLinkBtn">+ Add link</button>
           </div>
 
+          <!-- FEATURED SERVER -->
+          <div class="card">
+            <div class="card-title">Featured Discord Server</div>
+            <div class="hint-text" style="margin-bottom:12px">Paste an invite link and your profile shows a live server card — icon, member count, who's online, and a Join button.</div>
+            <div class="field">
+              <div class="field-label">Invite link</div>
+              <input class="field-input" id="featuredInviteInput" placeholder="https://discord.gg/yourserver" maxlength="120" oninput="markProfileDirty()"/>
+              <div class="field-hint">Use a permanent invite (never expires) so the card keeps working.</div>
+            </div>
+          </div>
+
           <!-- DISPLAY OPTIONS -->
           <div class="card">
             <div class="card-title">What shows on your profile</div>
@@ -446,6 +457,8 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
               <div class="fx-card active" id="disp-showRoles" onclick="toggleDisplayOpt('showRoles')"><div><div class="fx-label">Verified roles list</div><div class="fx-sub">Full role cards section</div></div><div class="toggle on" id="disp-toggle-showRoles"></div></div>
               <div class="fx-card active" id="disp-showSocials" onclick="toggleDisplayOpt('showSocials')"><div><div class="fx-label">Social buttons</div><div class="fx-sub">Twitter, GitHub, etc.</div></div><div class="toggle on" id="disp-toggle-showSocials"></div></div>
               <div class="fx-card active" id="disp-showSpotifyWidget" onclick="toggleDisplayOpt('showSpotifyWidget')"><div><div class="fx-label">Spotify widget</div><div class="fx-sub">Now playing on profile</div></div><div class="toggle on" id="disp-toggle-showSpotifyWidget"></div></div>
+              <div class="fx-card active" id="disp-showGuestbook" onclick="toggleDisplayOpt('showGuestbook')"><div><div class="fx-label">Guestbook</div><div class="fx-sub">Visitors sign your profile</div></div><div class="toggle on" id="disp-toggle-showGuestbook"></div></div>
+              <div class="fx-card active" id="disp-showServerCard" onclick="toggleDisplayOpt('showServerCard')"><div><div class="fx-label">Server card</div><div class="fx-sub">Featured Discord server</div></div><div class="toggle on" id="disp-toggle-showServerCard"></div></div>
             </div>
           </div>
 
@@ -572,6 +585,16 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
               <div class="fx-card" id="fx-particles" onclick="toggleFx('particles')">
                 <div><div class="fx-label">🌌 Particle Effect</div><div class="fx-sub">Floating particles overlay</div></div>
                 <div class="toggle" id="fx-toggle-particles"></div>
+              </div>
+              <div id="particle-style-section" style="display:none;grid-column:1/-1">
+                <div class="field-label" style="margin:4px 0 8px">Particle style</div>
+                <div class="font-options">
+                  <div class="font-btn selected" data-pstyle="dots" onclick="setParticleStyle('dots',this)">✨ Dots<br><span style="font-size:10px;opacity:0.5">Classic float</span></div>
+                  <div class="font-btn" data-pstyle="snow" onclick="setParticleStyle('snow',this)">❄️ Snow<br><span style="font-size:10px;opacity:0.5">Gentle fall</span></div>
+                  <div class="font-btn" data-pstyle="rain" onclick="setParticleStyle('rain',this)">🌧️ Rain<br><span style="font-size:10px;opacity:0.5">Moody streaks</span></div>
+                  <div class="font-btn" data-pstyle="sakura" onclick="setParticleStyle('sakura',this)">🌸 Sakura<br><span style="font-size:10px;opacity:0.5">Petals drift</span></div>
+                  <div class="font-btn" data-pstyle="fireflies" onclick="setParticleStyle('fireflies',this)">🪲 Fireflies<br><span style="font-size:10px;opacity:0.5">Glow wander</span></div>
+                </div>
               </div>
               <div class="fx-card" id="fx-glassmorphism" onclick="toggleFx('glassmorphism')">
                 <div><div class="fx-label">🪟 Glassmorphism</div><div class="fx-sub">Frosted glass card style</div></div>
@@ -859,6 +882,7 @@ let activeFx={music:false,anim:false,particles:false,glassmorphism:false,blur:fa
 let currentLayout='centered';
 let currentFont='DM Sans';
 let currentNameEffect='none';
+let currentParticleStyle='dots';
 let pendingMediaType='banner';
 let pendingMediaValue='';
 
@@ -909,7 +933,7 @@ let activeThemePreset=null;
 const DEFAULT_DISPLAY_OPTS={
   showBadges:true,showVerifiedBadge:true,showHandle:true,showPresence:true,showBio:true,
   showCustomLinks:true,showViews:true,showMemberSince:true,showLocalTime:true,showRoleStats:true,
-  showRoles:true,showSocials:true,showSpotifyWidget:true,
+  showRoles:true,showSocials:true,showSpotifyWidget:true,showGuestbook:true,showServerCard:true,
 };
 let displayOpts={...DEFAULT_DISPLAY_OPTS};
 
@@ -998,7 +1022,7 @@ function applyThemePreset(id){
   document.getElementById('previewLayoutState').textContent=p.layout.charAt(0).toUpperCase()+p.layout.slice(1);
 
   currentFont=p.font;
-  document.querySelectorAll('.font-btn:not([data-effect])').forEach(btn=>{
+  document.querySelectorAll('.font-btn:not([data-effect]):not([data-pstyle])').forEach(btn=>{
     btn.classList.toggle('selected',btn.textContent.trim().startsWith(p.font.split(' ')[0]));
   });
 
@@ -1082,7 +1106,7 @@ function setFont(font,btn){
   currentFont=font;
   activeThemePreset=null;
   document.querySelectorAll('.theme-preset-btn').forEach(b=>b.classList.remove('active'));
-  document.querySelectorAll('.font-btn:not([data-effect])').forEach(b=>b.classList.remove('selected'));
+  document.querySelectorAll('.font-btn:not([data-effect]):not([data-pstyle])').forEach(b=>b.classList.remove('selected'));
   btn.classList.add('selected');
   updatePreview();
 }
@@ -1092,6 +1116,21 @@ function setNameEffect(effect,btn){
   document.querySelectorAll('#nameEffectRow .font-btn').forEach(b=>b.classList.remove('selected'));
   btn.classList.add('selected');
   markProfileDirty();
+}
+
+function setParticleStyle(style,btn){
+  currentParticleStyle=style;
+  document.querySelectorAll('#particle-style-section .font-btn').forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected');
+  markProfileDirty();
+}
+
+function syncParticleStyleUI(){
+  const section=document.getElementById('particle-style-section');
+  if(section) section.style.display=activeFx.particles?'block':'none';
+  document.querySelectorAll('#particle-style-section .font-btn').forEach(b=>{
+    b.classList.toggle('selected',b.dataset.pstyle===currentParticleStyle);
+  });
 }
 
 function toggleFx(key){
@@ -1107,6 +1146,7 @@ function toggleFx(key){
       if(statusEl) statusEl.textContent='Music disabled — Save Changes to remove from profile';
     }
   }
+  if(key==='particles') syncParticleStyleUI();
   markProfileDirty();
   updatePreview();
 }
@@ -1385,6 +1425,31 @@ function setCustomLinks(links){
   list.innerHTML='';
   (links||[]).forEach(l=>addCustomLink(l.title,l.url));
   updateCustomLinkCount();
+}
+
+// Per-link click counts (last 30 days) shown inline in the links editor
+async function loadLinkClickCounts(){
+  try{
+    const sid=restoreAuthSid();
+    const url=sid?`${API_BASE}/analytics/links?sid=${encodeURIComponent(sid)}`:`${API_BASE}/analytics/links`;
+    const res=await fetch(url,{credentials:'include'});
+    if(!res.ok) return;
+    const data=await res.json();
+    const map=new Map((data.clicks||[]).map(c=>[c.label,c.count]));
+    document.querySelectorAll('.custom-link-row').forEach(row=>{
+      const title=row.querySelector('.cl-title').value.trim();
+      let chip=row.querySelector('.cl-clicks');
+      if(!chip){
+        chip=document.createElement('span');
+        chip.className='cl-clicks';
+        chip.style.cssText='flex-shrink:0;font-size:10px;color:var(--muted2);min-width:48px;text-align:right';
+        chip.title='Clicks in the last 30 days';
+        row.insertBefore(chip,row.lastElementChild);
+      }
+      const n=map.get(title)||0;
+      chip.textContent=`${n} click${n===1?'':'s'}`;
+    });
+  }catch{}
 }
 
 // ── Onboarding checklist ──
@@ -1671,8 +1736,11 @@ async function loadProfile(user){
     document.getElementById('tiktokInput').value=data.profile.socialLinks?.tiktok||'';
     document.getElementById('instagramInput').value=data.profile.socialLinks?.instagram||'';
     setCustomLinks(data.profile.customLinks);
+    loadLinkClickCounts();
     setDisplayOptions(data.profile.displayOptions);
     setEmailAlerts(data.profile.emailRoleAlerts);
+    const fiEl=document.getElementById('featuredInviteInput');
+    if(fiEl) fiEl.value=data.profile.featuredInvite?`https://discord.gg/${data.profile.featuredInvite}`:'';
     document.getElementById('emailInput').value=data.profile.email||'';
     if(data.profile.emailVerified){
       document.getElementById('emailVerifiedBadge').style.display='inline-flex';
@@ -1716,13 +1784,14 @@ async function loadProfile(user){
       btn.classList.toggle('selected',match);
     });
     currentFont=th.font||'DM Sans';
-    document.querySelectorAll('.font-btn:not([data-effect])').forEach(btn=>{
+    document.querySelectorAll('.font-btn:not([data-effect]):not([data-pstyle])').forEach(btn=>{
       btn.classList.toggle('selected',btn.textContent.trim().startsWith(currentFont.split(' ')[0]));
     });
     currentNameEffect=th.nameEffect||'none';
     document.querySelectorAll('#nameEffectRow .font-btn').forEach(btn=>{
       btn.classList.toggle('selected',btn.dataset.effect===currentNameEffect);
     });
+    currentParticleStyle=th.particleStyle||'dots';
     document.querySelectorAll('.theme-preset-btn').forEach(b=>b.classList.remove('active'));
     activeThemePreset=null;
 
@@ -1746,6 +1815,7 @@ async function loadProfile(user){
       }
     });
     document.getElementById('music-section').style.display=activeFx.music?'block':'none';
+    syncParticleStyleUI();
 
     updateEmailState();updatePreview();
 
@@ -1786,6 +1856,7 @@ async function saveProfile(){
     custom_links:collectCustomLinks(),
     display_options:collectDisplayOptions(),
     email_role_alerts:emailRoleAlerts,
+    featured_invite:document.getElementById('featuredInviteInput')?.value||'',
     timezone:(()=>{try{return Intl.DateTimeFormat().resolvedOptions().timeZone||'';}catch{return '';}})(),
     theme:{
       accentColor:document.getElementById('accentColorInput').value,textColor:document.getElementById('textColorInput').value,
@@ -1796,6 +1867,7 @@ async function saveProfile(){
       bgBlur:activeFx.blur,entrySplash:activeFx.splash,typewriterBio:activeFx.typewriter,tiltCard:activeFx.tilt,
       bgType:currentBgType,bgValue:currentBgData.value||document.getElementById('backgroundColorInput')?.value||'',layout:currentLayout,font:currentFont,
       nameEffect:currentNameEffect,
+      particleStyle:currentParticleStyle,
     }
   };
   try{

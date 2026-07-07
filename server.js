@@ -239,7 +239,7 @@ app.get('/api/profile/:slug', async (req, res) => {
       SELECT
         u.id, u.discord_id, u.discord_username, u.display_name, u.bio,
         u.avatar_hash, u.avatar_url, u.banner_url, u.social_links, u.custom_links, u.plan,
-        u.created_at, u.timezone,
+        u.created_at, u.timezone, u.featured_invite,
         u.email, u.email_verified, u.email_role_alerts,
         u.spotify_enabled, u.spotify_public,
         t.background_color, t.accent_color, t.text_color, t.card_color,
@@ -247,7 +247,7 @@ app.get('/api/profile/:slug', async (req, res) => {
         t.music_url, t.music_autoplay, t.custom_css,
         t.bg_type, t.bg_value, t.layout, t.font_family,
         t.card_opacity, t.particles_enabled, t.bg_blur_enabled,
-        t.entry_splash, t.typewriter_bio, t.tilt_card, t.name_effect,
+        t.entry_splash, t.typewriter_bio, t.tilt_card, t.name_effect, t.particle_style,
         u.presence_status, u.presence_activity, u.presence_updated_at,
         u.display_options
       FROM users u
@@ -344,6 +344,8 @@ app.get('/api/profile/:slug', async (req, res) => {
         viewCount,
         badges,
         displayOptions: normalizeDisplayOptions(user.display_options),
+        featuredInvite: user.featured_invite || null,
+        featuredServer: await resolveFeaturedServer(user.featured_invite),
       },
       theme: {
         backgroundColor: user.background_color || '#0d0d0d',
@@ -370,6 +372,7 @@ app.get('/api/profile/:slug', async (req, res) => {
         typewriterBio:   user.typewriter_bio   || false,
         tiltCard:        user.tilt_card        || false,
         nameEffect:      user.name_effect      || 'none',
+        particleStyle:   user.particle_style   || 'dots',
       },
       presence: user.presence_status ? {
         status:   user.presence_status,
@@ -418,6 +421,7 @@ app.post('/api/profile', async (req, res) => {
       email_role_alerts,
       display_options,
       timezone,
+      featured_invite,
       theme = {}
     } = req.body;
 
@@ -457,9 +461,10 @@ app.post('/api/profile', async (req, res) => {
         display_options = $8,
         email_role_alerts = $9,
         timezone = COALESCE(NULLIF(TRIM($10), ''), timezone),
+        featured_invite = $11,
         updated_at = NOW()
-      WHERE id = $11
-    `, [display_name, slug, bio, bannerUrl, social_links, JSON.stringify(cleanLinks), email || '', JSON.stringify(cleanDisplay), email_role_alerts !== false, String(timezone || '').slice(0, 64), userId]);
+      WHERE id = $12
+    `, [display_name, slug, bio, bannerUrl, social_links, JSON.stringify(cleanLinks), email || '', JSON.stringify(cleanDisplay), email_role_alerts !== false, String(timezone || '').slice(0, 64), extractInviteCode(featured_invite), userId]);
 
     const themeRow = await db.query(`
       SELECT t.id, t.is_preset
@@ -501,6 +506,9 @@ app.post('/api/profile', async (req, res) => {
     const nameEffect = ['none', 'glow', 'gradient', 'rainbow', 'sparkle'].includes(theme.nameEffect)
       ? theme.nameEffect
       : 'none';
+    const particleStyle = ['dots', 'snow', 'rain', 'sakura', 'fireflies'].includes(theme.particleStyle)
+      ? theme.particleStyle
+      : 'dots';
 
     const themeFields = [
       backgroundColor,
@@ -525,6 +533,7 @@ app.post('/api/profile', async (req, res) => {
       theme.typewriterBio ? true : false,
       theme.tiltCard ? true : false,
       nameEffect,
+      particleStyle,
     ];
 
     if (themeRow.rowCount > 0 && !themeRow.rows[0].is_preset) {
@@ -551,8 +560,9 @@ app.post('/api/profile', async (req, res) => {
           entry_splash     = $19,
           typewriter_bio   = $20,
           tilt_card        = $21,
-          name_effect      = $22
-        WHERE id = $23
+          name_effect      = $22,
+          particle_style   = $23
+        WHERE id = $24
       `, [...themeFields, themeRow.rows[0].id]);
     } else {
       const insertTheme = await db.query(`
@@ -563,7 +573,7 @@ app.post('/api/profile', async (req, res) => {
           music_url, music_autoplay, custom_css,
           bg_type, bg_value, layout, font_family, card_opacity,
           particles_enabled, bg_blur_enabled,
-          entry_splash, typewriter_bio, tilt_card, name_effect
+          entry_splash, typewriter_bio, tilt_card, name_effect, particle_style
         ) VALUES (
           gen_random_uuid(), $1, false, false, false,
           $2, $3, $4, $5,
@@ -571,7 +581,7 @@ app.post('/api/profile', async (req, res) => {
           $10, $11, $12,
           $13, $14, $15, $16, $17,
           $18, $19,
-          $20, $21, $22, $23
+          $20, $21, $22, $23, $24
         ) RETURNING id
       `, [
         `Custom theme for user ${userId}`,
@@ -758,9 +768,45 @@ function isBlockedMusicUrl(url) {
     || u.includes('spotify.com') || u.includes('open.spotify.com');
 }
 
+// ── Featured Discord server (resolved from invite, cached 10 min) ────────────
+const inviteCache = new Map();
+function extractInviteCode(raw) {
+  const s = String(raw || '').trim();
+  if (!s) return null;
+  const m = s.match(/(?:discord\.gg\/|discord(?:app)?\.com\/invite\/)([\w-]{2,32})/i) || s.match(/^([\w-]{2,32})$/);
+  return m ? m[1] : null;
+}
+async function resolveFeaturedServer(inviteCode) {
+  if (!inviteCode) return null;
+  const cached = inviteCache.get(inviteCode);
+  if (cached && cached.expires > Date.now()) return cached.data;
+  try {
+    const r = await fetch(`https://discord.com/api/v10/invites/${encodeURIComponent(inviteCode)}?with_counts=true`);
+    if (!r.ok) {
+      inviteCache.set(inviteCode, { data: null, expires: Date.now() + 10 * 60 * 1000 });
+      return null;
+    }
+    const inv = await r.json();
+    const g = inv.guild || {};
+    const data = {
+      name: g.name || 'Discord Server',
+      iconUrl: g.icon ? `https://cdn.discordapp.com/icons/${g.id}/${g.icon}.${String(g.icon).startsWith('a_') ? 'gif' : 'png'}?size=128` : null,
+      members: Number(inv.approximate_member_count || 0),
+      online: Number(inv.approximate_presence_count || 0),
+      inviteUrl: `https://discord.gg/${inviteCode}`,
+    };
+    inviteCache.set(inviteCode, { data, expires: Date.now() + 10 * 60 * 1000 });
+    return data;
+  } catch {
+    return null;
+  }
+}
+
 const DEFAULT_DISPLAY_OPTIONS = {
   showBadges: true,
   showLocalTime: true,
+  showGuestbook: true,
+  showServerCard: true,
   showVerifiedBadge: true,
   showHandle: true,
   showPresence: true,
@@ -924,6 +970,182 @@ app.post('/api/analytics/event', async (req, res) => {
     res.json({ ok: true });
   } catch (err) {
     console.error('[server] /api/analytics/event error:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// ── Per-link click counts (dashboard links editor) ───────────────────────────
+app.get('/api/analytics/links', async (req, res) => {
+  try {
+    const userId = await resolveUserId(req);
+    if (!userId) return res.status(401).json({ error: 'Not authenticated' });
+    const rows = await db.query(`
+      SELECT COALESCE(metadata->>'label', 'Unknown') AS label, COUNT(*) AS cnt
+      FROM analytics_events
+      WHERE user_id = $1 AND type = 'link_click'
+        AND created_at >= NOW() - INTERVAL '30 days'
+      GROUP BY 1 ORDER BY cnt DESC
+      LIMIT 100
+    `, [userId]);
+    res.json({ clicks: rows.rows.map(r => ({ label: r.label, count: Number(r.cnt) })) });
+  } catch (err) {
+    console.error('[server] /api/analytics/links error:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// ── Guestbook ─────────────────────────────────────────────────────────────────
+async function guestbookOwnerId(slug) {
+  const r = await db.query('SELECT id FROM users WHERE slug = $1', [String(slug || '').slice(0, 64)]);
+  return r.rowCount ? r.rows[0].id : null;
+}
+
+app.get('/api/guestbook/:slug', async (req, res) => {
+  try {
+    const ownerId = await guestbookOwnerId(req.params.slug);
+    if (!ownerId) return res.status(404).json({ error: 'Not found' });
+    const viewerId = await resolveUserId(req);
+    const rows = await db.query(`
+      SELECT g.id, g.message, g.pinned, g.created_at,
+             g.author_user_id,
+             COALESCE(a.display_name, a.discord_username) AS author_name,
+             a.slug AS author_slug, a.discord_id AS author_discord_id, a.avatar_hash, a.avatar_url
+      FROM guestbook_entries g
+      JOIN users a ON a.id = g.author_user_id
+      WHERE g.profile_user_id = $1
+      ORDER BY g.pinned DESC, g.created_at DESC
+      LIMIT 50
+    `, [ownerId]);
+    res.set('Cache-Control', 'no-store');
+    res.json({
+      isOwner: viewerId === ownerId,
+      viewerSignedIn: !!viewerId,
+      entries: rows.rows.map(r => ({
+        id: r.id,
+        message: r.message,
+        pinned: r.pinned,
+        createdAt: r.created_at,
+        authorName: r.author_name,
+        authorSlug: r.author_slug,
+        authorAvatar: r.avatar_url ||
+          (r.avatar_hash ? `https://cdn.discordapp.com/avatars/${r.author_discord_id}/${r.avatar_hash}.png?size=64` : null),
+        mine: viewerId === r.author_user_id,
+      })),
+    });
+  } catch (err) {
+    console.error('[server] guestbook GET error:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+app.post('/api/guestbook/:slug', async (req, res) => {
+  try {
+    const viewerId = await resolveUserId(req);
+    if (!viewerId) return res.status(401).json({ error: 'Sign in with Discord to sign the guestbook' });
+    const ownerId = await guestbookOwnerId(req.params.slug);
+    if (!ownerId) return res.status(404).json({ error: 'Not found' });
+    if (ownerId === viewerId) return res.status(400).json({ error: "You can't sign your own guestbook" });
+
+    const message = String(req.body?.message || '').trim().slice(0, 280);
+    if (message.length < 2) return res.status(400).json({ error: 'Message too short' });
+
+    await db.query(`
+      INSERT INTO guestbook_entries (profile_user_id, author_user_id, message, created_at)
+      VALUES ($1, $2, $3, NOW())
+      ON CONFLICT (profile_user_id, author_user_id)
+      DO UPDATE SET message = EXCLUDED.message, created_at = NOW()
+    `, [ownerId, viewerId, message]);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('[server] guestbook POST error:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+app.delete('/api/guestbook/entry/:id', async (req, res) => {
+  try {
+    const viewerId = await resolveUserId(req);
+    if (!viewerId) return res.status(401).json({ error: 'Not authenticated' });
+    const result = await db.query(`
+      DELETE FROM guestbook_entries
+      WHERE id = $1 AND (profile_user_id = $2 OR author_user_id = $2)
+    `, [req.params.id, viewerId]);
+    if (!result.rowCount) return res.status(403).json({ error: 'Not allowed' });
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('[server] guestbook DELETE error:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+app.post('/api/guestbook/entry/:id/pin', async (req, res) => {
+  try {
+    const viewerId = await resolveUserId(req);
+    if (!viewerId) return res.status(401).json({ error: 'Not authenticated' });
+    const result = await db.query(`
+      UPDATE guestbook_entries SET pinned = NOT pinned
+      WHERE id = $1 AND profile_user_id = $2
+      RETURNING pinned
+    `, [req.params.id, viewerId]);
+    if (!result.rowCount) return res.status(403).json({ error: 'Not allowed' });
+    res.json({ ok: true, pinned: result.rows[0].pinned });
+  } catch (err) {
+    console.error('[server] guestbook PIN error:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// ── Discover: trending profiles this week (cached 5 min) ─────────────────────
+let discoverCache = { data: null, at: 0 };
+app.get('/api/discover', async (req, res) => {
+  try {
+    if (discoverCache.data && Date.now() - discoverCache.at < 5 * 60 * 1000) {
+      return res.json(discoverCache.data);
+    }
+    const rows = await db.query(`
+      SELECT u.slug, COALESCE(u.display_name, u.discord_username) AS name,
+             u.bio, u.discord_id, u.avatar_hash, u.avatar_url, u.plan, u.created_at,
+             t.accent_color,
+             COALESCE(v7.views, 0)  AS views_7d,
+             COALESCE(va.views, 0)  AS views_all,
+             COALESCE(r.role_count, 0) AS role_count
+      FROM users u
+      LEFT JOIN themes t ON t.id = u.theme_id
+      LEFT JOIN (
+        SELECT user_id, COUNT(*) AS views FROM analytics_events
+        WHERE type = 'profile_view' AND created_at >= NOW() - INTERVAL '7 days'
+        GROUP BY user_id
+      ) v7 ON v7.user_id = u.id
+      LEFT JOIN (
+        SELECT user_id, COUNT(*) AS views FROM analytics_events
+        WHERE type = 'profile_view' GROUP BY user_id
+      ) va ON va.user_id = u.id
+      LEFT JOIN (
+        SELECT user_id, COUNT(*) AS role_count FROM verified_roles
+        WHERE is_active = true AND is_public = true GROUP BY user_id
+      ) r ON r.user_id = u.id
+      WHERE u.slug IS NOT NULL
+      ORDER BY COALESCE(v7.views, 0) DESC, COALESCE(va.views, 0) DESC
+      LIMIT 24
+    `);
+    const data = {
+      profiles: rows.rows.map(row => ({
+        slug: row.slug,
+        name: row.name || row.slug,
+        bio: (row.bio || '').slice(0, 120),
+        avatarUrl: row.avatar_url ||
+          (row.avatar_hash ? `https://cdn.discordapp.com/avatars/${row.discord_id}/${row.avatar_hash}.png?size=128` : null),
+        accent: /^#[0-9a-fA-F]{6}$/.test(row.accent_color || '') ? row.accent_color : '#5865F2',
+        pro: String(row.plan).toUpperCase() === 'PRO',
+        views7d: Number(row.views_7d),
+        viewsAll: Number(row.views_all),
+        roleCount: Number(row.role_count),
+      })),
+    };
+    discoverCache = { data, at: Date.now() };
+    res.json(data);
+  } catch (err) {
+    console.error('[server] /api/discover error:', err);
     res.status(500).json({ error: 'Server error' });
   }
 });
@@ -1276,7 +1498,10 @@ function escapeAttr(s) {
 }
 
 app.get('/:slug', async (req, res) => {
-  const reserved = ['api', 'dashboard', 'login', 'logout', 'static', 'status', 'admin', 'og', 'privacy', 'terms'];
+  const reserved = ['api', 'dashboard', 'login', 'logout', 'static', 'status', 'admin', 'og', 'privacy', 'terms', 'discover'];
+  if (String(req.params.slug || '').toLowerCase() === 'discover') {
+    return res.sendFile(path.join(__dirname, 'public', 'discover.html'));
+  }
   const slug = String(req.params.slug || '').toLowerCase();
   if (reserved.includes(slug)) {
     return res.status(404).send('Not found');
