@@ -99,9 +99,18 @@
       backdrop-filter: blur(22px);
       -webkit-backdrop-filter: blur(22px);
       overflow: hidden;
-      box-shadow: 0 30px 90px rgba(0,0,0,0.46), inset 0 1px 0 rgba(255,255,255,0.05);
+      box-shadow: 0 30px 90px rgba(0,0,0,0.46), inset 0 1px 0 rgba(255,255,255,0.05),
+        0 0 60px rgba(var(--accent-rgb, 88,101,242), 0.08);
       position: relative;
       animation: cardSlideIn 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+      transition: transform 0.12s ease-out;
+    }
+    .card.card-loaded {
+      animation: cardSlideIn 0.6s cubic-bezier(0.16, 1, 0.3, 1), cardGlow 4s ease-in-out 0.6s infinite alternate;
+    }
+    @keyframes cardGlow {
+      from { box-shadow: 0 30px 90px rgba(0,0,0,0.46), inset 0 1px 0 rgba(255,255,255,0.05), 0 0 40px rgba(var(--accent-rgb, 88,101,242), 0.06); }
+      to   { box-shadow: 0 30px 90px rgba(0,0,0,0.46), inset 0 1px 0 rgba(255,255,255,0.05), 0 0 70px rgba(var(--accent-rgb, 88,101,242), 0.14); }
     }
     .card::before {
       content: '';
@@ -537,13 +546,64 @@
     .share-modal.open { display: flex; }
     .share-card {
       width: 100%;
-      max-width: 340px;
-      background: #14151d;
-      border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 22px;
-      padding: 26px;
+      max-width: 360px;
+      background: linear-gradient(165deg, #181922 0%, #101118 100%);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 24px;
+      padding: 24px;
       text-align: center;
-      animation: cardSlideIn 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+      animation: sharePop 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: 0 24px 80px rgba(0,0,0,0.55), 0 0 0 1px rgba(var(--accent-rgb, 88,101,242), 0.15);
+      position: relative;
+    }
+    .share-close {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.1);
+      background: rgba(255,255,255,0.05);
+      color: rgba(255,255,255,0.6);
+      cursor: pointer;
+      font-size: 16px;
+      line-height: 1;
+      transition: background 0.15s, color 0.15s;
+    }
+    .share-close:hover { background: rgba(255,255,255,0.12); color: #fff; }
+    @keyframes sharePop {
+      from { opacity: 0; transform: scale(0.92) translateY(12px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    .share-profile {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-align: left;
+      margin-bottom: 18px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+    .share-profile-avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      object-fit: cover;
+      border: 2px solid rgba(var(--accent-rgb, 88,101,242), 0.5);
+      flex-shrink: 0;
+    }
+    .share-profile-name {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.35rem;
+      letter-spacing: 1px;
+      line-height: 1.1;
+    }
+    .share-profile-handle {
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      color: rgba(245,247,251,0.45);
+      margin-top: 2px;
     }
     .share-card h3 {
       font-family: 'Space Mono', monospace;
@@ -553,13 +613,22 @@
       color: rgba(245,247,251,0.55);
       margin-bottom: 18px;
     }
+    .share-qr-wrap {
+      position: relative;
+      width: 220px;
+      margin: 0 auto 16px;
+      padding: 8px;
+      border-radius: 20px;
+      background: linear-gradient(135deg, rgba(var(--accent-rgb, 88,101,242), 0.35), rgba(var(--accent-rgb, 88,101,242), 0.05));
+      box-shadow: 0 0 40px rgba(var(--accent-rgb, 88,101,242), 0.2);
+    }
     .share-qr {
-      width: 210px;
-      height: 210px;
-      border-radius: 16px;
+      width: 100%;
+      height: auto;
+      aspect-ratio: 1;
+      border-radius: 14px;
       border: 1px solid rgba(255,255,255,0.1);
       background: #0b0b10;
-      margin: 0 auto 16px;
       display: block;
     }
     .share-url {
@@ -973,7 +1042,20 @@
       overflow: hidden;
       white-space: nowrap;
       text-overflow: ellipsis;
+      position: relative;
     }
+    .custom-link-block::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.12) 50%, transparent 60%);
+      transform: translateX(-120%);
+      pointer-events: none;
+    }
+    .custom-link-block:hover::after {
+      animation: linkShine 0.65s ease;
+    }
+    @keyframes linkShine { to { transform: translateX(120%); } }
     .custom-link-block:hover {
       transform: translateY(-2px);
       background: rgba(var(--accent-rgb, 88, 101, 242), 0.12);
@@ -1048,27 +1130,46 @@
     .spotify-bar:nth-child(3) { animation-delay: 0.3s; }
     .spotify-bar.paused { animation-play-state: paused; opacity: 0.35; }
 
-    /* ── Music player ── */
-    .music-player {
-      position: fixed;
-      bottom: 22px;
-      right: 22px;
-      z-index: 100;
-      background: rgba(17,17,17,0.9);
-      border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 16px;
-      padding: 12px 16px;
+    /* ── Inline music widget (inside card — never blocks QR/share) ── */
+    .music-inline {
       display: flex;
       align-items: center;
-      gap: 10px;
-      backdrop-filter: blur(12px);
-      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
-      min-width: 214px;
+      gap: 14px;
+      padding: 14px 16px;
+      margin-bottom: 18px;
+      border-radius: 16px;
+      background: rgba(var(--accent-rgb, 88,101,242), 0.09);
+      border: 1px solid rgba(var(--accent-rgb, 88,101,242), 0.22);
+      transition: border-color 0.25s, box-shadow 0.25s;
     }
+    .music-inline.playing {
+      border-color: rgba(var(--accent-rgb, 88,101,242), 0.45);
+      box-shadow: 0 0 24px rgba(var(--accent-rgb, 88,101,242), 0.12);
+    }
+    .music-vinyl {
+      width: 46px;
+      height: 46px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      background: conic-gradient(from 0deg, #1a1a1a, #3a3a3a, #1a1a1a, #2a2a2a, #1a1a1a);
+      border: 2px solid rgba(var(--accent-rgb, 88,101,242), 0.55);
+      position: relative;
+      box-shadow: inset 0 0 8px rgba(0,0,0,0.6);
+    }
+    .music-vinyl::after {
+      content: '';
+      position: absolute;
+      inset: 38%;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 6px rgba(var(--accent-rgb, 88,101,242), 0.8);
+    }
+    .music-vinyl.spinning { animation: vinylSpin 2.8s linear infinite; }
+    @keyframes vinylSpin { to { transform: rotate(360deg); } }
 
     .music-btn {
-      width: 32px;
-      height: 32px;
+      width: 36px;
+      height: 36px;
       border-radius: 50%;
       background: var(--accent);
       border: none;
@@ -1078,9 +1179,11 @@
       justify-content: center;
       font-size: 14px;
       flex-shrink: 0;
-      transition: background 0.15s;
+      transition: background 0.15s, transform 0.15s;
+      box-shadow: 0 4px 14px rgba(var(--accent-rgb, 88,101,242), 0.45);
+      color: #fff;
     }
-    .music-btn:hover { background: #4752C4; }
+    .music-btn:hover { filter: brightness(1.12); transform: scale(1.06); }
 
     .music-info {
       flex: 1;
@@ -1145,6 +1248,100 @@
       display: flex;
       gap: 10px;
       flex-direction: column;
+    }
+    body.share-open .profile-actions {
+      opacity: 0;
+      pointer-events: none;
+      transform: translateX(8px);
+      transition: opacity 0.25s, transform 0.25s;
+    }
+
+    /* ── Floating accent orbs ── */
+    .accent-orbs {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      overflow: hidden;
+    }
+    .orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(60px);
+      opacity: 0.35;
+      animation: orbDrift 18s ease-in-out infinite alternate;
+    }
+    .orb-1 { width: 320px; height: 320px; background: rgba(var(--accent-rgb, 88,101,242), 0.25); top: 10%; left: -5%; animation-duration: 22s; }
+    .orb-2 { width: 260px; height: 260px; background: rgba(124,92,255,0.18); bottom: 15%; right: -8%; animation-duration: 16s; animation-delay: -4s; }
+    .orb-3 { width: 180px; height: 180px; background: rgba(0,255,178,0.1); top: 55%; left: 60%; animation-duration: 20s; animation-delay: -8s; }
+    @keyframes orbDrift {
+      from { transform: translate(0, 0) scale(1); }
+      to   { transform: translate(40px, -30px) scale(1.15); }
+    }
+
+    /* ── Verified stamp pop ── */
+    .profile-kicker {
+      animation: verifyPop 0.55s cubic-bezier(0.16, 1, 0.3, 1) 0.3s both;
+    }
+    @keyframes verifyPop {
+      from { opacity: 0; transform: scale(0.85) translateY(4px); }
+      to   { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    /* ── Page load accent sweep ── */
+    .page-load-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 3px;
+      width: 0;
+      z-index: 999;
+      background: linear-gradient(90deg, var(--accent), rgba(var(--accent-rgb, 88,101,242), 0.3));
+      box-shadow: 0 0 12px rgba(var(--accent-rgb, 88,101,242), 0.6);
+      animation: loadSweep 1.1s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    }
+    @keyframes loadSweep {
+      0% { width: 0; opacity: 1; }
+      70% { width: 100%; opacity: 1; }
+      100% { width: 100%; opacity: 0; }
+    }
+
+    /* ── Stagger reveal for card sections ── */
+    .reveal-item {
+      opacity: 0;
+      transform: translateY(10px);
+      animation: revealUp 0.55s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    @keyframes revealUp {
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Click sparks ── */
+    .click-spark {
+      position: fixed;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 9999;
+      animation: sparkFly 0.55s ease-out forwards;
+    }
+    @keyframes sparkFly {
+      0% { opacity: 1; transform: translate(0, 0) scale(1); }
+      100% { opacity: 0; transform: translate(var(--sx), var(--sy)) scale(0); }
+    }
+
+    /* ── Cursor glow trail ── */
+    .cursor-glow {
+      position: fixed;
+      width: 280px;
+      height: 280px;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 0;
+      background: radial-gradient(circle, rgba(var(--accent-rgb, 88,101,242), 0.07) 0%, transparent 70%);
+      transform: translate(-50%, -50%);
+      transition: opacity 0.3s;
     }
 
     .action-btn {
@@ -1456,10 +1653,29 @@
       .claim-btn {
         width: 100%;
       }
+
+      .profile-actions {
+        bottom: 18px;
+        right: 16px;
+      }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .card.card-loaded { animation: cardSlideIn 0.6s cubic-bezier(0.16, 1, 0.3, 1); }
+      .reveal-item { opacity: 1; transform: none; animation: none; }
+      .cursor-glow { display: none; }
     }
   </style>
 </head>
 <body>
+
+<div class="accent-orbs" aria-hidden="true">
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
+</div>
+
+<div class="page-load-bar" id="loadBar"></div>
+<div class="cursor-glow" id="cursorGlow" aria-hidden="true"></div>
 
 <div class="bg-animated" id="bgEl"></div>
 <div class="bg-media" id="bgMedia"></div>
@@ -1497,8 +1713,12 @@
 <!-- Share modal -->
 <div class="share-modal" id="shareModal">
   <div class="share-card">
-    <h3>Share this profile</h3>
-    <img class="share-qr" id="shareQr" alt="QR code" loading="lazy"/>
+    <button class="share-close" type="button" id="shareCloseBtn" aria-label="Close">✕</button>
+    <div class="share-profile" id="shareProfilePreview"></div>
+    <h3>Scan to visit</h3>
+    <div class="share-qr-wrap">
+      <img class="share-qr" id="shareQr" alt="QR code" loading="lazy"/>
+    </div>
     <div class="share-url" id="shareUrl"></div>
     <div class="share-actions">
       <button class="share-btn2" id="shareCopyBtn" type="button">Copy Link</button>
@@ -1516,6 +1736,10 @@
   <button class="action-btn" id="shareBtn" title="Share Profile">
     <span class="action-tooltip">Share</span>
     <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.59 13.51l6.83 3.98M15.41 6.51l-6.82 3.98"/></svg>
+  </button>
+  <button class="action-btn" id="qrBtn" title="QR Code">
+    <span class="action-tooltip">QR Code</span>
+    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h2v2h-2zM18 14h3v3h-3zM14 18h2v3h-2zM18 18h1v1h-1zM21 18h1v1h-1zM21 21h1v1h-1z"/></svg>
   </button>
 </div>
 
@@ -1844,6 +2068,149 @@ function copyToClipboard(text) {
   });
 }
 
+function closeShareModal() {
+  document.getElementById('shareModal')?.classList.remove('open');
+  document.body.classList.remove('share-open');
+}
+
+function openShareModal(p) {
+  const url = `${window.location.origin}/${p.slug}`;
+  trackEvent('share', 'Share button');
+  const modal = document.getElementById('shareModal');
+  document.getElementById('shareQr').src = `${API_BASE}/qr/${encodeURIComponent(p.slug)}`;
+  document.getElementById('shareUrl').textContent = `cordfol.org/${p.slug}`;
+  document.getElementById('shareProfilePreview').innerHTML = `
+    <img class="share-profile-avatar" src="${escapeHtml(p.avatarUrl || 'https://cdn.discordapp.com/embed/avatars/0.png')}" alt="" onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'"/>
+    <div>
+      <div class="share-profile-name">${escapeHtml(p.displayName)}</div>
+      <div class="share-profile-handle">cordfol.org/${escapeHtml(p.slug)}</div>
+    </div>
+  `;
+  document.getElementById('shareCopyBtn').onclick = () => {
+    copyToClipboard(url);
+    trackEvent('share', 'Copy link (modal)');
+  };
+  const nativeBtn = document.getElementById('shareNativeBtn');
+  if (navigator.share) {
+    nativeBtn.style.display = '';
+    nativeBtn.onclick = () => navigator.share({ title: `${p.displayName}'s Cordfol`, url }).catch(() => {});
+  } else {
+    nativeBtn.style.display = 'none';
+  }
+  modal.classList.add('open');
+  document.body.classList.add('share-open');
+}
+
+function initProfilePolish(enableParallax = true) {
+  const card = document.getElementById('card');
+  if (card) {
+    card.classList.add('card-loaded');
+    card.querySelectorAll('.card-body > *').forEach((el, i) => {
+      el.classList.add('reveal-item');
+      el.style.animationDelay = `${0.08 + i * 0.05}s`;
+    });
+  }
+  setTimeout(() => document.getElementById('loadBar')?.remove(), 1200);
+
+  if (window._polishInit) return;
+  window._polishInit = true;
+
+  document.addEventListener('click', e => {
+    if (e.target.closest('a, button, input, .share-modal')) return;
+    const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#5865F2';
+    for (let i = 0; i < 7; i++) {
+      const s = document.createElement('div');
+      s.className = 'click-spark';
+      s.style.left = e.clientX + 'px';
+      s.style.top = e.clientY + 'px';
+      s.style.background = accent;
+      const angle = (Math.PI * 2 * i) / 7 + Math.random() * 0.4;
+      const dist = 24 + Math.random() * 28;
+      s.style.setProperty('--sx', `${Math.cos(angle) * dist}px`);
+      s.style.setProperty('--sy', `${Math.sin(angle) * dist}px`);
+      document.body.appendChild(s);
+      setTimeout(() => s.remove(), 600);
+    }
+  });
+
+  const glow = document.getElementById('cursorGlow');
+  if (glow && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    document.addEventListener('mousemove', e => {
+      glow.style.left = e.clientX + 'px';
+      glow.style.top = e.clientY + 'px';
+    });
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.target.closest('input, textarea')) return;
+    if ((e.key === 's' || e.key === 'S') && window._shareProfile) {
+      e.preventDefault();
+      openShareModal(window._shareProfile);
+    }
+  });
+
+  if (card && enableParallax && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    document.addEventListener('mousemove', e => {
+      const x = (e.clientX / window.innerWidth - 0.5) * 8;
+      const y = (e.clientY / window.innerHeight - 0.5) * 6;
+      card.style.transform = `perspective(900px) rotateY(${x * 0.15}deg) rotateX(${-y * 0.15}deg)`;
+    });
+    document.addEventListener('mouseleave', () => { card.style.transform = ''; });
+  }
+}
+
+function syncMusicUI() {
+  const btn = document.getElementById('musicBtn');
+  const vinyl = document.getElementById('musicVinyl');
+  const wrap = document.getElementById('musicInline');
+  if (btn) btn.textContent = isPlaying ? '⏸' : '▶';
+  document.querySelectorAll('.music-bar').forEach(b => b.classList.toggle('paused', !isPlaying));
+  vinyl?.classList.toggle('spinning', isPlaying);
+  wrap?.classList.toggle('playing', isPlaying);
+}
+
+function initInlineMusic(musicUrl, autoplay, entrySplash) {
+  const slot = document.getElementById('musicSlot');
+  if (!slot || !musicUrl) return;
+  if (musicUrl.includes('youtube.com') || musicUrl.includes('youtu.be')) {
+    slot.innerHTML = '<div class="gb-empty">YouTube links cannot play here — upload an MP3 in the dashboard.</div>';
+    return;
+  }
+
+  audio = new Audio(musicUrl);
+  audio.loop = true;
+  audio.crossOrigin = 'anonymous';
+  audio.onerror = () => console.error('[profile] Failed to load audio:', musicUrl);
+
+  slot.innerHTML = `
+    <div class="music-inline" id="musicInline">
+      <div class="music-vinyl" id="musicVinyl"></div>
+      <button class="music-btn" id="musicBtn" type="button">▶</button>
+      <div class="music-info">
+        <div class="music-label">Background Track</div>
+        <div class="music-bars">
+          <div class="music-bar paused" style="height:6px"></div>
+          <div class="music-bar paused" style="height:10px"></div>
+          <div class="music-bar paused" style="height:4px"></div>
+          <div class="music-bar paused" style="height:12px"></div>
+          <div class="music-bar paused" style="height:7px"></div>
+        </div>
+      </div>
+    </div>
+  `;
+  document.getElementById('musicBtn').onclick = () => toggleMusic();
+
+  if (autoplay && !entrySplash) {
+    audio.muted = true;
+    audio.play().then(() => {
+      audio.muted = false;
+      isPlaying = true;
+      syncMusicUI();
+      startVisualizer();
+    }).catch(() => {});
+  }
+}
+
 function buildMissingProfileMarkup(slug) {
   const cleanSlug = sanitizeSlug(slug);
   if (!cleanSlug) {
@@ -1871,14 +2238,12 @@ function toggleMusic() {
   if (isPlaying) {
     audio.pause();
     isPlaying = false;
-    document.getElementById('musicBtn').textContent = '▶';
-    document.querySelectorAll('.music-bar').forEach(b => b.classList.add('paused'));
+    syncMusicUI();
   } else {
     audio.muted = false;
     audio.play().then(() => {
       isPlaying = true;
-      document.getElementById('musicBtn').textContent = '⏸';
-      document.querySelectorAll('.music-bar').forEach(b => b.classList.remove('paused'));
+      syncMusicUI();
       startVisualizer();
     }).catch(err => console.error('Audio play failed:', err));
   }
@@ -1991,7 +2356,12 @@ async function renderProfile() {
   const oauthVerifiedCount = roles.filter(r => r.proofType === 'OAUTH').length;
   const socialLinks = (p.socialLinks && typeof p.socialLinks === 'object') ? p.socialLinks : {};
 
-  // Store for action buttons
+  // Store for action buttons + share modal
+  window._shareProfile = {
+    displayName: p.displayName,
+    slug: p.slug,
+    avatarUrl: p.avatarUrl,
+  };
   window.currentProfile = {
     displayName: p.displayName,
     slug: p.slug,
@@ -2004,30 +2374,14 @@ async function renderProfile() {
     copyToClipboard(`cordfol.org/${p.slug}`);
     trackEvent('share', 'Copy link');
   };
-  document.getElementById('shareBtn').onclick = () => {
-    const url = `${window.location.origin}/${p.slug}`;
-    trackEvent('share', 'Share button');
-    const modal = document.getElementById('shareModal');
-    document.getElementById('shareQr').src = `${API_BASE}/qr/${encodeURIComponent(p.slug)}`;
-    document.getElementById('shareUrl').textContent = `cordfol.org/${p.slug}`;
-    document.getElementById('shareCopyBtn').onclick = () => {
-      copyToClipboard(url);
-      trackEvent('share', 'Copy link (modal)');
-    };
-    const nativeBtn = document.getElementById('shareNativeBtn');
-    if (navigator.share) {
-      nativeBtn.style.display = '';
-      nativeBtn.onclick = () => navigator.share({ title: `${p.displayName}'s Cordfol`, url }).catch(() => {});
-    } else {
-      nativeBtn.style.display = 'none';
-    }
-    modal.classList.add('open');
-  };
+  document.getElementById('shareBtn').onclick = () => openShareModal(window._shareProfile);
+  document.getElementById('qrBtn').onclick = () => openShareModal(window._shareProfile);
   document.getElementById('shareModal').addEventListener('click', e => {
-    if (e.target === e.currentTarget) e.currentTarget.classList.remove('open');
+    if (e.target === e.currentTarget) closeShareModal();
   });
+  document.getElementById('shareCloseBtn')?.addEventListener('click', closeShareModal);
   document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') document.getElementById('shareModal').classList.remove('open');
+    if (e.key === 'Escape') closeShareModal();
   });
 
   // Apply theme
@@ -2054,53 +2408,8 @@ async function renderProfile() {
     document.head.appendChild(style);
   }
 
-  // Music
-  if (t.musicUrl) {
-    console.log('[profile] Music URL:', t.musicUrl);
-    
-    // Validate URL is a direct audio file, not a YouTube link or other embed
-    if (t.musicUrl.includes('youtube.com') || t.musicUrl.includes('youtu.be')) {
-      console.error('[profile] YouTube URLs are not supported. Use a direct audio file URL (mp3, wav, ogg, etc)');
-    } else {
-      audio = new Audio(t.musicUrl);
-      audio.loop = true;
-      audio.crossOrigin = 'anonymous';
-      audio.onerror = () => {
-        console.error('[profile] Failed to load audio:', t.musicUrl);
-      };
-      audio.oncanplay = () => {
-        console.log('[profile] Audio loaded successfully');
-      };
-      
-      if (t.musicAutoplay && !t.entrySplash) {
-        audio.muted = true;
-        audio.play().then(() => {
-          audio.muted = false;
-          isPlaying = true;
-          document.getElementById('musicBtn').textContent = '⏸';
-          document.querySelectorAll('.music-bar').forEach(b => b.classList.remove('paused'));
-          startVisualizer();
-          console.log('[profile] Audio autoplay started');
-        }).catch(err => console.error('Autoplay failed:', err));
-      }
-      const player = document.createElement('div');
-      player.className = 'music-player';
-      player.innerHTML = `
-        <button class="music-btn" id="musicBtn" onclick="toggleMusic()">${isPlaying ? '⏸' : '▶'}</button>
-        <div class="music-info">
-          <div class="music-label">Now Playing</div>
-          <div class="music-bars">
-            <div class="music-bar ${isPlaying ? '' : 'paused'}" style="height:6px"></div>
-            <div class="music-bar ${isPlaying ? '' : 'paused'}" style="height:10px"></div>
-            <div class="music-bar ${isPlaying ? '' : 'paused'}" style="height:4px"></div>
-            <div class="music-bar ${isPlaying ? '' : 'paused'}" style="height:12px"></div>
-            <div class="music-bar ${isPlaying ? '' : 'paused'}" style="height:7px"></div>
-          </div>
-        </div>
-      `;
-      document.body.appendChild(player);
-    }
-  }
+  // Music loads into card after render (never blocks QR/share buttons)
+  const hasMusic = !!(t.musicUrl && !String(t.musicUrl).includes('youtube.com') && !String(t.musicUrl).includes('youtu.be'));
 
   // Roles HTML
   const rolesHtml = (disp.showRoles && roles.length) ? `
@@ -2248,6 +2557,7 @@ async function renderProfile() {
         </div>
       </div>
       ${disp.showBio && p.bio ? `<div class="profile-bio" id="profileBio">${escapeHtml(p.bio)}</div>` : ''}
+      ${hasMusic ? '<div id="musicSlot"></div>' : ''}
       <div id="spotifySlot"></div>
       ${serverCardHtml}
       ${customLinksHtml}
@@ -2257,6 +2567,8 @@ async function renderProfile() {
       ${guestbookShellHtml}
     </div>
   `;
+
+  if (hasMusic) initInlineMusic(t.musicUrl, !!t.musicAutoplay, !!t.entrySplash);
 
   if (disp.showSpotifyWidget && p.spotify?.public) {
     initSpotifyWidget(p.slug);
@@ -2276,6 +2588,7 @@ async function renderProfile() {
   if (disp.showViews && p.viewCount) animateViewCount(document.getElementById('viewCountNum'), p.viewCount);
   if (disp.showLocalTime !== false && p.timezone) startLocalClock(p.timezone);
   if (disp.showGuestbook !== false) initGuestbook(p.slug);
+  initProfilePolish(!t.tiltCard);
 }
 
 // ── Guestbook ──
@@ -2407,9 +2720,7 @@ function showEntrySplash(p, playMusicOnEnter) {
     if (playMusicOnEnter && audio) {
       audio.play().then(() => {
         isPlaying = true;
-        const btn = document.getElementById('musicBtn');
-        if (btn) btn.textContent = '⏸';
-        document.querySelectorAll('.music-bar').forEach(b => b.classList.remove('paused'));
+        syncMusicUI();
         startVisualizer();
       }).catch(() => {});
     }

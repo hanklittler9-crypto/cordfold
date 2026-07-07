@@ -70,6 +70,10 @@ router.get('/', (req, res) => {
     });
   }
 
+  // Silent login first; if Discord refused it (see callback), retry with the
+  // normal consent screen so users who revoked access can re-authorize.
+  const needConsent = req.query.consent === '1' || req.cookies?.oauth_retry === '1';
+
   const url = [
     'https://discord.com/api/oauth2/authorize',
     `?client_id=${DISCORD_CLIENT_ID}`,
@@ -77,7 +81,7 @@ router.get('/', (req, res) => {
     '&response_type=code',
     `&scope=${SCOPES}`,
     `&state=${state}`,
-    '&prompt=none',
+    `&prompt=${needConsent ? 'consent' : 'none'}`,
   ].join('');
 
   res.redirect(url);
@@ -87,7 +91,21 @@ router.get('/', (req, res) => {
 router.get('/callback', async (req, res) => {
   const { code, state, error } = req.query;
 
-  if (error) return res.redirect('/?error=denied');
+  if (error) {
+    // prompt=none can't show UI, so Discord returns access_denied whenever
+    // re-consent is needed. Retry once with the real authorize screen.
+    if (error === 'access_denied' && req.cookies?.oauth_retry !== '1') {
+      res.cookie('oauth_retry', '1', {
+        httpOnly: true,
+        secure: true,
+        sameSite: 'none',
+        maxAge: 2 * 60 * 1000
+      });
+      return res.redirect('/api/auth/discord');
+    }
+    res.clearCookie('oauth_retry');
+    return res.redirect('/?error=denied');
+  }
   if (!state) return res.redirect('/?error=csrf');
 
   try {
@@ -171,6 +189,7 @@ router.get('/callback', async (req, res) => {
       }
       const sid = req.sessionID;
       console.log('[auth] Session saved, sid:', sid);
+      res.clearCookie('oauth_retry');
       const returnPath = String(req.cookies?.oauth_return || '');
       if (/^\/[a-z0-9\-]{1,64}$/.test(returnPath)) {
         res.clearCookie('oauth_return');
