@@ -401,6 +401,10 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
             <div class="btn-row" id="emailBtnRow" style="display:none">
               <button class="btn btn-ghost" onclick="sendVerifyEmail()">Send Verification Email</button>
             </div>
+            <div class="fx-card active" id="emailAlertsCard" onclick="toggleEmailAlerts()" style="margin-top:12px">
+              <div><div class="fx-label">📬 Role change alerts</div><div class="fx-sub">Email me when a verified role is removed from my profile (verified email only)</div></div>
+              <div class="toggle on" id="emailAlertsToggle"></div>
+            </div>
           </div>
 
           <!-- SOCIAL LINKS -->
@@ -920,6 +924,19 @@ function toggleDisplayOpt(key){
 
 function collectDisplayOptions(){
   return {...displayOpts};
+}
+
+let emailRoleAlerts=true;
+function toggleEmailAlerts(){
+  emailRoleAlerts=!emailRoleAlerts;
+  document.getElementById('emailAlertsCard').classList.toggle('active',emailRoleAlerts);
+  document.getElementById('emailAlertsToggle').classList.toggle('on',emailRoleAlerts);
+  markProfileDirty();
+}
+function setEmailAlerts(on){
+  emailRoleAlerts=on!==false;
+  document.getElementById('emailAlertsCard')?.classList.toggle('active',emailRoleAlerts);
+  document.getElementById('emailAlertsToggle')?.classList.toggle('on',emailRoleAlerts);
 }
 
 function initThemePresets(){
@@ -1637,6 +1654,7 @@ async function loadProfile(user){
     document.getElementById('instagramInput').value=data.profile.socialLinks?.instagram||'';
     setCustomLinks(data.profile.customLinks);
     setDisplayOptions(data.profile.displayOptions);
+    setEmailAlerts(data.profile.emailRoleAlerts);
     document.getElementById('emailInput').value=data.profile.email||'';
     if(data.profile.emailVerified){
       document.getElementById('emailVerifiedBadge').style.display='inline-flex';
@@ -1745,6 +1763,7 @@ async function saveProfile(){
     },
     custom_links:collectCustomLinks(),
     display_options:collectDisplayOptions(),
+    email_role_alerts:emailRoleAlerts,
     theme:{
       accentColor:document.getElementById('accentColorInput').value,textColor:document.getElementById('textColorInput').value,
       cardColor:document.getElementById('cardColorInput').value,cardOpacity:document.getElementById('cardOpacityInput').value,

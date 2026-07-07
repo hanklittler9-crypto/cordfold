@@ -239,7 +239,7 @@ app.get('/api/profile/:slug', async (req, res) => {
       SELECT
         u.id, u.discord_id, u.discord_username, u.display_name, u.bio,
         u.avatar_hash, u.avatar_url, u.banner_url, u.social_links, u.custom_links, u.plan,
-        u.email, u.email_verified,
+        u.email, u.email_verified, u.email_role_alerts,
         u.spotify_enabled, u.spotify_public,
         t.background_color, t.accent_color, t.text_color, t.card_color,
         t.glass_enabled, t.glass_blur, t.glass_opacity, t.animated_bg,
@@ -314,6 +314,7 @@ app.get('/api/profile/:slug', async (req, res) => {
         customLinks: user.custom_links || [],
         email:       user.email,
         emailVerified: user.email_verified || false,
+        emailRoleAlerts: user.email_role_alerts !== false,
         plan:        user.plan,
         spotify: {
           public: !!(user.spotify_enabled && user.spotify_public),
@@ -390,6 +391,7 @@ app.post('/api/profile', async (req, res) => {
       social_links,
       custom_links,
       email,
+      email_role_alerts,
       display_options,
       theme = {}
     } = req.body;
@@ -428,9 +430,10 @@ app.post('/api/profile', async (req, res) => {
         custom_links = $6,
         email = NULLIF(TRIM($7), ''),
         display_options = $8,
+        email_role_alerts = $9,
         updated_at = NOW()
-      WHERE id = $9
-    `, [display_name, slug, bio, bannerUrl, social_links, JSON.stringify(cleanLinks), email || '', JSON.stringify(cleanDisplay), userId]);
+      WHERE id = $10
+    `, [display_name, slug, bio, bannerUrl, social_links, JSON.stringify(cleanLinks), email || '', JSON.stringify(cleanDisplay), email_role_alerts !== false, userId]);
 
     const themeRow = await db.query(`
       SELECT t.id, t.is_preset

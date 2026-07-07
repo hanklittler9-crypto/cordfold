@@ -14,6 +14,7 @@
 const express  = require('express');
 const { Pool } = require('pg');
 const { getValidAccessToken } = require('./discord');
+const { maybeSendRoleChangeAlert } = require('./email');
 
 const router = express.Router();
 
@@ -137,6 +138,17 @@ router.patch('/roles/:id', requireAuth, async (req, res) => {
 // ─────────────────────────────────────────────────────────────────────────────
 async function runScanForUser(userId) {
   console.log(`[scan] Starting scan for user ${userId}`);
+
+  // Snapshot active roles so we can email the user about anything that drops
+  let rolesBefore = [];
+  try {
+    const snap = await db.query(`
+      SELECT guild_id, role_id, role_name, custom_label, guild_name
+      FROM verified_roles
+      WHERE user_id = $1 AND is_active = true
+    `, [userId]);
+    rolesBefore = snap.rows;
+  } catch { /* non-critical */ }
 
   let accessToken;
   try {
@@ -265,6 +277,30 @@ async function runScanForUser(userId) {
     'UPDATE users SET updated_at = NOW() WHERE id = $1',
     [userId]
   );
+
+  // ── Email alert for roles that went inactive this scan ──────────────────────
+  if (rolesBefore.length) {
+    try {
+      const after = await db.query(`
+        SELECT guild_id, role_id FROM verified_roles
+        WHERE user_id = $1 AND is_active = true
+      `, [userId]);
+      const stillActive = new Set(after.rows.map(r => `${r.guild_id}:${r.role_id}`));
+      const lostRoles = rolesBefore
+        .filter(r => !stillActive.has(`${r.guild_id}:${r.role_id}`))
+        .map(r => ({
+          roleName: r.custom_label || r.role_name,
+          roleId: r.role_id,
+          guildName: r.guild_name,
+        }));
+
+      if (lostRoles.length) {
+        maybeSendRoleChangeAlert(db, userId, lostRoles).catch(err =>
+          console.error('[scan] Role alert failed:', err.message)
+        );
+      }
+    } catch { /* non-critical */ }
+  }
 
   console.log(`[scan] Scan complete for user ${userId}. ${guilds.length} guilds processed.`);
   return { ok: true, guildsScanned: guilds.length };
