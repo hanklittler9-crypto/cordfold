@@ -27,6 +27,9 @@ const createSpotifyRouter = require('./spotify');
 const app  = express();
 const PORT = process.env.PORT || 3000;
 
+// Trust Cloudflare Tunnel / reverse proxy so req.secure and X-Forwarded-* are honored
+app.set('trust proxy', 1);
+
 // ── CORS ─────────────────────────────────────────────────────────────────────
 const FRONTEND_ORIGIN = [
   'https://dashboard.cordfol.org',
@@ -65,6 +68,7 @@ app.use(session({
   secret: process.env.SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
+  proxy: true,
   cookie: {
     httpOnly: true,
     secure: true,
