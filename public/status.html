@@ -54,13 +54,18 @@
       z-index: 100;
     }
     .nav-logo {
-      font-family: 'IBM Plex Mono', monospace;
-      font-size: 13px;
-      letter-spacing: 2px;
+      font-family: 'Syne', sans-serif;
+      font-size: 14px;
+      letter-spacing: 0.12em;
       text-transform: uppercase;
-      color: var(--discord);
-      font-weight: 700;
+      color: var(--text);
+      font-weight: 800;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
     }
+    .nav-logo img { width: 20px; height: 20px; display: block; }
     .nav-links {
       display: flex;
       gap: 24px;
@@ -297,7 +302,7 @@
 </head>
 <body>
   <nav>
-    <div class="nav-logo">Cordfol Status</div>
+    <div class="nav-logo"><img src="/logo.svg" alt=""/>Cordfol Status</div>
     <div class="nav-links">
       <a href="/">← Home</a>
       <a href="/admin">Admin Panel</a>

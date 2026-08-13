@@ -30,6 +30,27 @@ const PORT = process.env.PORT || 3000;
 // Trust Cloudflare Tunnel / reverse proxy so req.secure and X-Forwarded-* are honored
 app.set('trust proxy', 1);
 
+// ── Upload limits (self-hosted, generous) ────────────────────────────────────
+// Media is posted as base64 JSON (~133% of raw size). A 100MB file needs ~134MB
+// of body, so Express must be ≥150mb. If you terminate TLS via nginx/Caddy, also
+// raise client_max_body_size / request_body_size there. Cloudflare orange-cloud
+// proxy caps uploads ~100MB — use Tunnel grey-cloud or direct origin for larger.
+const MUSIC_UPLOAD_DIR = path.join(__dirname, 'public', 'uploads', 'music');
+const MEDIA_UPLOAD_DIR = path.join(__dirname, 'public', 'uploads', 'media');
+const API_ORIGIN = process.env.API_ORIGIN || 'https://api.cordfol.org';
+const MAX_MUSIC_BYTES = 25 * 1024 * 1024;       // MP3 / audio
+const MAX_MEDIA_BYTES = 100 * 1024 * 1024;      // banner / video / media picker
+const MAX_BG_IMAGE_BYTES = 40 * 1024 * 1024;    // background GIF / still images
+const MAX_DATA_URL_IN_DB = 12 * 1024;           // reject embedded blobs — use /uploads
+const EXPRESS_BODY_LIMIT = '150mb';
+
+try {
+  fs.mkdirSync(MUSIC_UPLOAD_DIR, { recursive: true });
+  fs.mkdirSync(MEDIA_UPLOAD_DIR, { recursive: true });
+} catch (err) {
+  console.error('[uploads] Could not create upload dir:', err.message);
+}
+
 // ── CORS ─────────────────────────────────────────────────────────────────────
 const FRONTEND_ORIGIN = [
   'https://dashboard.cordfol.org',
@@ -45,8 +66,8 @@ app.use(cors({
 
 // ── Middleware ───────────────────────────────────────────────────────────────
 app.use(cookieParser());
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+app.use(express.json({ limit: EXPRESS_BODY_LIMIT }));
+app.use(express.urlencoded({ extended: true, limit: EXPRESS_BODY_LIMIT }));
 
 // ── Database ─────────────────────────────────────────────────────────────────
 const db = new Pool({
@@ -235,6 +256,123 @@ app.use('/api/profile', async (req, res, next) => {
   }
   next();
 });
+
+// Fast dashboard profile — no view-count scan, invite resolve, or public roles
+app.get('/api/dashboard/profile', async (req, res) => {
+  try {
+    const { sid } = req.query;
+    if (sid && !req.session?.userId) {
+      try {
+        const result = await db.query('SELECT sess FROM user_sessions WHERE sid = $1', [sid]);
+        if (result.rowCount > 0 && result.rows[0].sess?.userId) {
+          req.session.userId = result.rows[0].sess.userId;
+        }
+      } catch (err) {
+        console.error('[dashboard/profile] Session lookup error:', err);
+      }
+    }
+
+    const userId = req.session?.userId;
+    if (!userId) return res.status(401).json({ authenticated: false, error: 'Not authenticated' });
+
+    const userResult = await db.query(`
+      SELECT
+        u.id, u.discord_id, u.discord_username, u.display_name, u.bio, u.slug,
+        u.avatar_hash, u.avatar_url, u.banner_url, u.social_links, u.custom_links, u.plan,
+        u.timezone, u.featured_invite,
+        u.email, u.email_verified, u.email_role_alerts,
+        u.spotify_enabled, u.spotify_public, u.display_options,
+        t.background_color, t.accent_color, t.text_color, t.card_color,
+        t.glass_enabled, t.glass_blur, t.glass_opacity, t.animated_bg,
+        t.music_url, t.music_autoplay, t.custom_css,
+        t.bg_type, t.bg_value, t.layout, t.font_family,
+        t.card_opacity, t.particles_enabled, t.bg_blur_enabled,
+        t.entry_splash, t.typewriter_bio, t.tilt_card, t.name_effect, t.particle_style
+      FROM users u
+      LEFT JOIN themes t ON t.id = u.theme_id
+      WHERE u.id = $1
+    `, [userId]);
+
+    if (userResult.rowCount === 0) {
+      return res.status(401).json({ authenticated: false, error: 'User not found' });
+    }
+
+    const user = userResult.rows[0];
+    const rawMusic = user.music_url || null;
+    const musicIsEmbedded = rawMusic && String(rawMusic).startsWith('data:');
+
+    res.set('Cache-Control', 'private, no-store, must-revalidate');
+    res.json({
+      authenticated: true,
+      user: {
+        discordId: user.discord_id,
+        username: user.discord_username,
+        avatarUrl: user.avatar_url ||
+          (user.avatar_hash
+            ? `https://cdn.discordapp.com/avatars/${user.discord_id}/${user.avatar_hash}.${String(user.avatar_hash).startsWith('a_') ? 'gif' : 'png'}?size=128`
+            : null),
+        slug: user.slug,
+        displayName: user.display_name,
+        bio: user.bio,
+        plan: user.plan,
+      },
+      profile: {
+        slug: user.slug,
+        discordId: user.discord_id,
+        displayName: user.display_name || user.discord_username,
+        bio: user.bio,
+        avatarUrl: user.avatar_url ||
+          (user.avatar_hash
+            ? `https://cdn.discordapp.com/avatars/${user.discord_id}/${user.avatar_hash}.${String(user.avatar_hash).startsWith('a_') ? 'gif' : 'png'}?size=256`
+            : null),
+        timezone: user.timezone || null,
+        bannerUrl: user.banner_url,
+        socialLinks: user.social_links || {},
+        customLinks: user.custom_links || [],
+        email: user.email,
+        emailVerified: user.email_verified || false,
+        emailRoleAlerts: user.email_role_alerts !== false,
+        plan: user.plan,
+        spotify: { public: !!(user.spotify_enabled && user.spotify_public) },
+        viewCount: 0,
+        displayOptions: normalizeDisplayOptions(user.display_options),
+        featuredInvite: user.featured_invite || null,
+        featuredServer: null,
+      },
+      theme: {
+        backgroundColor: user.background_color || '#0d0d0d',
+        accentColor: user.accent_color || '#5865F2',
+        textColor: user.text_color || '#ffffff',
+        cardColor: user.card_color || '#111111',
+        cardOpacity: user.card_opacity != null ? user.card_opacity : 0.92,
+        glassEnabled: user.glass_enabled || false,
+        glassmorphism: user.glass_enabled || false,
+        glassBlur: user.glass_blur || 12,
+        glassOpacity: user.glass_opacity || 0.15,
+        animatedBg: user.animated_bg || false,
+        musicUrl: musicIsEmbedded ? null : (rawMusic || null),
+        musicLegacy: musicIsEmbedded || false,
+        musicAutoplay: user.music_autoplay || false,
+        customCss: user.custom_css || null,
+        bgType: user.bg_type || 'solid',
+        bgValue: user.bg_value || null,
+        layout: user.layout || 'centered',
+        font: user.font_family || 'DM Sans',
+        particles: user.particles_enabled || false,
+        bgBlur: user.bg_blur_enabled || false,
+        entrySplash: user.entry_splash || false,
+        typewriterBio: user.typewriter_bio || false,
+        tiltCard: user.tilt_card || false,
+        nameEffect: user.name_effect || 'none',
+        particleStyle: user.particle_style || 'dots',
+      },
+    });
+  } catch (err) {
+    console.error('[server] /api/dashboard/profile error:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 app.get('/api/profile/:slug', async (req, res) => {
   const { slug } = req.params;
 
@@ -641,7 +779,7 @@ app.post('/api/profile/music-upload', async (req, res) => {
 
     if (!buf.length) return res.status(400).json({ error: 'Empty file' });
     if (buf.length > MAX_MUSIC_BYTES) {
-      return res.status(400).json({ error: 'File too large (max 5MB)' });
+      return res.status(400).json({ error: 'File too large (max 25MB)' });
     }
 
     const ext = filename && /\.(mp3|wav|ogg|m4a)$/i.test(filename)
@@ -678,9 +816,6 @@ app.post('/api/profile/media-upload', async (req, res) => {
     }
 
     if (!buf.length) return res.status(400).json({ error: 'Empty file' });
-    if (buf.length > MAX_MEDIA_BYTES) {
-      return res.status(400).json({ error: 'File too large (max 12MB)' });
-    }
 
     const allowed = {
       'image/jpeg': '.jpg',
@@ -701,12 +836,20 @@ app.post('/api/profile/media-upload', async (req, res) => {
     if (!ext) return res.status(400).json({ error: 'Unsupported file type' });
 
     const kindSafe = ['banner', 'bg'].includes(kind) ? kind : 'media';
+    const isVideo = ext === '.mp4' || ext === '.webm';
+    // BG stills/GIFs: 40MB; banner + any video + media picker: 100MB
+    const maxBytes = (kindSafe === 'bg' && !isVideo) ? MAX_BG_IMAGE_BYTES : MAX_MEDIA_BYTES;
+    const maxMb = Math.round(maxBytes / (1024 * 1024));
+    if (buf.length > maxBytes) {
+      return res.status(400).json({ error: `File too large (max ${maxMb}MB)` });
+    }
+
     const safeName = `${String(userId).replace(/[^a-zA-Z0-9-]/g, '')}-${kindSafe}-${Date.now()}${ext}`;
     await fs.promises.writeFile(path.join(MEDIA_UPLOAD_DIR, safeName), buf);
 
     res.json({
       url: `${API_ORIGIN}/uploads/media/${safeName}`,
-      type: ext === '.mp4' || ext === '.webm' ? 'video' : (ext === '.gif' ? 'gif' : 'image'),
+      type: isVideo ? 'video' : (ext === '.gif' ? 'gif' : 'image'),
     });
   } catch (err) {
     console.error('[server] /api/profile/media-upload error:', err);
@@ -823,20 +966,6 @@ function discordMemberSince(discordId) {
   } catch {
     return null;
   }
-}
-
-const MUSIC_UPLOAD_DIR = path.join(__dirname, 'public', 'uploads', 'music');
-const MEDIA_UPLOAD_DIR = path.join(__dirname, 'public', 'uploads', 'media');
-const API_ORIGIN = process.env.API_ORIGIN || 'https://api.cordfol.org';
-const MAX_MUSIC_BYTES = 5 * 1024 * 1024;
-const MAX_MEDIA_BYTES = 12 * 1024 * 1024;
-const MAX_DATA_URL_IN_DB = 12 * 1024; // reject embedded blobs — use /uploads instead
-
-try {
-  fs.mkdirSync(MUSIC_UPLOAD_DIR, { recursive: true });
-  fs.mkdirSync(MEDIA_UPLOAD_DIR, { recursive: true });
-} catch (err) {
-  console.error('[uploads] Could not create upload dir:', err.message);
 }
 
 function isBlockedMusicUrl(url) {
@@ -1637,6 +1766,16 @@ app.get('/:slug', async (req, res) => {
   }
 
   res.type('html').send(html);
+});
+
+// Clear JSON 413 when body exceeds EXPRESS_BODY_LIMIT (base64 uploads)
+app.use((err, req, res, next) => {
+  if (err?.type === 'entity.too.large' || err?.status === 413) {
+    return res.status(413).json({
+      error: `Upload too large (server body limit ${EXPRESS_BODY_LIMIT}). Try a smaller file, or raise any reverse-proxy body limit.`,
+    });
+  }
+  return next(err);
 });
 
 // ── Start Server ──────────────────────────────────────────────────────────────

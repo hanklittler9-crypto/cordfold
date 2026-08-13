@@ -21,7 +21,8 @@ body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);disp
 body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 46% 34% at 88% 0%,rgba(196,107,255,0.12),transparent 65%),radial-gradient(ellipse 34% 28% at 0% 100%,rgba(88,101,242,0.06),transparent 60%);pointer-events:none;}
 body::after{content:'';position:fixed;inset:0;opacity:0.028;pointer-events:none;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");}
 .topbar{height:60px;min-height:60px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 22px;background:rgba(0,0,0,0.82);backdrop-filter:blur(18px);position:relative;z-index:50;flex-shrink:0;}
-.topbar-logo{font-family:'Syne',sans-serif;font-size:15px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;color:var(--text);text-decoration:none;}
+.topbar-logo{display:inline-flex;align-items:center;gap:10px;font-family:'Syne',sans-serif;font-size:15px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;color:var(--text);text-decoration:none;}
+.topbar-logo img{width:22px;height:22px;display:block;flex-shrink:0;}
 .topbar-logo span{color:rgba(255,255,255,0.45);}
 .topbar-right{display:flex;align-items:center;gap:12px;}
 .plan-badge{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:1px;padding:5px 10px;border-radius:999px;background:rgba(255,255,255,0.05);color:var(--muted2);border:1px solid var(--border);}
@@ -248,6 +249,37 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
 .modal-title{font-size:16px;font-weight:500;margin-bottom:8px;}
 .modal-desc{font-size:13px;color:var(--muted2);line-height:1.6;margin-bottom:24px;}
 .modal-actions{display:flex;gap:10px;justify-content:flex-end;}
+
+/* ── First-time onboarding wizard ── */
+.onboard-overlay{position:fixed;inset:0;z-index:800;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(0,0,0,0.72);backdrop-filter:blur(14px);opacity:0;pointer-events:none;transition:opacity 0.25s;}
+.onboard-overlay.open{opacity:1;pointer-events:all;}
+.onboard-modal{width:min(520px,100%);background:linear-gradient(180deg,#141414,#0c0c0c);border:1px solid rgba(255,255,255,0.1);border-radius:22px;padding:28px 28px 22px;box-shadow:0 30px 80px rgba(0,0,0,0.55);transform:translateY(12px) scale(0.98);transition:transform 0.28s cubic-bezier(0.22,1,0.36,1);position:relative;overflow:hidden;}
+.onboard-overlay.open .onboard-modal{transform:none;}
+.onboard-modal::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 70% 50% at 80% 0%,rgba(196,107,255,0.16),transparent 60%);pointer-events:none;}
+.onboard-kicker{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted2);margin-bottom:10px;position:relative;}
+.onboard-title{font-family:'Syne',sans-serif;font-weight:800;font-size:clamp(22px,4vw,28px);letter-spacing:-0.02em;text-transform:uppercase;margin-bottom:10px;position:relative;line-height:1.05;}
+.onboard-copy{font-size:14px;color:var(--muted2);line-height:1.65;margin-bottom:22px;position:relative;}
+.onboard-steps{display:flex;gap:6px;margin-bottom:22px;position:relative;}
+.onboard-dot{flex:1;height:4px;border-radius:999px;background:rgba(255,255,255,0.08);}
+.onboard-dot.on{background:var(--discord);}
+.onboard-dot.done{background:rgba(61,214,140,0.7);}
+.onboard-panel{display:none;position:relative;}
+.onboard-panel.active{display:block;}
+.onboard-input-row{display:flex;gap:0;margin-bottom:14px;}
+.onboard-prefix{height:42px;display:flex;align-items:center;padding:0 12px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-right:none;border-radius:12px 0 0 12px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted2);white-space:nowrap;}
+.onboard-input{flex:1;height:42px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:0 12px 12px 0;padding:0 12px;color:var(--text);font-family:'Outfit',sans-serif;font-size:14px;outline:none;}
+.onboard-input:focus{border-color:rgba(196,107,255,0.45);}
+.onboard-hint{font-size:11px;color:var(--muted2);margin-bottom:18px;min-height:16px;}
+.onboard-hint.ok{color:var(--neon);}
+.onboard-hint.err{color:var(--hot);}
+.onboard-actions{display:flex;justify-content:space-between;gap:10px;align-items:center;position:relative;margin-top:8px;}
+.onboard-skip{background:none;border:none;color:var(--muted2);font-size:12px;cursor:pointer;padding:8px 4px;}
+.onboard-skip:hover{color:var(--text);}
+.onboard-checklist{display:flex;flex-direction:column;gap:8px;margin-bottom:8px;}
+.onboard-check{display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:12px;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.03);font-size:13px;}
+.onboard-check .mark{width:20px;height:20px;border-radius:50%;border:1.5px solid rgba(255,255,255,0.2);display:inline-flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0;}
+.onboard-check.done .mark{background:var(--neon);border-color:var(--neon);color:#000;font-weight:700;}
+.onboard-check.done{opacity:0.7;}
 .notif-dot{width:7px;height:7px;border-radius:50%;background:var(--hot);margin-left:auto;flex-shrink:0;}
 .profile-layout{display:grid;grid-template-columns:minmax(0,1fr) 270px;gap:18px;}
 .preview-card{padding:14px;}
@@ -293,7 +325,7 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
 <body>
 
 <div class="topbar">
-  <a href="/" class="topbar-logo">CORD<span>FOL</span></a>
+  <a href="/" class="topbar-logo"><img src="/logo.svg" alt=""/>CORD<span>FOL</span></a>
   <div class="topbar-right" id="topbarRight">
     <button id="loginBtn" class="btn btn-primary" onclick="goToDiscordLogin()">Login with Discord</button>
     <div id="userInfo" style="display:none">
@@ -466,7 +498,7 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
           <div class="card">
             <div class="card-title">Profile Banner</div>
             <div class="media-preview-box" id="bannerPreviewBox" onclick="openMediaPicker('banner')">
-              <div class="media-preview-label">🖼️ Click to choose banner<br><span style="font-size:10px;opacity:0.6">Image · GIF · Video · Preset</span></div>
+              <div class="media-preview-label">🖼️ Click to choose banner<br><span style="font-size:10px;opacity:0.6">Image · GIF · Video · Max 100MB</span></div>
             </div>
             <div class="btn-row">
               <button class="btn btn-ghost" onclick="openMediaPicker('banner')">Change Banner</button>
@@ -507,7 +539,7 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
             <div class="bg-panel" id="bg-panel-gif">
               <div class="drop-zone" onclick="document.getElementById('gifUpload').click()" ondragover="event.preventDefault();this.classList.add('dragover')" ondragleave="this.classList.remove('dragover')" ondrop="handleBgDrop(event,'gif')">
                 <div class="drop-zone-icon">🎞️</div>
-                <div class="drop-zone-text">Drop a GIF here or click to browse<br><span style="font-size:10px;opacity:0.6">Max 8MB · Will loop automatically</span></div>
+                <div class="drop-zone-text">Drop a GIF here or click to browse<br><span style="font-size:10px;opacity:0.6">Max 40MB · Will loop automatically</span></div>
                 <input type="file" id="gifUpload" accept=".gif" onchange="handleBgUpload(event,'gif')"/>
               </div>
               <div class="field" style="margin-top:12px"><div class="field-label">Or paste GIF URL</div><input class="field-input" id="gifUrlInput" placeholder="https://...gif" oninput="updatePreview()"/></div>
@@ -516,7 +548,7 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
             <div class="bg-panel" id="bg-panel-video">
               <div class="drop-zone" onclick="document.getElementById('videoUpload').click()" ondragover="event.preventDefault();this.classList.add('dragover')" ondragleave="this.classList.remove('dragover')" ondrop="handleBgDrop(event,'video')">
                 <div class="drop-zone-icon">📹</div>
-                <div class="drop-zone-text">Drop a video here or click to browse<br><span style="font-size:10px;opacity:0.6">MP4 · WebM · Max 20MB · Plays muted, looping</span></div>
+                <div class="drop-zone-text">Drop a video here or click to browse<br><span style="font-size:10px;opacity:0.6">MP4 · WebM · Max 100MB · Plays muted, looping</span></div>
                 <input type="file" id="videoUpload" accept=".mp4,.webm,.ogg" onchange="handleBgUpload(event,'video')"/>
               </div>
               <div class="field" style="margin-top:12px"><div class="field-label">Or paste video URL</div><input class="field-input" id="videoUrlInput" placeholder="https://...mp4" oninput="updatePreview()"/></div>
@@ -627,7 +659,7 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
               <div class="field">
                 <div class="field-label">Upload MP3</div>
                 <input class="field-input" type="file" id="musicFileInput" accept=".mp3,.wav,.ogg,.m4a,audio/*" onchange="handleMusicUpload(event)"/>
-                <div class="field-hint" id="uploadStatus">Max 5MB · MP3, WAV, OGG, M4A</div>
+                <div class="field-hint" id="uploadStatus">Max 25MB · MP3, WAV, OGG, M4A</div>
               </div>
               <div class="field"><div class="field-label">Or paste direct file URL</div><input class="field-input" id="musicUrlInput" placeholder="https://files.catbox.moe/yourtrack.mp3" oninput="validateMusicUrlInput();updatePreview()"/><div class="field-hint" id="musicUrlHint">Direct MP3/WAV/OGG link only — not YouTube or Spotify pages.</div></div>
               <div class="field" id="musicLegacyWarn" style="display:none"><div class="field-hint" style="color:var(--amber)">Your old embedded track was cleared for speed — re-upload an MP3 above, then Save.</div></div>
@@ -806,6 +838,101 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
   </div>
 </div>
 
+<!-- FIRST-TIME ONBOARDING WIZARD -->
+<div class="onboard-overlay" id="onboardWizard" role="dialog" aria-modal="true" aria-labelledby="onboardTitle">
+  <div class="onboard-modal">
+    <div class="onboard-steps" id="onboardDots" aria-hidden="true">
+      <div class="onboard-dot on"></div>
+      <div class="onboard-dot"></div>
+      <div class="onboard-dot"></div>
+      <div class="onboard-dot"></div>
+      <div class="onboard-dot"></div>
+    </div>
+
+    <div class="onboard-panel active" data-step="0">
+      <div class="onboard-kicker"><img src="/logo.svg" alt="" width="14" height="14" style="vertical-align:-2px;margin-right:6px"/>Welcome to Cordfol</div>
+      <div class="onboard-title" id="onboardTitle">Your verified profile starts here</div>
+      <div class="onboard-copy">Claim a handle, write a short bio, pick a layout — then share a link that actually proves your Discord roles.</div>
+      <div class="onboard-actions">
+        <button type="button" class="onboard-skip" onclick="skipOnboardWizard()">Skip for now</button>
+        <button type="button" class="btn btn-primary" onclick="onboardNext()">Get started</button>
+      </div>
+    </div>
+
+    <div class="onboard-panel" data-step="1">
+      <div class="onboard-kicker">Step 1 of 4</div>
+      <div class="onboard-title">Claim your handle</div>
+      <div class="onboard-copy">This is your public URL. Keep it short and memorable.</div>
+      <div class="field" style="margin-bottom:12px">
+        <div class="field-label">Display name</div>
+        <input class="field-input" id="onboardDisplayName" placeholder="Your name" maxlength="40"/>
+      </div>
+      <div class="onboard-input-row">
+        <div class="onboard-prefix">cordfol.org/</div>
+        <input class="onboard-input" id="onboardSlug" placeholder="your-handle" maxlength="32" autocomplete="off" spellcheck="false"/>
+      </div>
+      <div class="onboard-hint" id="onboardSlugHint">Letters, numbers, and hyphens only</div>
+      <div class="onboard-actions">
+        <button type="button" class="btn btn-ghost" onclick="onboardBack()">Back</button>
+        <button type="button" class="btn btn-primary" id="onboardSlugContinue" onclick="onboardNext()">Continue</button>
+      </div>
+    </div>
+
+    <div class="onboard-panel" data-step="2">
+      <div class="onboard-kicker">Step 2 of 4</div>
+      <div class="onboard-title">Write a short bio</div>
+      <div class="onboard-copy">One or two lines is enough. You can add banners, music, and big uploads later — up to 100MB on this server.</div>
+      <textarea class="field-input" id="onboardBio" rows="3" maxlength="280" placeholder="Who you are, what you build, where people can find you…" style="resize:vertical;min-height:88px"></textarea>
+      <div class="onboard-hint" id="onboardBioHint" style="margin-top:10px">Optional — you can skip</div>
+      <div class="onboard-actions">
+        <button type="button" class="btn btn-ghost" onclick="onboardBack()">Back</button>
+        <div style="display:flex;gap:8px">
+          <button type="button" class="btn btn-ghost" onclick="onboardNext(true)">Skip</button>
+          <button type="button" class="btn btn-primary" onclick="onboardNext()">Continue</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="onboard-panel" data-step="3">
+      <div class="onboard-kicker">Step 3 of 4</div>
+      <div class="onboard-title">Pick a layout</div>
+      <div class="onboard-copy">Centered is the modern guns.lol-style stack. Card keeps a classic banner frame.</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px;position:relative">
+        <button type="button" class="layout-btn selected" id="onboardLayoutCentered" onclick="setOnboardLayout('centered')" style="padding:16px;text-align:left">
+          <div class="layout-name" style="font-weight:700;margin-bottom:4px">Centered</div>
+          <div style="font-size:11px;color:var(--muted2);line-height:1.4">Round avatar · floating status · open stack</div>
+        </button>
+        <button type="button" class="layout-btn" id="onboardLayoutCard" onclick="setOnboardLayout('card')" style="padding:16px;text-align:left">
+          <div class="layout-name" style="font-weight:700;margin-bottom:4px">Card</div>
+          <div style="font-size:11px;color:var(--muted2);line-height:1.4">Banner header · framed profile card</div>
+        </button>
+      </div>
+      <div class="onboard-actions">
+        <button type="button" class="btn btn-ghost" onclick="onboardBack()">Back</button>
+        <button type="button" class="btn btn-primary" onclick="onboardNext()">Continue</button>
+      </div>
+    </div>
+
+    <div class="onboard-panel" data-step="4">
+      <div class="onboard-kicker">You're live</div>
+      <div class="onboard-title">Share your page</div>
+      <div class="onboard-copy">Copy your link, then finish setup in the dashboard — scan roles, upload media, connect Spotify.</div>
+      <div class="onboard-input-row" style="margin-bottom:10px">
+        <input class="onboard-input" id="onboardShareUrl" readonly style="border-radius:12px;font-family:'IBM Plex Mono',monospace;font-size:12px"/>
+      </div>
+      <div class="onboard-checklist" id="onboardFinishList">
+        <div class="onboard-check"><span class="mark">1</span> Scan Discord roles on Verify</div>
+        <div class="onboard-check"><span class="mark">2</span> Add a banner or background (up to 100MB)</div>
+        <div class="onboard-check"><span class="mark">3</span> Drop social links so people can follow you</div>
+      </div>
+      <div class="onboard-actions">
+        <button type="button" class="btn btn-ghost" onclick="copyOnboardLink()">Copy link</button>
+        <button type="button" class="btn btn-primary" onclick="finishOnboardWizard()">Open dashboard</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- MEDIA PICKER MODAL -->
 <div class="modal-overlay" id="mediaPickerModal" onclick="closeMediaPicker(event)">
   <div class="modal wide">
@@ -823,7 +950,7 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
     <div class="media-tab-panel" id="media-panel-upload">
       <div class="drop-zone" onclick="document.getElementById('mediaFileInput').click()" ondragover="event.preventDefault();this.classList.add('dragover')" ondragleave="this.classList.remove('dragover')" ondrop="handleMediaDrop(event)">
         <div class="drop-zone-icon">📁</div>
-        <div class="drop-zone-text">Drop image, GIF, or video here<br><span style="font-size:10px;opacity:0.6">PNG · JPG · GIF · MP4 · WebM · Max 15MB</span></div>
+        <div class="drop-zone-text">Drop image, GIF, or video here<br><span style="font-size:10px;opacity:0.6">PNG · JPG · GIF · MP4 · WebM · Max 100MB</span></div>
         <input type="file" id="mediaFileInput" accept="image/*,.gif,video/mp4,video/webm" onchange="handleMediaUpload(event)"/>
       </div>
       <div class="field-hint" id="mediaUploadStatus" style="margin-top:10px;text-align:center"></div>
@@ -1190,9 +1317,9 @@ function handleMediaUpload(e){
 }
 
 function processMediaFile(file){
-  const max=12*1024*1024;
+  const max=100*1024*1024;
   const status=document.getElementById('mediaUploadStatus');
-  if(file.size>max){status.textContent='File too large (max 12MB)';status.style.color='var(--hot)';return;}
+  if(file.size>max){status.textContent='File too large (max 100MB)';status.style.color='var(--hot)';return;}
   status.textContent='Uploading…';status.style.color='var(--muted2)';
   const reader=new FileReader();
   reader.onload=async e=>{
@@ -1214,7 +1341,7 @@ async function uploadMediaFile(dataUrl,filename,kind){
   const sid=restoreAuthSid();
   const url=sid?`${API_BASE}/profile/media-upload?sid=${encodeURIComponent(sid)}`:`${API_BASE}/profile/media-upload`;
   const controller=new AbortController();
-  const timer=setTimeout(()=>controller.abort(),60000);
+  const timer=setTimeout(()=>controller.abort(),180000);
   try{
     const res=await fetch(url,{
       method:'POST',
@@ -1250,7 +1377,7 @@ function applyMediaPicker(){
 
 function updateBannerPreviewBox(val){
   const box=document.getElementById('bannerPreviewBox');
-  if(!val){box.innerHTML='<div class="media-preview-label">🖼️ Click to choose banner<br><span style="font-size:10px;opacity:0.6">Image · GIF · Video · Preset</span></div>';return;}
+  if(!val){box.innerHTML='<div class="media-preview-label">🖼️ Click to choose banner<br><span style="font-size:10px;opacity:0.6">Image · GIF · Video · Max 100MB</span></div>';return;}
   if(val.startsWith('linear-gradient')){box.innerHTML=`<div style="position:absolute;inset:0;border-radius:11px;background:${val}"></div>`;return;}
   if(val.match(/\.(mp4|webm)/i)||val.startsWith('data:video')){box.innerHTML=`<video autoplay muted loop playsinline src="${val}"></video>`;return;}
   box.innerHTML=`<img src="${val}" alt="banner"/>`;
@@ -1265,8 +1392,8 @@ function clearBanner(){
 function handleBgUpload(e,type){
   const file=e.target.files[0];
   if(!file) return;
-  const max=type==='video'?12*1024*1024:8*1024*1024;
-  if(file.size>max){showToast('ERR',`File too large (max ${type==='video'?12:8}MB)`);return;}
+  const max=type==='video'?100*1024*1024:40*1024*1024;
+  if(file.size>max){showToast('ERR',`File too large (max ${type==='video'?100:40}MB)`);return;}
   showToast('OK','Uploading background…','info');
   const reader=new FileReader();
   reader.onload=async ev=>{
@@ -1414,6 +1541,8 @@ async function checkSlug(el){
   el.value=v;
   if(!v){hint.textContent='';return;}
   if(taken.includes(v)){hint.textContent='❌ This handle is unavailable';hint.className='field-hint err';return;}
+  const own=(window._onboardOriginalSlug||'').toLowerCase();
+  if(own&&v===own){hint.textContent='✓ This is your handle';hint.className='field-hint';updatePreview();return;}
   try{
     const res=await fetch(`${API_BASE}/profile/${v}`);
     if(res.ok){hint.textContent='❌ This handle is unavailable';hint.className='field-hint err';}
@@ -1491,8 +1620,12 @@ async function loadLinkClickCounts(){
   }catch{}
 }
 
-// ── Onboarding checklist ──
+// ── Onboarding checklist + first-time wizard ──
 window._onboard={slug:false,bio:false,social:false,roles:false,shared:false};
+window._onboardStep=0;
+window._onboardLayout='centered';
+window._onboardSlugOk=false;
+window._onboardOriginalSlug='';
 
 function updateOnboarding(){
   const o=window._onboard;
@@ -1534,6 +1667,225 @@ function copyProfileLink(){
     try{ localStorage.setItem('cordfol_onboard_shared','1'); }catch{}
     updateOnboarding();
   }).catch(()=>showToast('ERR','Could not copy link.','error'));
+}
+
+function maybeShowOnboardWizard(profile){
+  try{ if(localStorage.getItem('cordfol_wizard_done')==='1') return; }catch{return;}
+  const sl=profile?.socialLinks||{};
+  const established=!!(
+    (profile?.bio&&String(profile.bio).trim().length>12)||
+    profile?.bannerUrl||
+    (Number(profile?.viewCount)||0)>3||
+    Object.values(sl).some(v=>!!v)
+  );
+  if(established){
+    try{ localStorage.setItem('cordfol_wizard_done','1'); }catch{}
+    return;
+  }
+  const nameEl=document.getElementById('onboardDisplayName');
+  const slugEl=document.getElementById('onboardSlug');
+  const bioEl=document.getElementById('onboardBio');
+  if(nameEl) nameEl.value=document.getElementById('displayName')?.value||profile?.displayName||'';
+  window._onboardOriginalSlug=(document.getElementById('slug')?.value||profile?.slug||'').toLowerCase();
+  if(slugEl) slugEl.value=window._onboardOriginalSlug;
+  if(bioEl) bioEl.value=document.getElementById('bioText')?.value||profile?.bio||'';
+  window._onboardLayout=currentLayout||'centered';
+  setOnboardLayout(window._onboardLayout==='card'?'card':'centered');
+  window._onboardStep=0;
+  renderOnboardStep();
+  if(slugEl){
+    slugEl.oninput=()=>checkOnboardSlug();
+    checkOnboardSlug();
+  }
+  setTimeout(()=>{
+    const wiz=document.getElementById('onboardWizard');
+    if(wiz) wiz.classList.add('open');
+  },450);
+}
+
+function setOnboardLayout(layout){
+  window._onboardLayout=layout==='card'?'card':'centered';
+  document.getElementById('onboardLayoutCentered')?.classList.toggle('selected',window._onboardLayout==='centered');
+  document.getElementById('onboardLayoutCard')?.classList.toggle('selected',window._onboardLayout==='card');
+}
+
+function renderOnboardStep(){
+  const step=window._onboardStep||0;
+  document.querySelectorAll('#onboardWizard .onboard-panel').forEach(p=>{
+    p.classList.toggle('active',Number(p.dataset.step)===step);
+  });
+  document.querySelectorAll('#onboardDots .onboard-dot').forEach((d,i)=>{
+    d.classList.toggle('on',i===step);
+    d.classList.toggle('done',i<step);
+  });
+  if(step===4){
+    const slug=document.getElementById('onboardSlug')?.value||document.getElementById('slug')?.value||'';
+    const share=document.getElementById('onboardShareUrl');
+    if(share) share.value=`https://cordfol.org/${slug}`;
+  }
+}
+
+async function checkOnboardSlug(){
+  const el=document.getElementById('onboardSlug');
+  const hint=document.getElementById('onboardSlugHint');
+  const btn=document.getElementById('onboardSlugContinue');
+  if(!el||!hint) return;
+  let v=el.value.toLowerCase().replace(/[^a-z0-9\-]/g,'');
+  el.value=v;
+  window._onboardSlugOk=false;
+  if(btn) btn.disabled=true;
+  if(!v){hint.textContent='Pick a handle to continue';hint.className='onboard-hint err';return;}
+  if(v.length<2){hint.textContent='At least 2 characters';hint.className='onboard-hint err';return;}
+  if(taken.includes(v)){hint.textContent='This handle is unavailable';hint.className='onboard-hint err';return;}
+  if(v===window._onboardOriginalSlug){
+    window._onboardSlugOk=true;
+    hint.textContent='✓ Keeping your current handle';hint.className='onboard-hint ok';
+    if(btn) btn.disabled=false;
+    return;
+  }
+  hint.textContent='Checking…';hint.className='onboard-hint';
+  try{
+    const res=await fetch(`${API_BASE}/profile/${encodeURIComponent(v)}?t=${Date.now()}`,{cache:'no-store'});
+    if(res.ok){hint.textContent='This handle is unavailable';hint.className='onboard-hint err';return;}
+    window._onboardSlugOk=true;
+    hint.textContent='✓ Available';hint.className='onboard-hint ok';
+    if(btn) btn.disabled=false;
+  }catch{
+    window._onboardSlugOk=true;
+    hint.textContent='✓ Looks available';hint.className='onboard-hint ok';
+    if(btn) btn.disabled=false;
+  }
+}
+
+async function applyOnboardFieldsToForm(){
+  const name=document.getElementById('onboardDisplayName')?.value?.trim()||'';
+  const slug=document.getElementById('onboardSlug')?.value?.trim()||'';
+  const bio=document.getElementById('onboardBio')?.value||'';
+  if(name&&document.getElementById('displayName')) document.getElementById('displayName').value=name;
+  if(slug&&document.getElementById('slug')){
+    document.getElementById('slug').value=slug;
+    checkSlug(document.getElementById('slug'));
+  }
+  if(document.getElementById('bioText')) document.getElementById('bioText').value=bio;
+  currentLayout=window._onboardLayout||'centered';
+  document.querySelectorAll('.layout-btn').forEach(btn=>{
+    const n=(btn.querySelector('.layout-name')?.textContent||'').toLowerCase();
+    const match=(currentLayout==='card'&&n.includes('stack'))||(currentLayout==='centered'&&n.includes('center'))||(currentLayout==='left'&&n.includes('left'))||(currentLayout==='magazine'&&n.includes('magazine'));
+    btn.classList.toggle('selected',match);
+  });
+  updatePreview();
+  window._onboard.slug=!!slug;
+  window._onboard.bio=!!String(bio).trim();
+}
+
+async function saveOnboardProgress(){
+  await applyOnboardFieldsToForm();
+  const slug=document.getElementById('slug')?.value;
+  const display_name=document.getElementById('displayName')?.value;
+  if(!slug||!display_name) return false;
+  const body={
+    display_name,slug,
+    bio:document.getElementById('bioText')?.value||'',
+    email:document.getElementById('emailInput')?.value||'',
+    bannerUrl:currentBannerData?.value||'',
+    social_links:{
+      twitter:document.getElementById('twitterInput')?.value||'',
+      github:document.getElementById('githubInput')?.value||'',
+      youtube:document.getElementById('youtubeInput')?.value||'',
+      website:document.getElementById('websiteInput')?.value||'',
+      tiktok:document.getElementById('tiktokInput')?.value||'',
+      instagram:document.getElementById('instagramInput')?.value||'',
+    },
+    custom_links:typeof collectCustomLinks==='function'?collectCustomLinks():[],
+    display_options:typeof collectDisplayOptions==='function'?collectDisplayOptions():{},
+    email_role_alerts:typeof emailRoleAlerts!=='undefined'?emailRoleAlerts:true,
+    featured_invite:document.getElementById('featuredInviteInput')?.value||'',
+    theme:{
+      accentColor:document.getElementById('accentColorInput')?.value||'#5865F2',
+      textColor:document.getElementById('textColorInput')?.value||'#ffffff',
+      cardColor:document.getElementById('cardColorInput')?.value||'#111111',
+      cardOpacity:document.getElementById('cardOpacityInput')?.value||92,
+      musicUrl:null,musicAutoplay:false,
+      animatedBg:!!activeFx?.anim,glassmorphism:!!activeFx?.glassmorphism,
+      particles:!!activeFx?.particles,bgBlur:!!activeFx?.blur,
+      entrySplash:!!activeFx?.splash,typewriterBio:!!activeFx?.typewriter,tiltCard:!!activeFx?.tilt,
+      bgType:currentBgType||'solid',bgValue:currentBgData?.value||document.getElementById('backgroundColorInput')?.value||'',
+      layout:currentLayout||'centered',font:currentFont||'DM Sans',
+      nameEffect:currentNameEffect||'none',particleStyle:currentParticleStyle||'dots',
+    }
+  };
+  try{
+    const sid=restoreAuthSid();
+    const url=sid?`${API_BASE}/profile?sid=${encodeURIComponent(sid)}`:`${API_BASE}/profile`;
+    const res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},credentials:'include',body:JSON.stringify(body)});
+    if(!res.ok){
+      if(res.status===409){showToast('ERR','That handle was just taken — pick another.','error');return false;}
+      const err=await res.json().catch(()=>({}));
+      showToast('ERR',err.error||'Could not save yet.','error');
+      return false;
+    }
+    window._onboardOriginalSlug=slug;
+    window._profileDirty=false;
+    const publicLink=document.getElementById('viewPublicPageLink');
+    if(publicLink) publicLink.href=buildPublicProfileUrl(slug);
+    document.getElementById('profileUrl').textContent=`Customize your public page at ${PUBLIC_HOST}/${slug}`;
+    updateOnboarding();
+    return true;
+  }catch{
+    showToast('ERR','Could not save — check your connection.','error');
+    return false;
+  }
+}
+
+async function onboardNext(skipBio){
+  const step=window._onboardStep||0;
+  if(step===1){
+    if(!window._onboardSlugOk){await checkOnboardSlug();if(!window._onboardSlugOk){showToast('ERR','Pick an available handle first.','error');return;}}
+    const name=document.getElementById('onboardDisplayName')?.value?.trim();
+    if(!name){showToast('ERR','Add a display name.','error');return;}
+    const ok=await saveOnboardProgress();
+    if(!ok) return;
+  }
+  if(step===2){
+    if(skipBio) document.getElementById('onboardBio').value='';
+    await applyOnboardFieldsToForm();
+  }
+  if(step===3){
+    const ok=await saveOnboardProgress();
+    if(!ok) return;
+  }
+  window._onboardStep=Math.min(4,step+1);
+  renderOnboardStep();
+}
+
+function onboardBack(){
+  window._onboardStep=Math.max(0,(window._onboardStep||0)-1);
+  renderOnboardStep();
+}
+
+function skipOnboardWizard(){
+  try{ localStorage.setItem('cordfol_wizard_done','1'); }catch{}
+  document.getElementById('onboardWizard')?.classList.remove('open');
+  showToast('OK','You can finish setup anytime from Getting started.');
+}
+
+function copyOnboardLink(){
+  const url=document.getElementById('onboardShareUrl')?.value||'';
+  if(!url) return;
+  navigator.clipboard.writeText(url).then(()=>{
+    showToast('LINK','Profile link copied!');
+    window._onboard.shared=true;
+    try{ localStorage.setItem('cordfol_onboard_shared','1'); }catch{}
+    updateOnboarding();
+  }).catch(()=>showToast('ERR','Could not copy.','error'));
+}
+
+function finishOnboardWizard(){
+  try{ localStorage.setItem('cordfol_wizard_done','1'); }catch{}
+  document.getElementById('onboardWizard')?.classList.remove('open');
+  updateOnboarding();
+  switchTab('verify');
+  showToast('OK','Welcome in — scan your roles next.');
 }
 
 // ── Analytics (real data) ──
@@ -1648,12 +2000,18 @@ function applyPendingClaimSlug(){
 async function checkSession(){
   try{
     const sid=restoreAuthSid();
-    const res=sid?await fetch(`${API_BASE}/auth/token?sid=${sid}`,{credentials:'include'}):await fetch(`${API_BASE}/auth/me`,{credentials:'include'});
+    // Parallel: fast bootstrap + roles + Spotify (don't block UI on the side loads)
+    loadRoles();
+    refreshSpotifyStatus();
+    const url=sid?`${API_BASE}/dashboard/profile?sid=${encodeURIComponent(sid)}`:`${API_BASE}/dashboard/profile`;
+    const res=await fetch(url,{credentials:'include',cache:'no-store'});
     if(!res.ok)throw new Error('Not logged in');
     const data=await res.json();
     if(!data.authenticated)throw new Error('Not authenticated');
     const user=normalizeUser(data.user||data);
-    showUser(user);await loadProfile(user);applyPendingClaimSlug();loadRoles();refreshSpotifyStatus();
+    showUser(user);
+    applyDashboardProfile(data,user);
+    applyPendingClaimSlug();
   }catch{
     document.getElementById('loginBtn').style.display='';
     document.getElementById('userInfo').style.display='none';
@@ -1761,113 +2119,126 @@ async function toggleRoleVisibility(roleId,isPublic,toggleEl){
 
 async function loadProfile(user){
   try{
-    const res=await fetch(`${API_BASE}/profile/${user.slug}?t=${Date.now()}`,{cache:'no-store'});
+    const sid=restoreAuthSid();
+    const url=sid?`${API_BASE}/dashboard/profile?sid=${encodeURIComponent(sid)}`:`${API_BASE}/dashboard/profile`;
+    const res=await fetch(url,{credentials:'include',cache:'no-store'});
     if(!res.ok)throw new Error('No profile');
     const data=await res.json();
-    const th=data.theme||{};
-    document.getElementById('displayName').value=data.profile.displayName||'';
-    document.getElementById('slug').value=data.profile.slug||'';
-    document.getElementById('bioText').value=data.profile.bio||'';
-    document.getElementById('twitterInput').value=data.profile.socialLinks?.twitter||'';
-    document.getElementById('githubInput').value=data.profile.socialLinks?.github||'';
-    document.getElementById('youtubeInput').value=data.profile.socialLinks?.youtube||'';
-    document.getElementById('websiteInput').value=data.profile.socialLinks?.website||'';
-    document.getElementById('tiktokInput').value=data.profile.socialLinks?.tiktok||'';
-    document.getElementById('instagramInput').value=data.profile.socialLinks?.instagram||'';
-    setCustomLinks(data.profile.customLinks);
-    loadLinkClickCounts();
-    setDisplayOptions(data.profile.displayOptions);
-    setEmailAlerts(data.profile.emailRoleAlerts);
-    const fiEl=document.getElementById('featuredInviteInput');
-    if(fiEl) fiEl.value=data.profile.featuredInvite?`https://discord.gg/${data.profile.featuredInvite}`:'';
-    document.getElementById('emailInput').value=data.profile.email||'';
-    if(data.profile.emailVerified){
-      document.getElementById('emailVerifiedBadge').style.display='inline-flex';
-      document.getElementById('emailBtnRow').style.display='none';
-    }
-    document.getElementById('accentColorInput').value=th.accentColor||'#5865F2';
-    document.getElementById('textColorInput').value=th.textColor||'#ffffff';
-    document.getElementById('cardColorInput').value=th.cardColor||'#111111';
-    document.getElementById('cardOpacityInput').value=th.cardOpacity!=null?Math.round(Number(th.cardOpacity)* (Number(th.cardOpacity)<=1?100:1)):92;
-    document.getElementById('musicUrlInput').value=th.musicUrl||'';
-    const legacyWarn=document.getElementById('musicLegacyWarn');
-    if(legacyWarn) legacyWarn.style.display=th.musicLegacy?'block':'none';
-    if(document.getElementById('musicAutoplayInput')) document.getElementById('musicAutoplayInput').checked=!!th.musicAutoplay;
-
-    if(data.profile.bannerUrl){
-      currentBannerData={type:isVideoUrl(data.profile.bannerUrl)?'video':'image',value:data.profile.bannerUrl};
-      updateBannerPreviewBox(data.profile.bannerUrl);
-    } else {
-      currentBannerData={type:'gradient',value:''};
-      updateBannerPreviewBox('');
-    }
-
-    const bgType=th.bgType||'solid';
-    currentBgType=bgType;
-    currentBgData={type:bgType,value:th.bgValue||''};
-    document.querySelectorAll('.bg-type-btn').forEach((btn,i)=>{
-      const types=['gradient','solid','gif','video'];
-      btn.classList.toggle('active',types[i]===bgType);
-    });
-    document.querySelectorAll('.bg-panel').forEach(p=>p.classList.remove('active'));
-    const bgPanel=document.getElementById('bg-panel-'+bgType);
-    if(bgPanel) bgPanel.classList.add('active');
-    if(bgType==='solid'&&th.bgValue) document.getElementById('backgroundColorInput').value=th.bgValue;
-    if(bgType==='gif'&&th.bgValue) document.getElementById('gifUrlInput').value=th.bgValue;
-    if(bgType==='video'&&th.bgValue) document.getElementById('videoUrlInput').value=th.bgValue;
-
-    currentLayout=th.layout||'centered';
-    document.querySelectorAll('.layout-btn').forEach(btn=>{
-      const name=(btn.querySelector('.layout-name')?.textContent||'').toLowerCase();
-      const match=(currentLayout==='left'&&name.includes('left'))||(currentLayout==='magazine'&&name.includes('magazine'))||(currentLayout==='card'&&name.includes('stack'))||(currentLayout==='centered'&&name.includes('center'));
-      btn.classList.toggle('selected',match);
-    });
-    currentFont=th.font||'DM Sans';
-    document.querySelectorAll('.font-btn:not([data-effect]):not([data-pstyle])').forEach(btn=>{
-      btn.classList.toggle('selected',btn.textContent.trim().startsWith(currentFont.split(' ')[0]));
-    });
-    currentNameEffect=th.nameEffect||'none';
-    document.querySelectorAll('#nameEffectRow .font-btn').forEach(btn=>{
-      btn.classList.toggle('selected',btn.dataset.effect===currentNameEffect);
-    });
-    currentParticleStyle=th.particleStyle||'dots';
-    document.querySelectorAll('.theme-preset-btn').forEach(b=>b.classList.remove('active'));
-    activeThemePreset=null;
-
-    activeFx={
-      music:!!th.musicUrl||!!th.musicLegacy,
-      anim:!!th.animatedBg,
-      particles:!!th.particles,
-      glassmorphism:!!(th.glassmorphism||th.glassEnabled),
-      blur:!!th.bgBlur,
-      cursor:false,
-      splash:!!th.entrySplash,
-      typewriter:!!th.typewriterBio,
-      tilt:!!th.tiltCard
-    };
-    Object.keys(activeFx).forEach(key=>{
-      const card=document.getElementById('fx-'+key);
-      const toggle=document.getElementById('fx-toggle-'+key);
-      if(card&&toggle){
-        card.classList.toggle('active',activeFx[key]);
-        toggle.classList.toggle('on',activeFx[key]);
-      }
-    });
-    document.getElementById('music-section').style.display=activeFx.music?'block':'none';
-    syncParticleStyleUI();
-
-    updateEmailState();updatePreview();
-
-    const sl=data.profile.socialLinks||{};
-    window._onboard.slug=!!data.profile.slug;
-    window._onboard.bio=!!(data.profile.bio||data.profile.bannerUrl);
-    window._onboard.social=Object.values(sl).some(v=>v);
-    try{ if(localStorage.getItem('cordfol_onboard_shared')==='1'||data.profile.viewCount>0) window._onboard.shared=true; }catch{}
-    updateOnboarding();
+    if(!data.authenticated)throw new Error('Not authenticated');
+    applyDashboardProfile(data,user||normalizeUser(data.user||{}));
   }catch{
-    window._onboard.slug=!!user.slug;
-    updateOnboarding();
+    if(user){
+      window._onboard.slug=!!user.slug;
+      updateOnboarding();
+      maybeShowOnboardWizard({slug:user.slug,displayName:user.display_name||user.discord_username,bio:'',socialLinks:{},viewCount:0});
+    }
   }
+}
+
+function applyDashboardProfile(data,user){
+  const th=data.theme||{};
+  const profile=data.profile||{};
+  document.getElementById('displayName').value=profile.displayName||'';
+  document.getElementById('slug').value=profile.slug||'';
+  window._onboardOriginalSlug=(profile.slug||'').toLowerCase();
+  document.getElementById('bioText').value=profile.bio||'';
+  document.getElementById('twitterInput').value=profile.socialLinks?.twitter||'';
+  document.getElementById('githubInput').value=profile.socialLinks?.github||'';
+  document.getElementById('youtubeInput').value=profile.socialLinks?.youtube||'';
+  document.getElementById('websiteInput').value=profile.socialLinks?.website||'';
+  document.getElementById('tiktokInput').value=profile.socialLinks?.tiktok||'';
+  document.getElementById('instagramInput').value=profile.socialLinks?.instagram||'';
+  setCustomLinks(profile.customLinks);
+  setTimeout(()=>{ try{ loadLinkClickCounts(); }catch{} },0);
+  setDisplayOptions(profile.displayOptions);
+  setEmailAlerts(profile.emailRoleAlerts);
+  const fiEl=document.getElementById('featuredInviteInput');
+  if(fiEl) fiEl.value=profile.featuredInvite?`https://discord.gg/${profile.featuredInvite}`:'';
+  document.getElementById('emailInput').value=profile.email||'';
+  if(profile.emailVerified){
+    document.getElementById('emailVerifiedBadge').style.display='inline-flex';
+    document.getElementById('emailBtnRow').style.display='none';
+  }
+  document.getElementById('accentColorInput').value=th.accentColor||'#5865F2';
+  document.getElementById('textColorInput').value=th.textColor||'#ffffff';
+  document.getElementById('cardColorInput').value=th.cardColor||'#111111';
+  document.getElementById('cardOpacityInput').value=th.cardOpacity!=null?Math.round(Number(th.cardOpacity)* (Number(th.cardOpacity)<=1?100:1)):92;
+  document.getElementById('musicUrlInput').value=th.musicUrl||'';
+  const legacyWarn=document.getElementById('musicLegacyWarn');
+  if(legacyWarn) legacyWarn.style.display=th.musicLegacy?'block':'none';
+  if(document.getElementById('musicAutoplayInput')) document.getElementById('musicAutoplayInput').checked=!!th.musicAutoplay;
+
+  if(profile.bannerUrl){
+    currentBannerData={type:isVideoUrl(profile.bannerUrl)?'video':'image',value:profile.bannerUrl};
+    updateBannerPreviewBox(profile.bannerUrl);
+  } else {
+    currentBannerData={type:'gradient',value:''};
+    updateBannerPreviewBox('');
+  }
+
+  const bgType=th.bgType||'solid';
+  currentBgType=bgType;
+  currentBgData={type:bgType,value:th.bgValue||''};
+  document.querySelectorAll('.bg-type-btn').forEach((btn,i)=>{
+    const types=['gradient','solid','gif','video'];
+    btn.classList.toggle('active',types[i]===bgType);
+  });
+  document.querySelectorAll('.bg-panel').forEach(p=>p.classList.remove('active'));
+  const bgPanel=document.getElementById('bg-panel-'+bgType);
+  if(bgPanel) bgPanel.classList.add('active');
+  if(bgType==='solid'&&th.bgValue) document.getElementById('backgroundColorInput').value=th.bgValue;
+  if(bgType==='gif'&&th.bgValue) document.getElementById('gifUrlInput').value=th.bgValue;
+  if(bgType==='video'&&th.bgValue) document.getElementById('videoUrlInput').value=th.bgValue;
+
+  currentLayout=th.layout||'centered';
+  document.querySelectorAll('.layout-btn').forEach(btn=>{
+    const name=(btn.querySelector('.layout-name')?.textContent||'').toLowerCase();
+    const match=(currentLayout==='left'&&name.includes('left'))||(currentLayout==='magazine'&&name.includes('magazine'))||(currentLayout==='card'&&name.includes('stack'))||(currentLayout==='centered'&&name.includes('center'));
+    btn.classList.toggle('selected',match);
+  });
+  currentFont=th.font||'DM Sans';
+  document.querySelectorAll('.font-btn:not([data-effect]):not([data-pstyle])').forEach(btn=>{
+    btn.classList.toggle('selected',btn.textContent.trim().startsWith(currentFont.split(' ')[0]));
+  });
+  currentNameEffect=th.nameEffect||'none';
+  document.querySelectorAll('#nameEffectRow .font-btn').forEach(btn=>{
+    btn.classList.toggle('selected',btn.dataset.effect===currentNameEffect);
+  });
+  currentParticleStyle=th.particleStyle||'dots';
+  document.querySelectorAll('.theme-preset-btn').forEach(b=>b.classList.remove('active'));
+  activeThemePreset=null;
+
+  activeFx={
+    music:!!th.musicUrl||!!th.musicLegacy,
+    anim:!!th.animatedBg,
+    particles:!!th.particles,
+    glassmorphism:!!(th.glassmorphism||th.glassEnabled),
+    blur:!!th.bgBlur,
+    cursor:false,
+    splash:!!th.entrySplash,
+    typewriter:!!th.typewriterBio,
+    tilt:!!th.tiltCard
+  };
+  Object.keys(activeFx).forEach(key=>{
+    const card=document.getElementById('fx-'+key);
+    const toggle=document.getElementById('fx-toggle-'+key);
+    if(card&&toggle){
+      card.classList.toggle('active',activeFx[key]);
+      toggle.classList.toggle('on',activeFx[key]);
+    }
+  });
+  document.getElementById('music-section').style.display=activeFx.music?'block':'none';
+  syncParticleStyleUI();
+
+  updateEmailState();updatePreview();
+
+  const sl=profile.socialLinks||{};
+  window._onboard.slug=!!profile.slug;
+  window._onboard.bio=!!(profile.bio||profile.bannerUrl);
+  window._onboard.social=Object.values(sl).some(v=>v);
+  try{ if(localStorage.getItem('cordfol_onboard_shared')==='1'||profile.viewCount>0) window._onboard.shared=true; }catch{}
+  updateOnboarding();
+  maybeShowOnboardWizard(profile);
 }
 
 function isVideoUrl(url){
@@ -1939,6 +2310,11 @@ async function saveProfile(){
     }
     const publicLink=document.getElementById('viewPublicPageLink');
     if(publicLink&&slug) publicLink.href=`${PUBLIC_BASE_URL}/${slug}?v=${Date.now()}`;
+    window._onboardOriginalSlug=slug;
+    window._onboard.slug=!!slug;
+    window._onboard.bio=!!(document.getElementById('bioText')?.value||currentBannerData?.value);
+    window._onboard.social=Object.values(body.social_links||{}).some(v=>v);
+    updateOnboarding();
   }catch(err){
     showToast('ERR',err?.name==='AbortError'?'Save timed out — try again without huge files.':'Failed to save profile!','error');
   }
@@ -1975,9 +2351,11 @@ async function handleMusicUpload(event){
   const file=event.target.files[0];
   if(!file) return;
   const statusEl=document.getElementById('uploadStatus');
-  const max=5*1024*1024;
-  if(file.size>max){statusEl.textContent='File too large (max 5MB)';statusEl.style.color='var(--hot)';return;}
+  const max=25*1024*1024;
+  if(file.size>max){statusEl.textContent='File too large (max 25MB)';statusEl.style.color='var(--hot)';return;}
   statusEl.textContent='Uploading…';statusEl.style.color='var(--muted2)';
+  const controller=new AbortController();
+  const timer=setTimeout(()=>controller.abort(),180000);
   try{
     const dataUrl=await new Promise((resolve,reject)=>{
       const reader=new FileReader();
@@ -1987,7 +2365,13 @@ async function handleMusicUpload(event){
     });
     const sid=restoreAuthSid();
     const url=sid?`${API_BASE}/profile/music-upload?sid=${encodeURIComponent(sid)}`:`${API_BASE}/profile/music-upload`;
-    const res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},credentials:'include',body:JSON.stringify({data:dataUrl,filename:file.name})});
+    const res=await fetch(url,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      credentials:'include',
+      signal:controller.signal,
+      body:JSON.stringify({data:dataUrl,filename:file.name}),
+    });
     const json=await res.json().catch(()=>({}));
     if(!res.ok) throw new Error(json.error||'Upload failed');
     document.getElementById('musicUrlInput').value=json.url;
@@ -2001,8 +2385,10 @@ async function handleMusicUpload(event){
     markProfileDirty();
     updatePreview();
   }catch(err){
-    statusEl.textContent=err.message||'Upload failed';
+    statusEl.textContent=err.name==='AbortError'?'Upload timed out — try a smaller file':(err.message||'Upload failed');
     statusEl.style.color='var(--hot)';
+  }finally{
+    clearTimeout(timer);
   }
 }
 

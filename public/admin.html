@@ -60,15 +60,18 @@
       text-align: center;
     }
     .auth-logo {
-      font-family: 'Black Han Sans', sans-serif;
-      font-size: 28px;
-      letter-spacing: -1px;
+      font-family: 'Syne', sans-serif;
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: 0.12em;
       margin-bottom: 8px;
-      background: linear-gradient(135deg, var(--discord), var(--neon));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
+      color: #fff;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
     }
+    .auth-logo img { width: 28px; height: 28px; display: block; }
     .auth-sub {
       color: var(--muted);
       font-size: 14px;
@@ -103,12 +106,17 @@
       overflow-y: auto;
     }
     .sidebar-logo {
-      font-family: 'IBM Plex Mono', monospace;
-      font-size: 12px;
-      letter-spacing: 2px;
+      font-family: 'Syne', sans-serif;
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: 0.1em;
       margin-bottom: 32px;
-      color: var(--discord);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 10px;
     }
+    .sidebar-logo img { width: 22px; height: 22px; display: block; }
     .nav-group {
       display: flex;
       flex-direction: column;
@@ -333,7 +341,7 @@
 <body>
   <div id="auth-screen" class="auth-container">
     <div class="auth-card">
-      <div class="auth-logo">CORDFOL</div>
+      <div class="auth-logo"><img src="/logo.svg" alt=""/>CORDFOL</div>
       <p class="auth-sub">Admin Panel</p>
       <div class="loading-spinner"></div>
       <p style="margin-top: 20px; color: var(--muted); font-size: 12px;">Checking authentication...</p>
@@ -342,7 +350,7 @@
 
   <div id="admin-screen" class="admin-container" style="display: none;">
     <div class="sidebar">
-      <div class="sidebar-logo">CORDFOL ADMIN</div>
+      <div class="sidebar-logo"><img src="/logo.svg" alt=""/>CORDFOL ADMIN</div>
       
       <div class="nav-group">
         <button class="nav-item active" data-section="dashboard">📊 Dashboard</button>
@@ -753,7 +761,7 @@
 </body>
 </html>
     <div class="sidebar">
-      <div class="sidebar-logo">CORDFOL ADMIN</div>
+      <div class="sidebar-logo"><img src="/logo.svg" alt=""/>CORDFOL ADMIN</div>
       
       <div class="nav-group">
         <button class="nav-item active" data-section="dashboard">📊 Dashboard</button>
