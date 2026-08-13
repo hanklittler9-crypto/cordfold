@@ -1,0 +1,170 @@
+/* Cordfol — Athr-inspired brand system */
+:root {
+  --bg: #000000;
+  --bg-soft: #070707;
+  --surface: #111111;
+  --surface2: #161616;
+  --surface3: #1c1c1c;
+  --ink: #ffffff;
+  --ink-soft: rgba(255, 255, 255, 0.62);
+  --ink-faint: rgba(255, 255, 255, 0.38);
+  --line: rgba(255, 255, 255, 0.08);
+  --line-strong: rgba(255, 255, 255, 0.14);
+  --btn: #222222;
+  --btn-hover: #2c2c2c;
+  --glow: #c84dff;
+  --glow-soft: rgba(200, 77, 255, 0.28);
+  --accent: #e8e8e8;
+  --discord: #5865F2;
+  --mint: #3dd68c;
+  --hot: #ff4d6d;
+  --amber: #f0b429;
+  --font-display: "Syne", sans-serif;
+  --font-body: "Outfit", sans-serif;
+  --font-mono: "IBM Plex Mono", monospace;
+  --radius: 10px;
+  --radius-lg: 18px;
+  --shadow: 0 30px 80px rgba(0, 0, 0, 0.55);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body.brand-body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+body.brand-body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 55% 45% at 78% 28%, var(--glow-soft), transparent 70%),
+    radial-gradient(ellipse 40% 35% at 12% 80%, rgba(88, 101, 242, 0.12), transparent 65%);
+  z-index: 0;
+}
+
+.brand-announce {
+  position: relative;
+  z-index: 120;
+  background: #000;
+  border-bottom: 1px solid var(--line);
+  text-align: center;
+  padding: 10px 16px;
+  font-size: 12px;
+  letter-spacing: 0.02em;
+  color: var(--ink-soft);
+}
+
+.brand-announce a {
+  color: var(--ink);
+  font-weight: 600;
+  text-decoration: none;
+  margin-left: 6px;
+}
+
+.brand-announce a:hover {
+  color: var(--glow);
+}
+
+.brand-nav {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 18px 5vw;
+  background: rgba(0, 0, 0, 0.72);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid transparent;
+}
+
+.brand-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 18px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.brand-mark {
+  width: 22px;
+  height: 22px;
+  display: block;
+  flex-shrink: 0;
+}
+
+.brand-links {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+}
+
+.brand-links a {
+  color: var(--ink-soft);
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.brand-links a:hover {
+  color: var(--ink);
+}
+
+.brand-signin {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 18px;
+  border-radius: 8px;
+  background: var(--btn);
+  color: var(--ink);
+  text-decoration: none;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border: 1px solid var(--line-strong);
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.brand-signin:hover {
+  background: var(--btn-hover);
+  border-color: rgba(255, 255, 255, 0.22);
+}
+
+.brand-display {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  text-transform: uppercase;
+  line-height: 0.98;
+}
+
+@media (max-width: 800px) {
+  .brand-links {
+    display: none;
+  }
+}

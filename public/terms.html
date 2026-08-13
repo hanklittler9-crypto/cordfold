@@ -3,28 +3,32 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="theme-color" content="#000000"/>
 <title>Terms — Cordfol</title>
 <link rel="icon" type="image/svg+xml" href="/favicon.svg"/>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="/brand.css"/>
 <style>
-*{margin:0;padding:0;box-sizing:border-box;}
-:root{--bg:#F3EDE1;--ink:#19170F;--ink-soft:rgba(25,23,15,0.65);--ink-faint:rgba(25,23,15,0.4);--line:rgba(25,23,15,0.1);--blurple:#5865F2;}
-body{background:var(--bg);color:var(--ink);font-family:'Inter',sans-serif;}
-nav{padding:20px 5vw;display:flex;align-items:center;justify-content:space-between;}
-.nav-logo{font-family:'Poppins',sans-serif;font-weight:800;font-size:19px;color:var(--ink);display:flex;align-items:center;gap:8px;text-decoration:none;}
-.nav-mark{width:22px;height:22px;border-radius:7px;background:var(--blurple);display:inline-block;}
-main{max-width:640px;margin:0 auto;padding:48px 5vw 96px;}
-h1{font-family:'Poppins',sans-serif;font-weight:700;font-size:34px;letter-spacing:-1px;margin-bottom:8px;}
-.updated{font-size:12.5px;color:var(--ink-faint);margin-bottom:40px;}
-h2{font-family:'Poppins',sans-serif;font-weight:600;font-size:17px;margin:36px 0 10px;}
+main{position:relative;z-index:1;max-width:640px;margin:0 auto;padding:48px 5vw 96px;}
+h1{font-family:var(--font-display);font-weight:800;font-size:34px;letter-spacing:-0.03em;margin-bottom:8px;text-transform:uppercase;}
+.updated{font-size:12.5px;color:var(--ink-faint);margin-bottom:40px;letter-spacing:0.06em;text-transform:uppercase;}
+h2{font-family:var(--font-display);font-weight:700;font-size:16px;margin:36px 0 10px;text-transform:uppercase;}
 p{font-size:14.5px;color:var(--ink-soft);line-height:1.75;margin-bottom:12px;}
-a{color:var(--blurple);}
+a{color:#e0a8ff;}
 </style>
 </head>
-<body>
-<nav><a class="nav-logo" href="/"><span class="nav-mark"></span>Cordfol</a></nav>
+<body class="brand-body">
+<nav class="brand-nav">
+  <a class="brand-logo" href="/">
+    <svg class="brand-mark" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M4 4h10l6 8-6 8H4l6-8L4 4z" fill="#fff"/>
+      <path d="M8 8h4l2.5 4L12 16H8l2.5-4L8 8z" fill="#000"/>
+    </svg>
+    Cordfol
+  </a>
+</nav>
 <main>
   <h1>Terms</h1>
   <div class="updated">Last updated July 2026</div>
