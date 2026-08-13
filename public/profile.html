@@ -206,12 +206,14 @@
       from { opacity: 0.45; transform: scale(0.92); }
       to { opacity: 0.9; transform: scale(1.08); }
     }
-    .page.layout-centered .status-pill {
+    /* Status pill — always constrained so it can't explode layouts */
+    .status-pill {
       display: flex;
       align-items: center;
       gap: 12px;
       width: min(100%, 320px);
-      margin: 14px auto 0;
+      max-width: 100%;
+      margin: 14px 0 0;
       padding: 10px 14px 10px 10px;
       border-radius: 18px;
       background: rgba(18,18,22,0.55);
@@ -222,6 +224,36 @@
       text-align: left;
       position: relative;
       overflow: hidden;
+      box-sizing: border-box;
+    }
+    .status-pill-avatar {
+      width: 42px !important;
+      height: 42px !important;
+      max-width: 42px !important;
+      max-height: 42px !important;
+      border-radius: 50%;
+      object-fit: cover;
+      flex-shrink: 0;
+      display: block;
+      box-shadow: 0 0 18px rgba(var(--accent-rgb, 196,107,255), 0.35);
+    }
+    .status-pill-text { min-width: 0; flex: 1; }
+    .status-pill-name {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .status-pill-activity {
+      font-size: 12px;
+      color: rgba(255,255,255,0.58);
+      margin-top: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 220px;
     }
     .page.layout-centered .status-pill::after {
       content: '';
@@ -331,44 +363,8 @@
       text-shadow: 0 1px 12px rgba(0,0,0,0.35);
     }
     .page.layout-centered .status-pill {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      width: min(100%, 320px);
-      margin: 14px auto 0;
-      padding: 10px 14px 10px 10px;
-      border-radius: 18px;
-      background: rgba(18,18,22,0.55);
-      border: 1px solid rgba(255,255,255,0.1);
-      backdrop-filter: blur(16px) saturate(1.15);
-      -webkit-backdrop-filter: blur(16px) saturate(1.15);
-      box-shadow: 0 12px 36px rgba(0,0,0,0.28);
-      text-align: left;
-    }
-    .page.layout-centered .status-pill-avatar {
-      width: 42px;
-      height: 42px;
-      border-radius: 50%;
-      object-fit: cover;
-      flex-shrink: 0;
-      box-shadow: 0 0 18px rgba(var(--accent-rgb, 196,107,255), 0.35);
-    }
-    .page.layout-centered .status-pill-name {
-      font-size: 13.5px;
-      font-weight: 700;
-      color: #fff;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-    .page.layout-centered .status-pill-activity {
-      font-size: 12px;
-      color: rgba(255,255,255,0.58);
-      margin-top: 2px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      max-width: 220px;
+      margin-left: auto;
+      margin-right: auto;
     }
     .page.layout-centered .presence-activity { display: none; }
     .page.layout-centered .profile-summary {
@@ -2857,7 +2853,8 @@ async function renderProfile() {
     </span>
   ` : '';
 
-  const statusPillHtml = `
+  const layoutMode = t.layout || 'centered';
+  const statusPillHtml = layoutMode === 'centered' ? `
     <div class="status-pill">
       <img class="status-pill-avatar" src="${escapeHtml(p.avatarUrl || 'https://cdn.discordapp.com/embed/avatars/0.png')}" alt="" onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'"/>
       <div class="status-pill-text">
@@ -2867,7 +2864,9 @@ async function renderProfile() {
             : (p.bio ? String(p.bio).slice(0, 48) : 'currently doing nothing')
         )}</div>
       </div>
-    </div>`;
+    </div>` : '';
+  // Avoid double status row when the glass pill is shown
+  const presenceRowHtml = layoutMode === 'centered' ? '' : presenceActivityHtml;
 
   const summaryChips = [];
   if (disp.showViews && p.viewCount && (t.layout || 'centered') !== 'centered') {
@@ -2929,7 +2928,7 @@ async function renderProfile() {
             ${badgesHtml}
           </div>
           ${disp.showHandle ? `<div class="profile-tag" id="profileTag" title="Click to copy link">cordfol.org/${escapeHtml(p.slug)}</div>` : ''}
-          ${presenceActivityHtml}
+          ${presenceRowHtml}
           ${statusPillHtml}
         </div>
       </div>
