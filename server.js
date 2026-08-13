@@ -292,12 +292,15 @@ app.get('/api/profile/:slug', async (req, res) => {
 
     let viewCount = 0;
     try {
-      const vc = await db.query(
-        `SELECT COUNT(*) AS c FROM analytics_events WHERE user_id = $1 AND type = 'profile_view'`,
-        [user.id]
-      );
+      const vc = await Promise.race([
+        db.query(
+          `SELECT COUNT(*) AS c FROM analytics_events WHERE user_id = $1 AND type = 'profile_view'`,
+          [user.id]
+        ),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('viewcount-timeout')), 1200)),
+      ]);
       viewCount = Number(vc.rows[0]?.c || 0);
-    } catch { /* non-critical */ }
+    } catch { /* non-critical / timed out */ }
 
     const rawMusic = user.music_url || null;
     const musicIsEmbedded = rawMusic && String(rawMusic).startsWith('data:');
@@ -322,7 +325,10 @@ app.get('/api/profile/:slug', async (req, res) => {
       badges.push({ id: 'music', label: 'Music Connected' });
     }
 
+    const featuredServerPromise = resolveFeaturedServer(user.featured_invite);
+
     res.set('Cache-Control', 'private, no-store, must-revalidate');
+    res.set('Pragma', 'no-cache');
     res.json({
       profile: {
         slug,
@@ -349,7 +355,7 @@ app.get('/api/profile/:slug', async (req, res) => {
         badges,
         displayOptions: normalizeDisplayOptions(user.display_options),
         featuredInvite: user.featured_invite || null,
-        featuredServer: await resolveFeaturedServer(user.featured_invite),
+        featuredServer: await featuredServerPromise,
       },
       theme: {
         backgroundColor: user.background_color || '#0d0d0d',
@@ -431,6 +437,12 @@ app.post('/api/profile', async (req, res) => {
 
     if (!slug || !display_name) {
       return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    if (isHugeDataUrl(bannerUrl) || isHugeDataUrl(theme.bgValue) || isHugeDataUrl(theme.backgroundColor)) {
+      return res.status(400).json({
+        error: 'Images/videos are too large to save inline. Re-upload them (they’ll be stored as files) then Save again.',
+      });
     }
 
     // Sanitize custom links: max 10, each needs a title + http(s) URL
@@ -645,6 +657,63 @@ app.post('/api/profile/music-upload', async (req, res) => {
   }
 });
 
+// ── Banner / background media upload (files, not DB blobs) ───────────────────
+app.post('/api/profile/media-upload', async (req, res) => {
+  try {
+    const userId = req.session?.userId;
+    if (!userId) return res.status(401).json({ error: 'Not authenticated' });
+
+    const { data, filename, kind } = req.body || {};
+    if (!data) return res.status(400).json({ error: 'No file data' });
+
+    const raw = String(data);
+    const mimeMatch = raw.match(/^data:([^;]+);base64,/);
+    const mime = mimeMatch?.[1] || '';
+    const b64 = raw.replace(/^data:[^;]+;base64,/, '');
+    let buf;
+    try {
+      buf = Buffer.from(b64, 'base64');
+    } catch {
+      return res.status(400).json({ error: 'Invalid media data' });
+    }
+
+    if (!buf.length) return res.status(400).json({ error: 'Empty file' });
+    if (buf.length > MAX_MEDIA_BYTES) {
+      return res.status(400).json({ error: 'File too large (max 12MB)' });
+    }
+
+    const allowed = {
+      'image/jpeg': '.jpg',
+      'image/jpg': '.jpg',
+      'image/png': '.png',
+      'image/webp': '.webp',
+      'image/gif': '.gif',
+      'video/mp4': '.mp4',
+      'video/webm': '.webm',
+    };
+    let ext = allowed[mime];
+    if (!ext && filename) {
+      const fromName = path.extname(filename).toLowerCase();
+      if (['.jpg', '.jpeg', '.png', '.webp', '.gif', '.mp4', '.webm'].includes(fromName)) {
+        ext = fromName === '.jpeg' ? '.jpg' : fromName;
+      }
+    }
+    if (!ext) return res.status(400).json({ error: 'Unsupported file type' });
+
+    const kindSafe = ['banner', 'bg'].includes(kind) ? kind : 'media';
+    const safeName = `${String(userId).replace(/[^a-zA-Z0-9-]/g, '')}-${kindSafe}-${Date.now()}${ext}`;
+    await fs.promises.writeFile(path.join(MEDIA_UPLOAD_DIR, safeName), buf);
+
+    res.json({
+      url: `${API_ORIGIN}/uploads/media/${safeName}`,
+      type: ext === '.mp4' || ext === '.webm' ? 'video' : (ext === '.gif' ? 'gif' : 'image'),
+    });
+  } catch (err) {
+    console.error('[server] /api/profile/media-upload error:', err);
+    res.status(500).json({ error: 'Upload failed' });
+  }
+});
+
 // ── Email Verification ────────────────────────────────────────────────────────
 app.post('/api/profile/verify-email', async (req, res) => {
   try {
@@ -757,19 +826,28 @@ function discordMemberSince(discordId) {
 }
 
 const MUSIC_UPLOAD_DIR = path.join(__dirname, 'public', 'uploads', 'music');
+const MEDIA_UPLOAD_DIR = path.join(__dirname, 'public', 'uploads', 'media');
 const API_ORIGIN = process.env.API_ORIGIN || 'https://api.cordfol.org';
 const MAX_MUSIC_BYTES = 5 * 1024 * 1024;
+const MAX_MEDIA_BYTES = 12 * 1024 * 1024;
+const MAX_DATA_URL_IN_DB = 12 * 1024; // reject embedded blobs — use /uploads instead
 
 try {
   fs.mkdirSync(MUSIC_UPLOAD_DIR, { recursive: true });
+  fs.mkdirSync(MEDIA_UPLOAD_DIR, { recursive: true });
 } catch (err) {
-  console.error('[music] Could not create upload dir:', err.message);
+  console.error('[uploads] Could not create upload dir:', err.message);
 }
 
 function isBlockedMusicUrl(url) {
   const u = String(url || '').toLowerCase();
   return u.includes('youtube.com') || u.includes('youtu.be')
     || u.includes('spotify.com') || u.includes('open.spotify.com');
+}
+
+function isHugeDataUrl(value) {
+  const s = String(value || '');
+  return s.startsWith('data:') && s.length > MAX_DATA_URL_IN_DB;
 }
 
 // ── Featured Discord server (resolved from invite, cached 10 min) ────────────
@@ -785,7 +863,10 @@ async function resolveFeaturedServer(inviteCode) {
   const cached = inviteCache.get(inviteCode);
   if (cached && cached.expires > Date.now()) return cached.data;
   try {
-    const r = await fetch(`https://discord.com/api/v10/invites/${encodeURIComponent(inviteCode)}?with_counts=true`);
+    const r = await fetch(
+      `https://discord.com/api/v10/invites/${encodeURIComponent(inviteCode)}?with_counts=true`,
+      { signal: AbortSignal.timeout(2500) }
+    );
     if (!r.ok) {
       inviteCache.set(inviteCode, { data: null, expires: Date.now() + 10 * 60 * 1000 });
       return null;

@@ -1190,17 +1190,48 @@ function handleMediaUpload(e){
 }
 
 function processMediaFile(file){
-  const max=15*1024*1024;
+  const max=12*1024*1024;
   const status=document.getElementById('mediaUploadStatus');
-  if(file.size>max){status.textContent='File too large (max 15MB)';status.style.color='var(--hot)';return;}
-  status.textContent='Reading file...';status.style.color='var(--muted2)';
+  if(file.size>max){status.textContent='File too large (max 12MB)';status.style.color='var(--hot)';return;}
+  status.textContent='Uploading…';status.style.color='var(--muted2)';
   const reader=new FileReader();
-  reader.onload=e=>{
-    pendingMediaValue=e.target.result;
-    status.textContent=`${file.name} ready (${(file.size/1024/1024).toFixed(2)}MB)`;
-    status.style.color='var(--neon)';
+  reader.onload=async e=>{
+    try{
+      const uploaded=await uploadMediaFile(e.target.result,file.name,'banner');
+      pendingMediaValue=uploaded.url;
+      status.textContent=`${file.name} uploaded — click Apply`;
+      status.style.color='var(--neon)';
+    }catch(err){
+      pendingMediaValue='';
+      status.textContent=err.message||'Upload failed';
+      status.style.color='var(--hot)';
+    }
   };
   reader.readAsDataURL(file);
+}
+
+async function uploadMediaFile(dataUrl,filename,kind){
+  const sid=restoreAuthSid();
+  const url=sid?`${API_BASE}/profile/media-upload?sid=${encodeURIComponent(sid)}`:`${API_BASE}/profile/media-upload`;
+  const controller=new AbortController();
+  const timer=setTimeout(()=>controller.abort(),60000);
+  try{
+    const res=await fetch(url,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      credentials:'include',
+      signal:controller.signal,
+      body:JSON.stringify({data:dataUrl,filename,kind}),
+    });
+    const json=await res.json().catch(()=>({}));
+    if(!res.ok) throw new Error(json.error||'Upload failed');
+    return json;
+  }catch(err){
+    if(err.name==='AbortError') throw new Error('Upload timed out — try a smaller file');
+    throw err;
+  }finally{
+    clearTimeout(timer);
+  }
 }
 
 function applyMediaPicker(){
@@ -1234,13 +1265,21 @@ function clearBanner(){
 function handleBgUpload(e,type){
   const file=e.target.files[0];
   if(!file) return;
-  const max=type==='video'?20*1024*1024:8*1024*1024;
-  if(file.size>max){showToast('ERR',`File too large (max ${type==='video'?20:8}MB)`);return;}
+  const max=type==='video'?12*1024*1024:8*1024*1024;
+  if(file.size>max){showToast('ERR',`File too large (max ${type==='video'?12:8}MB)`);return;}
+  showToast('OK','Uploading background…','info');
   const reader=new FileReader();
-  reader.onload=ev=>{
-    currentBgData={type,value:ev.target.result};
-    updatePreview();
-    showToast('OK',`${type==='video'?'Video':'GIF'} background loaded!`,'success');
+  reader.onload=async ev=>{
+    try{
+      const uploaded=await uploadMediaFile(ev.target.result,file.name,'bg');
+      currentBgType=uploaded.type==='video'?'video':(uploaded.type==='gif'?'gif':type);
+      currentBgData={type:currentBgType,value:uploaded.url};
+      updatePreview();
+      markProfileDirty();
+      showToast('OK',`${type==='video'?'Video':'GIF'} background uploaded — Save Changes`,'success');
+    }catch(err){
+      showToast('ERR',err.message||'Background upload failed','error');
+    }
   };
   reader.readAsDataURL(file);
 }
@@ -1844,10 +1883,22 @@ async function saveProfile(){
     savBtn.classList.remove('loading');savBtn.disabled=false;
     return;
   }
+  const bannerVal=currentBannerData.value||'';
+  const bgVal=currentBgData.value||document.getElementById('backgroundColorInput')?.value||'';
+  if(String(bannerVal).startsWith('data:')&&String(bannerVal).length>12000){
+    showToast('ERR','Banner is still a local file blob — re-upload it, wait for “uploaded”, then Save.','error');
+    savBtn.classList.remove('loading');savBtn.disabled=false;
+    return;
+  }
+  if(String(bgVal).startsWith('data:')&&String(bgVal).length>12000){
+    showToast('ERR','Background is still a local file blob — re-upload it, then Save.','error');
+    savBtn.classList.remove('loading');savBtn.disabled=false;
+    return;
+  }
   const body={
     display_name:document.getElementById('displayName').value,slug,bio:document.getElementById('bioText').value,
     email:document.getElementById('emailInput').value,
-    bannerUrl:currentBannerData.value||'',
+    bannerUrl:bannerVal,
     social_links:{
       twitter:document.getElementById('twitterInput').value,github:document.getElementById('githubInput').value,
       youtube:document.getElementById('youtubeInput').value,website:document.getElementById('websiteInput').value,
@@ -1865,18 +1916,20 @@ async function saveProfile(){
       musicAutoplay:document.getElementById('musicAutoplayInput')?.checked||false,
       animatedBg:activeFx.anim,glassmorphism:activeFx.glassmorphism,particles:activeFx.particles,
       bgBlur:activeFx.blur,entrySplash:activeFx.splash,typewriterBio:activeFx.typewriter,tiltCard:activeFx.tilt,
-      bgType:currentBgType,bgValue:currentBgData.value||document.getElementById('backgroundColorInput')?.value||'',layout:currentLayout,font:currentFont,
+      bgType:currentBgType,bgValue:bgVal,layout:currentLayout,font:currentFont,
       nameEffect:currentNameEffect,
       particleStyle:currentParticleStyle,
     }
   };
+  const controller=new AbortController();
+  const timer=setTimeout(()=>controller.abort(),25000);
   try{
     const sid=restoreAuthSid();const url=sid?`${API_BASE}/profile?sid=${encodeURIComponent(sid)}`:`${API_BASE}/profile`;
-    const res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},credentials:'include',body:JSON.stringify(body)});
+    const res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},credentials:'include',body:JSON.stringify(body),signal:controller.signal});
     if(!res.ok){if(res.status===409){showToast('ERR','❌ This handle is already taken!');}else{const err=await res.json().catch(()=>({error:'Failed to save'}));showToast('ERR',err.error||'Failed to save profile!');}return;}
     const savedMusic=activeFx.music&&musicUrl;
-    showToast('OK','Profile saved!','success');window._profileDirty=false;
-    await checkSession();
+    window._profileDirty=false;
+    showToast('OK','Profile saved! Open your page to see it.','success');
     if(savedMusic){
       activeFx.music=true;
       document.getElementById('musicUrlInput').value=musicUrl;
@@ -1884,8 +1937,12 @@ async function saveProfile(){
       document.getElementById('fx-toggle-music')?.classList.add('on');
       document.getElementById('music-section').style.display='block';
     }
-  }catch{showToast('ERR','Failed to save profile!','error');}
-  finally{savBtn.classList.remove('loading');savBtn.disabled=false;}
+    const publicLink=document.getElementById('viewPublicPageLink');
+    if(publicLink&&slug) publicLink.href=`${PUBLIC_BASE_URL}/${slug}?v=${Date.now()}`;
+  }catch(err){
+    showToast('ERR',err?.name==='AbortError'?'Save timed out — try again without huge files.':'Failed to save profile!','error');
+  }
+  finally{clearTimeout(timer);savBtn.classList.remove('loading');savBtn.disabled=false;}
 }
 
 // ── Unsaved changes guard ──

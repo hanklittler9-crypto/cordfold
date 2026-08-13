@@ -186,6 +186,93 @@
         0 0 0 6px rgba(255,255,255,0.04),
         0 0 48px rgba(var(--accent-rgb, 196,107,255), 0.35),
         0 24px 50px rgba(0,0,0,0.45);
+      animation: avatarFloat 5.5s ease-in-out infinite;
+    }
+    @keyframes avatarFloat {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+    .page.layout-centered .avatar-holder::after {
+      content: '';
+      position: absolute;
+      inset: -18px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(var(--accent-rgb, 196,107,255), 0.28), transparent 68%);
+      z-index: -1;
+      animation: avatarAura 4s ease-in-out infinite alternate;
+      pointer-events: none;
+    }
+    @keyframes avatarAura {
+      from { opacity: 0.45; transform: scale(0.92); }
+      to { opacity: 0.9; transform: scale(1.08); }
+    }
+    .page.layout-centered .status-pill {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      width: min(100%, 320px);
+      margin: 14px auto 0;
+      padding: 10px 14px 10px 10px;
+      border-radius: 18px;
+      background: rgba(18,18,22,0.55);
+      border: 1px solid rgba(255,255,255,0.1);
+      backdrop-filter: blur(16px) saturate(1.15);
+      -webkit-backdrop-filter: blur(16px) saturate(1.15);
+      box-shadow: 0 12px 36px rgba(0,0,0,0.28);
+      text-align: left;
+      position: relative;
+      overflow: hidden;
+    }
+    .page.layout-centered .status-pill::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(110deg, transparent 30%, rgba(255,255,255,0.12) 50%, transparent 70%);
+      transform: translateX(-120%);
+      animation: pillShine 4.5s ease-in-out infinite;
+      pointer-events: none;
+    }
+    @keyframes pillShine {
+      0%, 60% { transform: translateX(-120%); }
+      80%, 100% { transform: translateX(120%); }
+    }
+    .page.layout-centered .social-link {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: transparent;
+      border: none;
+      color: #fff;
+      box-shadow: none;
+      filter: drop-shadow(0 2px 10px rgba(0,0,0,0.45));
+      transition: transform 0.2s cubic-bezier(0.22,1,0.36,1), background 0.2s;
+    }
+    .bg-media {
+      transition: transform 0.35s ease-out;
+      will-change: transform;
+    }
+    .page.layout-centered .bg-media.parallax-on {
+      transform: scale(1.06);
+    }
+    .cursor-trail-dot {
+      position: fixed;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: rgba(var(--accent-rgb, 196,107,255), 0.55);
+      pointer-events: none;
+      z-index: 90;
+      mix-blend-mode: screen;
+      animation: trailFade 0.55s ease forwards;
+    }
+    @keyframes trailFade {
+      to { opacity: 0; transform: scale(0.2); }
+    }
+    .page.layout-centered .custom-link-block {
+      transition: transform 0.2s cubic-bezier(0.22,1,0.36,1), border-color 0.2s, background 0.2s;
+    }
+    .page.layout-centered .custom-link-block:hover {
+      transform: translateY(-3px) scale(1.01);
     }
     .page.layout-centered .avatar-ring {
       inset: -10px;
@@ -2385,9 +2472,19 @@ function initProfilePolish(enableParallax = true) {
 
   const glow = document.getElementById('cursorGlow');
   if (glow && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    let trailTick = 0;
     document.addEventListener('mousemove', e => {
       glow.style.left = e.clientX + 'px';
       glow.style.top = e.clientY + 'px';
+      trailTick += 1;
+      if (trailTick % 3 === 0 && document.querySelector('.page.layout-centered')) {
+        const dot = document.createElement('div');
+        dot.className = 'cursor-trail-dot';
+        dot.style.left = e.clientX + 'px';
+        dot.style.top = e.clientY + 'px';
+        document.body.appendChild(dot);
+        setTimeout(() => dot.remove(), 560);
+      }
     });
   }
 
@@ -2399,7 +2496,18 @@ function initProfilePolish(enableParallax = true) {
     }
   });
 
-  if (card && enableParallax && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const isCentered = document.querySelector('.page.layout-centered');
+  const bgMedia = document.getElementById('bgMedia');
+
+  if (!reduceMotion && isCentered && bgMedia) {
+    bgMedia.classList.add('parallax-on');
+    document.addEventListener('mousemove', e => {
+      const x = (e.clientX / window.innerWidth - 0.5) * 18;
+      const y = (e.clientY / window.innerHeight - 0.5) * 12;
+      bgMedia.style.transform = `scale(1.08) translate(${x}px, ${y}px)`;
+    });
+  } else if (card && enableParallax && !reduceMotion) {
     document.addEventListener('mousemove', e => {
       const x = (e.clientX / window.innerWidth - 0.5) * 8;
       const y = (e.clientY / window.innerHeight - 0.5) * 6;
@@ -2576,7 +2684,10 @@ async function renderProfile() {
 
   let data;
   try {
-    const res = await fetch(`${API_BASE}/profile/${slug}`);
+    const res = await fetch(`${API_BASE}/profile/${encodeURIComponent(slug)}?t=${Date.now()}`, {
+      cache: 'no-store',
+      headers: { 'Cache-Control': 'no-cache' },
+    });
     if (!res.ok) throw new Error('Not found');
     data = await res.json();
   } catch {
@@ -2746,15 +2857,17 @@ async function renderProfile() {
     </span>
   ` : '';
 
-  const statusPillHtml = presence
-    ? `<div class="status-pill">
-        <img class="status-pill-avatar" src="${escapeHtml(p.avatarUrl || 'https://cdn.discordapp.com/embed/avatars/0.png')}" alt="" onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'"/>
-        <div class="status-pill-text">
-          <div class="status-pill-name">${escapeHtml(p.displayName)}</div>
-          <div class="status-pill-activity">${escapeHtml(statusLine || 'currently online')}</div>
-        </div>
-      </div>`
-    : '';
+  const statusPillHtml = `
+    <div class="status-pill">
+      <img class="status-pill-avatar" src="${escapeHtml(p.avatarUrl || 'https://cdn.discordapp.com/embed/avatars/0.png')}" alt="" onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'"/>
+      <div class="status-pill-text">
+        <div class="status-pill-name">${escapeHtml(p.displayName)}</div>
+        <div class="status-pill-activity">${escapeHtml(
+          (presence && statusLine) ? statusLine
+            : (p.bio ? String(p.bio).slice(0, 48) : 'currently doing nothing')
+        )}</div>
+      </div>
+    </div>`;
 
   const summaryChips = [];
   if (disp.showViews && p.viewCount && (t.layout || 'centered') !== 'centered') {
