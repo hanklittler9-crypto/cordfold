@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="icon" type="image/svg+xml" href="/favicon.svg"/>
   <title>Cordfol Profile</title>
-  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;700&family=IBM+Plex+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&family=Space+Mono:wght@400;700&family=Syne:wght@500;600;700&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;700&family=IBM+Plex+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&family=Space+Mono:wght@400;700&family=Syne:wght@500;600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet"/>
   <style>
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -149,6 +149,252 @@
       font-weight: 400;
     }
     .page.layout-magazine .card.magazine-layout .card-body { padding-top: 10px; }
+
+    /* ── Guns.lol-inspired open profile (centered) ── */
+    .page.layout-centered {
+      justify-content: center;
+      padding: 72px 20px 100px;
+    }
+    .page.layout-centered .card {
+      max-width: 440px;
+      background: transparent;
+      border: none;
+      border-radius: 0;
+      box-shadow: none;
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+      overflow: visible;
+    }
+    .page.layout-centered .card::before,
+    .page.layout-centered .card.card-loaded {
+      animation: cardSlideIn 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .page.layout-centered .card::before { display: none; }
+    .page.layout-centered .banner { display: none; }
+    .page.layout-centered .avatar-wrap {
+      justify-content: center;
+      margin-top: 0;
+      padding: 0;
+      margin-bottom: 22px;
+    }
+    .page.layout-centered .avatar {
+      width: 132px;
+      height: 132px;
+      border-radius: 50%;
+      border: 3px solid rgba(255,255,255,0.18);
+      box-shadow:
+        0 0 0 6px rgba(255,255,255,0.04),
+        0 0 48px rgba(var(--accent-rgb, 196,107,255), 0.35),
+        0 24px 50px rgba(0,0,0,0.45);
+    }
+    .page.layout-centered .avatar-ring {
+      inset: -10px;
+      border-radius: 50%;
+      opacity: 0.55;
+    }
+    .page.layout-centered .presence-dot {
+      width: 22px;
+      height: 22px;
+      border: 4px solid rgba(8,8,10,0.92);
+      bottom: 6px;
+      left: auto;
+      right: 8px;
+    }
+    .page.layout-centered .card-body {
+      padding: 0 8px 20px;
+      text-align: center;
+    }
+    .page.layout-centered .profile-header {
+      justify-content: center;
+      margin-bottom: 10px;
+    }
+    .page.layout-centered .profile-heading {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+    }
+    .page.layout-centered .profile-kicker {
+      margin-bottom: 10px;
+      background: rgba(0,0,0,0.28);
+      backdrop-filter: blur(10px);
+    }
+    .page.layout-centered .profile-name {
+      font-family: 'Syne', 'DM Sans', sans-serif;
+      font-weight: 700;
+      font-size: clamp(1.85rem, 5vw, 2.4rem);
+      letter-spacing: -0.02em;
+      justify-content: center;
+      margin-bottom: 6px;
+      text-shadow: 0 2px 24px rgba(0,0,0,0.45);
+    }
+    .page.layout-centered .profile-tag {
+      background: transparent;
+      border: none;
+      color: rgba(255,255,255,0.55);
+      padding: 4px 0;
+      font-size: 12px;
+      letter-spacing: 0.04em;
+    }
+    .page.layout-centered .profile-bio {
+      text-align: center;
+      margin: 8px auto 18px;
+      max-width: 34ch;
+      color: rgba(255,255,255,0.72);
+      text-shadow: 0 1px 12px rgba(0,0,0,0.35);
+    }
+    .page.layout-centered .status-pill {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      width: min(100%, 320px);
+      margin: 14px auto 0;
+      padding: 10px 14px 10px 10px;
+      border-radius: 18px;
+      background: rgba(18,18,22,0.55);
+      border: 1px solid rgba(255,255,255,0.1);
+      backdrop-filter: blur(16px) saturate(1.15);
+      -webkit-backdrop-filter: blur(16px) saturate(1.15);
+      box-shadow: 0 12px 36px rgba(0,0,0,0.28);
+      text-align: left;
+    }
+    .page.layout-centered .status-pill-avatar {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      object-fit: cover;
+      flex-shrink: 0;
+      box-shadow: 0 0 18px rgba(var(--accent-rgb, 196,107,255), 0.35);
+    }
+    .page.layout-centered .status-pill-name {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .page.layout-centered .status-pill-activity {
+      font-size: 12px;
+      color: rgba(255,255,255,0.58);
+      margin-top: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 220px;
+    }
+    .page.layout-centered .presence-activity { display: none; }
+    .page.layout-centered .profile-summary {
+      justify-content: center;
+      margin-top: 16px;
+    }
+    .page.layout-centered .summary-chip {
+      background: rgba(0,0,0,0.28);
+      backdrop-filter: blur(10px);
+      border-color: rgba(255,255,255,0.1);
+    }
+    .page.layout-centered .roles-title {
+      text-align: center;
+      margin-top: 8px;
+    }
+    .page.layout-centered .roles-list {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 8px;
+    }
+    .page.layout-centered .role-item {
+      border-radius: 999px;
+      padding: 8px 12px 8px 8px;
+      background: rgba(0,0,0,0.32);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-left: 1px solid rgba(255,255,255,0.1);
+      gap: 8px;
+      max-width: 100%;
+    }
+    .page.layout-centered .role-item:hover { transform: translateY(-1px); }
+    .page.layout-centered .role-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+    }
+    .page.layout-centered .role-proof { display: none; }
+    .page.layout-centered .role-server { display: none; }
+    .page.layout-centered .socials {
+      justify-content: center;
+      gap: 18px;
+      margin-top: 22px;
+    }
+    .page.layout-centered .social-link {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: transparent;
+      border: none;
+      color: #fff;
+      box-shadow: none;
+      filter: drop-shadow(0 2px 10px rgba(0,0,0,0.45));
+    }
+    .page.layout-centered .social-link::before { display: none; }
+    .page.layout-centered .social-link:hover {
+      transform: translateY(-2px) scale(1.08);
+      background: rgba(255,255,255,0.08);
+      color: #fff !important;
+      box-shadow: none;
+    }
+    .page.layout-centered .social-link.twitter,
+    .page.layout-centered .social-link.youtube,
+    .page.layout-centered .social-link.instagram,
+    .page.layout-centered .social-link.twitch,
+    .page.layout-centered .social-link.tiktok,
+    .page.layout-centered .social-link.linkedin,
+    .page.layout-centered .social-link.github,
+    .page.layout-centered .social-link.website {
+      color: #fff;
+      border: none;
+    }
+    .page.layout-centered .custom-links { margin-top: 18px; }
+    .page.layout-centered .custom-link-block {
+      border-radius: 14px;
+      background: rgba(0,0,0,0.35);
+      backdrop-filter: blur(12px);
+      border-color: rgba(255,255,255,0.12);
+    }
+    .page.layout-centered .server-card,
+    .page.layout-centered .spotify-widget,
+    .page.layout-centered .gb-entry {
+      background: rgba(0,0,0,0.35);
+      backdrop-filter: blur(14px);
+      border-color: rgba(255,255,255,0.1);
+    }
+    .page.layout-centered .divider {
+      background: rgba(255,255,255,0.1);
+      margin: 18px auto;
+      width: 60%;
+    }
+    .page.layout-centered .profile-footer {
+      color: rgba(255,255,255,0.35);
+      text-shadow: 0 1px 8px rgba(0,0,0,0.4);
+    }
+    .views-float {
+      display: none;
+      position: fixed;
+      left: 22px;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 40;
+      align-items: center;
+      gap: 8px;
+      color: rgba(255,255,255,0.45);
+      font-size: 13px;
+      font-family: 'Space Mono', monospace;
+      letter-spacing: 0.04em;
+      text-shadow: 0 2px 12px rgba(0,0,0,0.45);
+      pointer-events: none;
+    }
+    .page.layout-centered .views-float { display: inline-flex; }
+    .views-float svg { opacity: 0.7; }
 
     /* ── Background media ── */
     .bg-media {
@@ -1684,6 +1930,10 @@
 <div class="noise"></div>
 
 <div class="page layout-centered">
+  <div class="views-float" id="viewsFloat" aria-hidden="true">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+    <span id="viewsFloatNum">0</span>
+  </div>
   <div class="card" id="card">
     <div class="skeleton-banner"></div>
     <div class="skeleton-avatar-wrap">
@@ -2472,8 +2722,11 @@ async function renderProfile() {
   const presenceDotHtml = presence
     ? `<div class="presence-dot presence-${escapeHtml(presence.status)}" title="${presenceTitles[presence.status] || ''}"></div>`
     : '';
-  const presenceActivityHtml = (presence && presence.activity && presence.status !== 'offline')
-    ? `<div class="presence-activity"><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" style="flex-shrink:0"><path d="M21.58 16.09l-1.09-7.66A4.996 4.996 0 0 0 15.54 4H8.46C6 4 3.9 5.83 3.51 8.43l-1.09 7.66a3.16 3.16 0 0 0 5.35 2.72L10.17 16h3.66l2.4 2.81a3.16 3.16 0 0 0 5.35-2.72zM11 11H9v2H8v-2H6v-1h2V8h1v2h2v1zm4-1.5a1 1 0 1 1 2 0 1 1 0 0 1-2 0zm2 3.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2z"/></svg> ${escapeHtml(presence.activity)}</div>`
+  const statusLine = (presence && presence.activity && presence.status !== 'offline')
+    ? presence.activity
+    : (presence ? (presenceTitles[presence.status] || 'Online') : '');
+  const presenceActivityHtml = (presence && presence.status !== 'offline')
+    ? `<div class="presence-activity"><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" style="flex-shrink:0"><path d="M21.58 16.09l-1.09-7.66A4.996 4.996 0 0 0 15.54 4H8.46C6 4 3.9 5.83 3.51 8.43l-1.09 7.66a3.16 3.16 0 0 0 5.35 2.72L10.17 16h3.66l2.4 2.81a3.16 3.16 0 0 0 5.35-2.72zM11 11H9v2H8v-2H6v-1h2V8h1v2h2v1zm4-1.5a1 1 0 1 1 2 0 1 1 0 0 1-2 0zm2 3.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2z"/></svg> ${escapeHtml(statusLine)}</div>`
     : '';
 
   // Profile badges (computed server-side)
@@ -2493,8 +2746,18 @@ async function renderProfile() {
     </span>
   ` : '';
 
+  const statusPillHtml = presence
+    ? `<div class="status-pill">
+        <img class="status-pill-avatar" src="${escapeHtml(p.avatarUrl || 'https://cdn.discordapp.com/embed/avatars/0.png')}" alt="" onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'"/>
+        <div class="status-pill-text">
+          <div class="status-pill-name">${escapeHtml(p.displayName)}</div>
+          <div class="status-pill-activity">${escapeHtml(statusLine || 'currently online')}</div>
+        </div>
+      </div>`
+    : '';
+
   const summaryChips = [];
-  if (disp.showViews && p.viewCount) {
+  if (disp.showViews && p.viewCount && (t.layout || 'centered') !== 'centered') {
     summaryChips.push(`<div class="summary-chip"><strong id="viewCountNum">0</strong> Views</div>`);
   }
   if (disp.showMemberSince && p.memberSince) {
@@ -2554,6 +2817,7 @@ async function renderProfile() {
           </div>
           ${disp.showHandle ? `<div class="profile-tag" id="profileTag" title="Click to copy link">cordfol.org/${escapeHtml(p.slug)}</div>` : ''}
           ${presenceActivityHtml}
+          ${statusPillHtml}
         </div>
       </div>
       ${disp.showBio && p.bio ? `<div class="profile-bio" id="profileBio">${escapeHtml(p.bio)}</div>` : ''}
@@ -2585,7 +2849,15 @@ async function renderProfile() {
       trackEvent('share', 'Copy handle');
     });
   }
-  if (disp.showViews && p.viewCount) animateViewCount(document.getElementById('viewCountNum'), p.viewCount);
+  if (disp.showViews && p.viewCount) {
+    animateViewCount(document.getElementById('viewCountNum'), p.viewCount);
+    animateViewCount(document.getElementById('viewsFloatNum'), p.viewCount);
+    const vf = document.getElementById('viewsFloat');
+    if (vf) vf.style.display = '';
+  } else {
+    const vf = document.getElementById('viewsFloat');
+    if (vf) vf.style.display = 'none';
+  }
   if (disp.showLocalTime !== false && p.timezone) startLocalClock(p.timezone);
   if (disp.showGuestbook !== false) initGuestbook(p.slug);
   initProfilePolish(!t.tiltCard);
