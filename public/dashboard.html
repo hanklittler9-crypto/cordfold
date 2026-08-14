@@ -2000,19 +2000,44 @@ function applyPendingClaimSlug(){
 async function checkSession(){
   try{
     const sid=restoreAuthSid();
-    // Parallel: fast bootstrap + roles + Spotify (don't block UI on the side loads)
-    loadRoles();
-    refreshSpotifyStatus();
-    const url=sid?`${API_BASE}/dashboard/profile?sid=${encodeURIComponent(sid)}`:`${API_BASE}/dashboard/profile`;
-    const res=await fetch(url,{credentials:'include',cache:'no-store'});
-    if(!res.ok)throw new Error('Not logged in');
-    const data=await res.json();
-    if(!data.authenticated)throw new Error('Not authenticated');
+    let data=null;
+
+    // Fast path: one-shot dashboard bootstrap
+    try{
+      const url=sid?`${API_BASE}/dashboard/profile?sid=${encodeURIComponent(sid)}`:`${API_BASE}/dashboard/profile`;
+      const res=await fetch(url,{credentials:'include',cache:'no-store'});
+      if(res.ok){
+        const json=await res.json();
+        if(json&&json.authenticated) data=json;
+      }
+    }catch(err){ console.warn('[dashboard] bootstrap failed, falling back', err); }
+
+    // Proven fallback: auth/token or auth/me, then fill profile
+    if(!data){
+      const authRes=sid
+        ? await fetch(`${API_BASE}/auth/token?sid=${encodeURIComponent(sid)}`,{credentials:'include',cache:'no-store'})
+        : await fetch(`${API_BASE}/auth/me`,{credentials:'include',cache:'no-store'});
+      if(!authRes.ok) throw new Error('Not logged in');
+      const authData=await authRes.json();
+      if(!authData.authenticated) throw new Error('Not authenticated');
+      const user=normalizeUser(authData.user||authData);
+      showUser(user);
+      await loadProfileFallback(user);
+      applyPendingClaimSlug();
+      loadRoles();
+      refreshSpotifyStatus();
+      return;
+    }
+
     const user=normalizeUser(data.user||data);
     showUser(user);
-    applyDashboardProfile(data,user);
+    try{ applyDashboardProfile(data,user); }
+    catch(err){ console.error('[dashboard] apply profile failed', err); }
     applyPendingClaimSlug();
-  }catch{
+    loadRoles();
+    refreshSpotifyStatus();
+  }catch(err){
+    console.warn('[dashboard] session check failed', err);
     document.getElementById('loginBtn').style.display='';
     document.getElementById('userInfo').style.display='none';
   }
@@ -2064,6 +2089,13 @@ async function loadRoles(){
     roleCount.textContent=`${active.length} active of ${roles.length} total`;
     scanStatus.innerHTML=latest?`<div class="scan-dot"></div> Last scanned ${new Date(latest).toLocaleString()} · ${active.length} active roles`:`<div class="scan-dot"></div> ${active.length} active roles`;
     renderServerList(roles);
+    const lp=document.getElementById('lp-roles');
+    if(lp){
+      const pub=roles.filter(r=>r.is_public&&r.is_active).slice(0,4);
+      lp.innerHTML=pub.length
+        ? pub.map(r=>`<div class="lp-role"><div class="lp-dot"></div>${escapeHtmlDash(r.custom_label||r.role_name)}</div>`).join('')
+        : '<div class="lp-role" style="opacity:0.5">No public roles yet</div>';
+    }
   }catch{roleList.innerHTML='<div class="empty-state">Failed to load roles.</div>';roleCount.textContent='0 roles';scanStatus.innerHTML='<div class="scan-dot"></div> Error loading roles';renderServerList([]);}
 }
 
@@ -2122,48 +2154,76 @@ async function loadProfile(user){
     const sid=restoreAuthSid();
     const url=sid?`${API_BASE}/dashboard/profile?sid=${encodeURIComponent(sid)}`:`${API_BASE}/dashboard/profile`;
     const res=await fetch(url,{credentials:'include',cache:'no-store'});
-    if(!res.ok)throw new Error('No profile');
-    const data=await res.json();
-    if(!data.authenticated)throw new Error('Not authenticated');
-    applyDashboardProfile(data,user||normalizeUser(data.user||{}));
-  }catch{
-    if(user){
-      window._onboard.slug=!!user.slug;
-      updateOnboarding();
-      maybeShowOnboardWizard({slug:user.slug,displayName:user.display_name||user.discord_username,bio:'',socialLinks:{},viewCount:0});
+    if(res.ok){
+      const data=await res.json();
+      if(data.authenticated){
+        applyDashboardProfile(data,user||normalizeUser(data.user||{}));
+        return;
+      }
     }
+    if(user) await loadProfileFallback(user);
+  }catch{
+    if(user) await loadProfileFallback(user);
+  }
+}
+
+async function loadProfileFallback(user){
+  try{
+    if(!user?.slug) throw new Error('No slug');
+    const res=await fetch(`${API_BASE}/profile/${encodeURIComponent(user.slug)}?t=${Date.now()}`,{cache:'no-store',credentials:'include'});
+    if(!res.ok) throw new Error('No profile');
+    const data=await res.json();
+    applyDashboardProfile(data,user);
+  }catch{
+    window._onboard.slug=!!user?.slug;
+    updateOnboarding();
+    maybeShowOnboardWizard({slug:user?.slug,displayName:user?.display_name||user?.discord_username,bio:'',socialLinks:{},viewCount:0});
   }
 }
 
 function applyDashboardProfile(data,user){
   const th=data.theme||{};
   const profile=data.profile||{};
-  document.getElementById('displayName').value=profile.displayName||'';
-  document.getElementById('slug').value=profile.slug||'';
+  const social=(()=>{
+    const raw=profile.socialLinks;
+    if(!raw) return {};
+    if(typeof raw==='object'&&!Array.isArray(raw)) return raw;
+    if(typeof raw==='string'){ try{ return JSON.parse(raw)||{}; }catch{ return {}; } }
+    return {};
+  })();
+  const customLinks=Array.isArray(profile.customLinks)?profile.customLinks
+    :(typeof profile.customLinks==='string'?(()=>{try{const p=JSON.parse(profile.customLinks);return Array.isArray(p)?p:[];}catch{return[];}})():[]);
+
+  const setVal=(id,val)=>{ const el=document.getElementById(id); if(el) el.value=val??''; };
+  setVal('displayName',profile.displayName||'');
+  setVal('slug',profile.slug||'');
   window._onboardOriginalSlug=(profile.slug||'').toLowerCase();
-  document.getElementById('bioText').value=profile.bio||'';
-  document.getElementById('twitterInput').value=profile.socialLinks?.twitter||'';
-  document.getElementById('githubInput').value=profile.socialLinks?.github||'';
-  document.getElementById('youtubeInput').value=profile.socialLinks?.youtube||'';
-  document.getElementById('websiteInput').value=profile.socialLinks?.website||'';
-  document.getElementById('tiktokInput').value=profile.socialLinks?.tiktok||'';
-  document.getElementById('instagramInput').value=profile.socialLinks?.instagram||'';
-  setCustomLinks(profile.customLinks);
+  setVal('bioText',profile.bio||'');
+  setVal('twitterInput',social.twitter||'');
+  setVal('githubInput',social.github||'');
+  setVal('youtubeInput',social.youtube||'');
+  setVal('websiteInput',social.website||'');
+  setVal('tiktokInput',social.tiktok||'');
+  setVal('instagramInput',social.instagram||'');
+  setCustomLinks(customLinks);
   setTimeout(()=>{ try{ loadLinkClickCounts(); }catch{} },0);
   setDisplayOptions(profile.displayOptions);
   setEmailAlerts(profile.emailRoleAlerts);
   const fiEl=document.getElementById('featuredInviteInput');
   if(fiEl) fiEl.value=profile.featuredInvite?`https://discord.gg/${profile.featuredInvite}`:'';
-  document.getElementById('emailInput').value=profile.email||'';
+  setVal('emailInput',profile.email||'');
   if(profile.emailVerified){
-    document.getElementById('emailVerifiedBadge').style.display='inline-flex';
-    document.getElementById('emailBtnRow').style.display='none';
+    const badge=document.getElementById('emailVerifiedBadge');
+    const row=document.getElementById('emailBtnRow');
+    if(badge) badge.style.display='inline-flex';
+    if(row) row.style.display='none';
   }
-  document.getElementById('accentColorInput').value=th.accentColor||'#5865F2';
-  document.getElementById('textColorInput').value=th.textColor||'#ffffff';
-  document.getElementById('cardColorInput').value=th.cardColor||'#111111';
-  document.getElementById('cardOpacityInput').value=th.cardOpacity!=null?Math.round(Number(th.cardOpacity)* (Number(th.cardOpacity)<=1?100:1)):92;
-  document.getElementById('musicUrlInput').value=th.musicUrl||'';
+  setVal('accentColorInput',th.accentColor||'#5865F2');
+  setVal('textColorInput',th.textColor||'#ffffff');
+  setVal('cardColorInput',th.cardColor||'#111111');
+  const opacityEl=document.getElementById('cardOpacityInput');
+  if(opacityEl) opacityEl.value=th.cardOpacity!=null?Math.round(Number(th.cardOpacity)* (Number(th.cardOpacity)<=1?100:1)):92;
+  setVal('musicUrlInput',th.musicUrl||'');
   const legacyWarn=document.getElementById('musicLegacyWarn');
   if(legacyWarn) legacyWarn.style.display=th.musicLegacy?'block':'none';
   if(document.getElementById('musicAutoplayInput')) document.getElementById('musicAutoplayInput').checked=!!th.musicAutoplay;
@@ -2186,9 +2246,9 @@ function applyDashboardProfile(data,user){
   document.querySelectorAll('.bg-panel').forEach(p=>p.classList.remove('active'));
   const bgPanel=document.getElementById('bg-panel-'+bgType);
   if(bgPanel) bgPanel.classList.add('active');
-  if(bgType==='solid'&&th.bgValue) document.getElementById('backgroundColorInput').value=th.bgValue;
-  if(bgType==='gif'&&th.bgValue) document.getElementById('gifUrlInput').value=th.bgValue;
-  if(bgType==='video'&&th.bgValue) document.getElementById('videoUrlInput').value=th.bgValue;
+  if(bgType==='solid'&&th.bgValue) setVal('backgroundColorInput',th.bgValue);
+  if(bgType==='gif'&&th.bgValue) setVal('gifUrlInput',th.bgValue);
+  if(bgType==='video'&&th.bgValue) setVal('videoUrlInput',th.bgValue);
 
   currentLayout=th.layout||'centered';
   document.querySelectorAll('.layout-btn').forEach(btn=>{
@@ -2227,18 +2287,18 @@ function applyDashboardProfile(data,user){
       toggle.classList.toggle('on',activeFx[key]);
     }
   });
-  document.getElementById('music-section').style.display=activeFx.music?'block':'none';
+  const musicSection=document.getElementById('music-section');
+  if(musicSection) musicSection.style.display=activeFx.music?'block':'none';
   syncParticleStyleUI();
 
   updateEmailState();updatePreview();
 
-  const sl=profile.socialLinks||{};
   window._onboard.slug=!!profile.slug;
   window._onboard.bio=!!(profile.bio||profile.bannerUrl);
-  window._onboard.social=Object.values(sl).some(v=>v);
+  window._onboard.social=Object.values(social).some(v=>v);
   try{ if(localStorage.getItem('cordfol_onboard_shared')==='1'||profile.viewCount>0) window._onboard.shared=true; }catch{}
   updateOnboarding();
-  maybeShowOnboardWizard(profile);
+  maybeShowOnboardWizard({...profile,socialLinks:social});
 }
 
 function isVideoUrl(url){

@@ -260,19 +260,20 @@ app.use('/api/profile', async (req, res, next) => {
 // Fast dashboard profile — no view-count scan, invite resolve, or public roles
 app.get('/api/dashboard/profile', async (req, res) => {
   try {
+    // Resolve sid without writing to express-session (avoids cookie churn / empty session races)
+    let userId = req.session?.userId || null;
     const { sid } = req.query;
-    if (sid && !req.session?.userId) {
+    if (!userId && sid) {
       try {
         const result = await db.query('SELECT sess FROM user_sessions WHERE sid = $1', [sid]);
-        if (result.rowCount > 0 && result.rows[0].sess?.userId) {
-          req.session.userId = result.rows[0].sess.userId;
-        }
+        const sess = result.rows[0]?.sess;
+        const parsed = typeof sess === 'string' ? JSON.parse(sess) : sess;
+        userId = parsed?.userId || null;
       } catch (err) {
         console.error('[dashboard/profile] Session lookup error:', err);
       }
     }
 
-    const userId = req.session?.userId;
     if (!userId) return res.status(401).json({ authenticated: false, error: 'Not authenticated' });
 
     const userResult = await db.query(`
