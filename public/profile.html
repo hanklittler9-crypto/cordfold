@@ -153,145 +153,165 @@
     /* ── Guns.lol-inspired open profile (centered) ── */
     .page.layout-centered {
       justify-content: center;
-      padding: 72px 20px 100px;
+      padding: 80px 20px 110px;
     }
-    .page.layout-centered .card {
-      max-width: 440px;
-      background: transparent;
-      border: none;
+    .page.layout-centered .card,
+    .page.layout-centered .card.glass {
+      max-width: 420px;
+      background: transparent !important;
+      border: none !important;
       border-radius: 0;
-      box-shadow: none;
-      backdrop-filter: none;
-      -webkit-backdrop-filter: none;
+      box-shadow: none !important;
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
       overflow: visible;
+      animation: cardSlideIn 0.55s cubic-bezier(0.16, 1, 0.3, 1);
     }
-    .page.layout-centered .card::before,
     .page.layout-centered .card.card-loaded {
-      animation: cardSlideIn 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+      animation: cardSlideIn 0.55s cubic-bezier(0.16, 1, 0.3, 1);
     }
     .page.layout-centered .card::before { display: none; }
     .page.layout-centered .banner { display: none; }
+
     .page.layout-centered .avatar-wrap {
       justify-content: center;
       margin-top: 0;
       padding: 0;
-      margin-bottom: 22px;
+      margin-bottom: 20px;
+    }
+    .page.layout-centered .avatar-holder {
+      width: 128px;
+      height: 128px;
     }
     .page.layout-centered .avatar {
-      width: 132px;
-      height: 132px;
+      width: 128px !important;
+      height: 128px !important;
+      max-width: 128px;
+      max-height: 128px;
       border-radius: 50%;
-      border: 3px solid rgba(255,255,255,0.18);
+      border: 2px solid rgba(255,255,255,0.22);
       box-shadow:
-        0 0 0 6px rgba(255,255,255,0.04),
-        0 0 48px rgba(var(--accent-rgb, 196,107,255), 0.35),
-        0 24px 50px rgba(0,0,0,0.45);
+        0 0 0 5px rgba(255,255,255,0.04),
+        0 0 42px rgba(var(--accent-rgb, 88,101,242), 0.32),
+        0 18px 40px rgba(0,0,0,0.4);
       animation: avatarFloat 5.5s ease-in-out infinite;
     }
     @keyframes avatarFloat {
       0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-8px); }
+      50% { transform: translateY(-6px); }
     }
     .page.layout-centered .avatar-holder::after {
       content: '';
       position: absolute;
-      inset: -18px;
+      inset: -16px;
       border-radius: 50%;
-      background: radial-gradient(circle, rgba(var(--accent-rgb, 196,107,255), 0.28), transparent 68%);
+      background: radial-gradient(circle, rgba(var(--accent-rgb, 88,101,242), 0.26), transparent 70%);
       z-index: -1;
       animation: avatarAura 4s ease-in-out infinite alternate;
       pointer-events: none;
     }
     @keyframes avatarAura {
-      from { opacity: 0.45; transform: scale(0.92); }
-      to { opacity: 0.9; transform: scale(1.08); }
+      from { opacity: 0.4; transform: scale(0.94); }
+      to { opacity: 0.85; transform: scale(1.06); }
     }
+    .page.layout-centered .avatar-ring {
+      inset: -8px;
+      border-radius: 50%;
+      opacity: 0.45;
+    }
+    .page.layout-centered .presence-dot {
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(8,8,10,0.95);
+      bottom: 4px;
+      left: auto;
+      right: 6px;
+    }
+
     /* Status pill — always constrained so it can't explode layouts */
     .status-pill {
       display: flex;
       align-items: center;
-      gap: 12px;
-      width: min(100%, 320px);
+      gap: 10px;
+      width: min(100%, 280px);
       max-width: 100%;
-      margin: 14px 0 0;
-      padding: 10px 14px 10px 10px;
-      border-radius: 18px;
-      background: rgba(18,18,22,0.55);
-      border: 1px solid rgba(255,255,255,0.1);
-      backdrop-filter: blur(16px) saturate(1.15);
-      -webkit-backdrop-filter: blur(16px) saturate(1.15);
-      box-shadow: 0 12px 36px rgba(0,0,0,0.28);
+      margin: 0 auto;
+      padding: 8px 14px 8px 8px;
+      border-radius: 999px;
+      background: rgba(12,12,16,0.48);
+      border: 1px solid rgba(255,255,255,0.12);
+      backdrop-filter: blur(18px) saturate(1.2);
+      -webkit-backdrop-filter: blur(18px) saturate(1.2);
+      box-shadow: 0 10px 28px rgba(0,0,0,0.28);
       text-align: left;
       position: relative;
       overflow: hidden;
       box-sizing: border-box;
+      flex: 0 0 auto;
     }
     .status-pill-avatar {
-      width: 42px !important;
-      height: 42px !important;
-      max-width: 42px !important;
-      max-height: 42px !important;
+      width: 34px !important;
+      height: 34px !important;
+      min-width: 34px !important;
+      min-height: 34px !important;
+      max-width: 34px !important;
+      max-height: 34px !important;
       border-radius: 50%;
       object-fit: cover;
-      flex-shrink: 0;
+      flex: 0 0 34px;
       display: block;
-      box-shadow: 0 0 18px rgba(var(--accent-rgb, 196,107,255), 0.35);
+      border: 1px solid rgba(255,255,255,0.14);
+      box-shadow: 0 0 14px rgba(var(--accent-rgb, 88,101,242), 0.28);
     }
-    .status-pill-text { min-width: 0; flex: 1; }
+    .status-pill-text { min-width: 0; flex: 1; overflow: hidden; }
     .status-pill-name {
-      font-size: 13.5px;
+      font-size: 12.5px;
       font-weight: 700;
       color: #fff;
-      display: flex;
-      align-items: center;
-      gap: 6px;
+      line-height: 1.2;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
     .status-pill-activity {
-      font-size: 12px;
-      color: rgba(255,255,255,0.58);
+      font-size: 11px;
+      color: rgba(255,255,255,0.55);
       margin-top: 2px;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      max-width: 220px;
+      max-width: 100%;
+    }
+    .page.layout-centered .status-pill {
+      margin: 16px auto 0;
     }
     .page.layout-centered .status-pill::after {
       content: '';
       position: absolute;
       inset: 0;
-      background: linear-gradient(110deg, transparent 30%, rgba(255,255,255,0.12) 50%, transparent 70%);
+      background: linear-gradient(110deg, transparent 28%, rgba(255,255,255,0.1) 50%, transparent 72%);
       transform: translateX(-120%);
-      animation: pillShine 4.5s ease-in-out infinite;
+      animation: pillShine 5s ease-in-out infinite;
       pointer-events: none;
     }
     @keyframes pillShine {
-      0%, 60% { transform: translateX(-120%); }
-      80%, 100% { transform: translateX(120%); }
+      0%, 65% { transform: translateX(-120%); }
+      85%, 100% { transform: translateX(120%); }
     }
-    .page.layout-centered .social-link {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      background: transparent;
-      border: none;
-      color: #fff;
-      box-shadow: none;
-      filter: drop-shadow(0 2px 10px rgba(0,0,0,0.45));
-      transition: transform 0.2s cubic-bezier(0.22,1,0.36,1), background 0.2s;
-    }
+
     .bg-media {
       transition: transform 0.35s ease-out;
       will-change: transform;
     }
     .page.layout-centered .bg-media.parallax-on {
-      transform: scale(1.06);
+      transform: scale(1.05);
     }
     .cursor-trail-dot {
       position: fixed;
       width: 6px;
       height: 6px;
       border-radius: 50%;
-      background: rgba(var(--accent-rgb, 196,107,255), 0.55);
+      background: rgba(var(--accent-rgb, 88,101,242), 0.5);
       pointer-events: none;
       z-index: 90;
       mix-blend-mode: screen;
@@ -300,32 +320,18 @@
     @keyframes trailFade {
       to { opacity: 0; transform: scale(0.2); }
     }
-    .page.layout-centered .custom-link-block {
-      transition: transform 0.2s cubic-bezier(0.22,1,0.36,1), border-color 0.2s, background 0.2s;
-    }
-    .page.layout-centered .custom-link-block:hover {
-      transform: translateY(-3px) scale(1.01);
-    }
-    .page.layout-centered .avatar-ring {
-      inset: -10px;
-      border-radius: 50%;
-      opacity: 0.55;
-    }
-    .page.layout-centered .presence-dot {
-      width: 22px;
-      height: 22px;
-      border: 4px solid rgba(8,8,10,0.92);
-      bottom: 6px;
-      left: auto;
-      right: 8px;
-    }
+
     .page.layout-centered .card-body {
-      padding: 0 8px 20px;
+      padding: 0 6px 12px;
       text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
     .page.layout-centered .profile-header {
       justify-content: center;
-      margin-bottom: 10px;
+      margin-bottom: 0;
+      width: 100%;
     }
     .page.layout-centered .profile-heading {
       display: flex;
@@ -334,97 +340,96 @@
       width: 100%;
     }
     .page.layout-centered .profile-kicker {
-      margin-bottom: 10px;
-      background: rgba(0,0,0,0.28);
-      backdrop-filter: blur(10px);
+      margin-bottom: 12px;
+      padding: 5px 10px;
+      background: rgba(0,0,0,0.22);
+      border-color: rgba(255,255,255,0.08);
+      backdrop-filter: blur(8px);
     }
     .page.layout-centered .profile-name {
       font-family: 'Syne', 'DM Sans', sans-serif;
       font-weight: 700;
-      font-size: clamp(1.85rem, 5vw, 2.4rem);
-      letter-spacing: -0.02em;
+      font-size: clamp(1.75rem, 4.8vw, 2.25rem);
+      letter-spacing: -0.025em;
       justify-content: center;
-      margin-bottom: 6px;
-      text-shadow: 0 2px 24px rgba(0,0,0,0.45);
+      flex-wrap: wrap;
+      margin-bottom: 4px;
+      gap: 8px;
+      text-shadow: 0 2px 20px rgba(0,0,0,0.4);
+    }
+    .page.layout-centered .badge-row {
+      margin-left: 0;
+      gap: 5px;
+    }
+    .page.layout-centered .p-badge {
+      width: 22px;
+      height: 22px;
+      font-size: 11px;
+      background: rgba(0,0,0,0.35);
+      border-color: rgba(255,255,255,0.14);
+      backdrop-filter: blur(8px);
     }
     .page.layout-centered .profile-tag {
       background: transparent;
       border: none;
-      color: rgba(255,255,255,0.55);
-      padding: 4px 0;
+      color: rgba(255,255,255,0.48);
+      padding: 2px 0;
       font-size: 12px;
-      letter-spacing: 0.04em;
+      letter-spacing: 0.03em;
+      cursor: pointer;
     }
     .page.layout-centered .profile-bio {
       text-align: center;
-      margin: 8px auto 18px;
-      max-width: 34ch;
-      color: rgba(255,255,255,0.72);
-      text-shadow: 0 1px 12px rgba(0,0,0,0.35);
-    }
-    .page.layout-centered .status-pill {
-      margin-left: auto;
-      margin-right: auto;
+      margin: 12px auto 0;
+      max-width: 32ch;
+      color: rgba(255,255,255,0.68);
+      font-size: 0.92rem;
+      line-height: 1.45;
+      text-shadow: 0 1px 10px rgba(0,0,0,0.3);
+      order: 0;
     }
     .page.layout-centered .presence-activity { display: none; }
-    .page.layout-centered .profile-summary {
-      justify-content: center;
-      margin-top: 16px;
-    }
-    .page.layout-centered .summary-chip {
-      background: rgba(0,0,0,0.28);
-      backdrop-filter: blur(10px);
-      border-color: rgba(255,255,255,0.1);
-    }
-    .page.layout-centered .roles-title {
-      text-align: center;
-      margin-top: 8px;
-    }
-    .page.layout-centered .roles-list {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 8px;
-    }
-    .page.layout-centered .role-item {
-      border-radius: 999px;
-      padding: 8px 12px 8px 8px;
-      background: rgba(0,0,0,0.32);
-      backdrop-filter: blur(12px);
-      border: 1px solid rgba(255,255,255,0.1);
-      border-left: 1px solid rgba(255,255,255,0.1);
-      gap: 8px;
-      max-width: 100%;
-    }
-    .page.layout-centered .role-item:hover { transform: translateY(-1px); }
-    .page.layout-centered .role-icon {
-      width: 28px;
-      height: 28px;
-      border-radius: 50%;
-    }
-    .page.layout-centered .role-proof { display: none; }
-    .page.layout-centered .role-server { display: none; }
+    .page.layout-centered .profile-summary { display: none; }
+
     .page.layout-centered .socials {
       justify-content: center;
-      gap: 18px;
+      gap: 16px;
       margin-top: 22px;
+      margin-bottom: 4px;
+      width: 100%;
     }
     .page.layout-centered .social-link {
-      width: 40px;
-      height: 40px;
+      width: 38px;
+      height: 38px;
+      padding: 0;
+      gap: 0;
       border-radius: 50%;
       background: transparent;
       border: none;
-      color: #fff;
+      color: #fff !important;
       box-shadow: none;
-      filter: drop-shadow(0 2px 10px rgba(0,0,0,0.45));
+      font-size: 0;
+      filter: drop-shadow(0 2px 8px rgba(0,0,0,0.4));
+      transition: transform 0.2s cubic-bezier(0.22,1,0.36,1), background 0.2s, opacity 0.2s;
+      opacity: 0.92;
+    }
+    .page.layout-centered .social-link > span:last-child { display: none; }
+    .page.layout-centered .social-link > span:first-child {
+      display: inline-flex;
+      font-size: 18px;
+      line-height: 1;
+    }
+    .page.layout-centered .social-link svg {
+      width: 20px;
+      height: 20px;
     }
     .page.layout-centered .social-link::before { display: none; }
     .page.layout-centered .social-link:hover {
-      transform: translateY(-2px) scale(1.08);
+      transform: translateY(-2px) scale(1.1);
       background: rgba(255,255,255,0.08);
       color: #fff !important;
       box-shadow: none;
+      opacity: 1;
     }
     .page.layout-centered .social-link.twitter,
     .page.layout-centered .social-link.youtube,
@@ -434,30 +439,114 @@
     .page.layout-centered .social-link.linkedin,
     .page.layout-centered .social-link.github,
     .page.layout-centered .social-link.website {
-      color: #fff;
+      color: #fff !important;
       border: none;
+      background: transparent;
     }
-    .page.layout-centered .custom-links { margin-top: 18px; }
+
+    .page.layout-centered #spotifySlot,
+    .page.layout-centered #musicSlot {
+      width: 100%;
+      margin-top: 20px;
+    }
+    .page.layout-centered .music-inline,
+    .page.layout-centered .spotify-widget {
+      margin-bottom: 0;
+      border-radius: 16px;
+      background: rgba(0,0,0,0.38);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(255,255,255,0.1);
+      text-align: left;
+    }
+    .page.layout-centered .spotify-widget:hover {
+      background: rgba(0,0,0,0.46);
+      border-color: rgba(30, 215, 96, 0.28);
+    }
+    .page.layout-centered #gbSection {
+      width: 100%;
+      text-align: left;
+    }
+
+    .page.layout-centered .custom-links {
+      margin-top: 16px;
+      width: 100%;
+    }
     .page.layout-centered .custom-link-block {
       border-radius: 14px;
-      background: rgba(0,0,0,0.35);
+      background: rgba(0,0,0,0.32);
       backdrop-filter: blur(12px);
-      border-color: rgba(255,255,255,0.12);
+      border-color: rgba(255,255,255,0.1);
+      transition: transform 0.2s cubic-bezier(0.22,1,0.36,1), border-color 0.2s, background 0.2s;
     }
+    .page.layout-centered .custom-link-block:hover {
+      transform: translateY(-2px);
+      background: rgba(0,0,0,0.42);
+    }
+
     .page.layout-centered .server-card,
-    .page.layout-centered .spotify-widget,
     .page.layout-centered .gb-entry {
-      background: rgba(0,0,0,0.35);
+      background: rgba(0,0,0,0.32);
       backdrop-filter: blur(14px);
       border-color: rgba(255,255,255,0.1);
     }
-    .page.layout-centered .divider {
-      background: rgba(255,255,255,0.1);
-      margin: 18px auto;
-      width: 60%;
+    .page.layout-centered .server-card {
+      width: 100%;
+      margin-top: 16px;
     }
+
+    .page.layout-centered .divider {
+      background: rgba(255,255,255,0.08);
+      margin: 22px auto 14px;
+      width: 48%;
+    }
+    .page.layout-centered .roles-title {
+      text-align: center;
+      margin-top: 0;
+      margin-bottom: 10px;
+      letter-spacing: 1.6px;
+      opacity: 0.75;
+    }
+    .page.layout-centered .roles-list {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      margin-bottom: 8px;
+    }
+    .page.layout-centered .role-item {
+      border-radius: 999px;
+      padding: 6px 12px 6px 6px;
+      background: rgba(0,0,0,0.3);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-left: 1px solid rgba(255,255,255,0.1);
+      gap: 8px;
+      max-width: 100%;
+      box-shadow: none;
+    }
+    .page.layout-centered .role-item:hover {
+      transform: translateY(-1px);
+      box-shadow: none;
+      background: rgba(0,0,0,0.4);
+    }
+    .page.layout-centered .role-icon {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+    }
+    .page.layout-centered .role-name {
+      font-size: 12px;
+    }
+    .page.layout-centered .role-proof { display: none; }
+    .page.layout-centered .role-server { display: none; }
+    .page.layout-centered .role-pin-tag {
+      font-size: 9px;
+      padding: 2px 6px;
+    }
+
     .page.layout-centered .profile-footer {
-      color: rgba(255,255,255,0.35);
+      color: rgba(255,255,255,0.32);
       text-shadow: 0 1px 8px rgba(0,0,0,0.4);
     }
     .views-float {
@@ -469,7 +558,7 @@
       z-index: 40;
       align-items: center;
       gap: 8px;
-      color: rgba(255,255,255,0.45);
+      color: rgba(255,255,255,0.42);
       font-size: 13px;
       font-family: 'Space Mono', monospace;
       letter-spacing: 0.04em;
@@ -478,6 +567,30 @@
     }
     .page.layout-centered .views-float { display: inline-flex; }
     .views-float svg { opacity: 0.7; }
+
+    @media (max-width: 640px) {
+      .page.layout-centered .avatar-holder {
+        width: 112px;
+        height: 112px;
+      }
+      .page.layout-centered .avatar {
+        width: 112px !important;
+        height: 112px !important;
+        max-width: 112px;
+        max-height: 112px;
+      }
+      .views-float {
+        left: 14px;
+        font-size: 11px;
+      }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .page.layout-centered .avatar,
+      .page.layout-centered .avatar-holder::after,
+      .page.layout-centered .status-pill::after {
+        animation: none;
+      }
+    }
 
     /* ── Background media ── */
     .bg-media {
@@ -2257,19 +2370,37 @@ function applyCardTheme(theme) {
     ? (Number(theme.cardOpacity) > 1 ? Number(theme.cardOpacity) / 100 : Number(theme.cardOpacity))
     : 0.92;
   const glassOn = theme.glassmorphism || theme.glassEnabled;
+  const layout = theme.layout || 'centered';
 
   document.documentElement.style.setProperty('--card-rgb', hexToRgb(cardColor));
   document.documentElement.style.setProperty('--card-alpha', String(cardOpacity));
+
+  // Centered = frameless guns-style stack; never paint a glass card shell
+  if (layout === 'centered') {
+    card.classList.remove('glass');
+    card.style.background = 'transparent';
+    card.style.backdropFilter = 'none';
+    card.style.webkitBackdropFilter = 'none';
+    card.style.border = 'none';
+    card.style.boxShadow = 'none';
+    return;
+  }
 
   if (glassOn) {
     card.classList.add('glass');
     card.style.backdropFilter = `blur(${theme.glassBlur || 18}px)`;
     card.style.webkitBackdropFilter = `blur(${theme.glassBlur || 18}px)`;
+    card.style.background = '';
+    card.style.border = '';
+    card.style.boxShadow = '';
   } else {
     card.classList.remove('glass');
     const rgb = hexToRgb(cardColor);
     card.style.background = `linear-gradient(180deg, rgba(${rgb},${cardOpacity}), rgba(${rgb},${Math.max(cardOpacity - 0.08, 0.5)}))`;
     card.style.backdropFilter = '';
+    card.style.webkitBackdropFilter = '';
+    card.style.border = '';
+    card.style.boxShadow = '';
   }
 }
 
@@ -2768,10 +2899,13 @@ async function renderProfile() {
   // Music loads into card after render (never blocks QR/share buttons)
   const hasMusic = !!(t.musicUrl && !String(t.musicUrl).includes('youtube.com') && !String(t.musicUrl).includes('youtu.be'));
 
+  const layoutMode = t.layout || 'centered';
+  const isCenteredLayout = layoutMode === 'centered';
+
   // Roles HTML
   const rolesHtml = (disp.showRoles && roles.length) ? `
     <div class="divider"></div>
-    <div class="roles-title">Verified Roles</div>
+    <div class="roles-title">${isCenteredLayout ? 'Roles' : 'Verified Roles'}</div>
     <div class="roles-list">
       ${roles.map(r => {
         const roleColor = r.roleColor || null;
@@ -2853,36 +2987,36 @@ async function renderProfile() {
     </span>
   ` : '';
 
-  const layoutMode = t.layout || 'centered';
-  const statusPillHtml = layoutMode === 'centered' ? `
+  const statusPillHtml = isCenteredLayout ? `
     <div class="status-pill">
       <img class="status-pill-avatar" src="${escapeHtml(p.avatarUrl || 'https://cdn.discordapp.com/embed/avatars/0.png')}" alt="" onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'"/>
       <div class="status-pill-text">
         <div class="status-pill-name">${escapeHtml(p.displayName)}</div>
         <div class="status-pill-activity">${escapeHtml(
-          (presence && statusLine) ? statusLine
-            : (p.bio ? String(p.bio).slice(0, 48) : 'currently doing nothing')
+          (presence && statusLine) ? statusLine : 'currently doing nothing'
         )}</div>
       </div>
     </div>` : '';
   // Avoid double status row when the glass pill is shown
-  const presenceRowHtml = layoutMode === 'centered' ? '' : presenceActivityHtml;
+  const presenceRowHtml = isCenteredLayout ? '' : presenceActivityHtml;
 
   const summaryChips = [];
-  if (disp.showViews && p.viewCount && (t.layout || 'centered') !== 'centered') {
-    summaryChips.push(`<div class="summary-chip"><strong id="viewCountNum">0</strong> Views</div>`);
-  }
-  if (disp.showMemberSince && p.memberSince) {
-    summaryChips.push(`<div class="summary-chip"><strong>${escapeHtml(p.memberSince)}</strong> on Discord</div>`);
-  }
-  if (disp.showLocalTime !== false && p.timezone) {
-    const localNow = localTimeIn(p.timezone);
-    if (localNow) summaryChips.push(`<div class="summary-chip"><strong id="localTimeVal">${escapeHtml(localNow)}</strong> local time</div>`);
-  }
-  if (disp.showRoleStats) {
-    summaryChips.push(`<div class="summary-chip"><strong>${activeRoleCount}</strong> Active roles</div>`);
-    summaryChips.push(`<div class="summary-chip"><strong>${botVerifiedCount}</strong> Bot proof</div>`);
-    summaryChips.push(`<div class="summary-chip"><strong>${oauthVerifiedCount}</strong> OAuth proof</div>`);
+  if (!isCenteredLayout) {
+    if (disp.showViews && p.viewCount) {
+      summaryChips.push(`<div class="summary-chip"><strong id="viewCountNum">0</strong> Views</div>`);
+    }
+    if (disp.showMemberSince && p.memberSince) {
+      summaryChips.push(`<div class="summary-chip"><strong>${escapeHtml(p.memberSince)}</strong> on Discord</div>`);
+    }
+    if (disp.showLocalTime !== false && p.timezone) {
+      const localNow = localTimeIn(p.timezone);
+      if (localNow) summaryChips.push(`<div class="summary-chip"><strong id="localTimeVal">${escapeHtml(localNow)}</strong> local time</div>`);
+    }
+    if (disp.showRoleStats) {
+      summaryChips.push(`<div class="summary-chip"><strong>${activeRoleCount}</strong> Active roles</div>`);
+      summaryChips.push(`<div class="summary-chip"><strong>${botVerifiedCount}</strong> Bot proof</div>`);
+      summaryChips.push(`<div class="summary-chip"><strong>${oauthVerifiedCount}</strong> OAuth proof</div>`);
+    }
   }
   const summaryHtml = summaryChips.length
     ? `<div class="profile-summary">${summaryChips.join('')}</div>`
@@ -2910,6 +3044,52 @@ async function renderProfile() {
     <div id="gbSection"><div class="gb-empty">Loading…</div></div>
   ` : '';
 
+  const bioHtml = (disp.showBio && p.bio) ? `<div class="profile-bio" id="profileBio">${escapeHtml(p.bio)}</div>` : '';
+
+  // Centered = open guns-like vertical stack; other layouts keep denser card flow
+  const bodyInnerHtml = isCenteredLayout ? `
+      <div class="profile-header">
+        <div class="profile-heading">
+          ${disp.showVerifiedBadge ? '<div class="profile-kicker"><span class="cf-verified-mark">✓</span> Verified by Cordfol</div>' : ''}
+          <div class="profile-name">
+            <span class="${t.nameEffect && t.nameEffect !== 'none' ? `fx-name-${escapeHtml(t.nameEffect)}` : ''}">${escapeHtml(p.displayName)}</span>
+            ${badgesHtml}
+          </div>
+          ${disp.showHandle ? `<div class="profile-tag" id="profileTag" title="Click to copy link">cordfol.org/${escapeHtml(p.slug)}</div>` : ''}
+          ${bioHtml}
+          ${statusPillHtml}
+        </div>
+      </div>
+      ${socialsHtml}
+      ${hasMusic ? '<div id="musicSlot"></div>' : ''}
+      <div id="spotifySlot"></div>
+      ${customLinksHtml}
+      ${serverCardHtml}
+      ${rolesHtml}
+      ${guestbookShellHtml}
+  ` : `
+      <div class="profile-header">
+        <div class="profile-heading">
+          ${disp.showVerifiedBadge ? '<div class="profile-kicker"><span class="cf-verified-mark">✓</span> Verified by Cordfol</div>' : ''}
+          <div class="profile-name">
+            <span class="${t.nameEffect && t.nameEffect !== 'none' ? `fx-name-${escapeHtml(t.nameEffect)}` : ''}">${escapeHtml(p.displayName)}</span>
+            ${badgesHtml}
+          </div>
+          ${disp.showHandle ? `<div class="profile-tag" id="profileTag" title="Click to copy link">cordfol.org/${escapeHtml(p.slug)}</div>` : ''}
+          ${presenceRowHtml}
+        </div>
+      </div>
+      ${bioHtml}
+      ${hasMusic ? '<div id="musicSlot"></div>' : ''}
+      <div id="spotifySlot"></div>
+      ${serverCardHtml}
+      ${customLinksHtml}
+      ${summaryHtml}
+      ${rolesHtml}
+      ${socialsHtml}
+      ${guestbookShellHtml}
+  `;
+
   document.getElementById('card').innerHTML = `
     ${bannerHtml}
     <div class="avatar-wrap">
@@ -2920,27 +3100,7 @@ async function renderProfile() {
       </div>
     </div>
     <div class="card-body">
-      <div class="profile-header">
-        <div class="profile-heading">
-          ${disp.showVerifiedBadge ? '<div class="profile-kicker"><span class="cf-verified-mark">✓</span> Verified by Cordfol</div>' : ''}
-          <div class="profile-name">
-            <span class="${t.nameEffect && t.nameEffect !== 'none' ? `fx-name-${escapeHtml(t.nameEffect)}` : ''}">${escapeHtml(p.displayName)}</span>
-            ${badgesHtml}
-          </div>
-          ${disp.showHandle ? `<div class="profile-tag" id="profileTag" title="Click to copy link">cordfol.org/${escapeHtml(p.slug)}</div>` : ''}
-          ${presenceRowHtml}
-          ${statusPillHtml}
-        </div>
-      </div>
-      ${disp.showBio && p.bio ? `<div class="profile-bio" id="profileBio">${escapeHtml(p.bio)}</div>` : ''}
-      ${hasMusic ? '<div id="musicSlot"></div>' : ''}
-      <div id="spotifySlot"></div>
-      ${serverCardHtml}
-      ${customLinksHtml}
-      ${summaryHtml}
-      ${rolesHtml}
-      ${socialsHtml}
-      ${guestbookShellHtml}
+      ${bodyInnerHtml}
     </div>
   `;
 
