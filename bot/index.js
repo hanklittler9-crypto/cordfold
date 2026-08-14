@@ -10,6 +10,7 @@ const {
   Client,
   GatewayIntentBits,
   PermissionFlagsBits,
+  PermissionsBitField,
   SlashCommandBuilder,
   REST,
   Routes,
@@ -116,12 +117,33 @@ function isCordfolGuild(guildId) {
   return guildId && String(guildId) === String(CORDFOL_GUILD_ID);
 }
 
+function memberHasAdminPerm(member) {
+  const perms = member?.permissions;
+  if (!perms) return false;
+  try {
+    if (typeof perms.has === 'function') {
+      return perms.has(PermissionFlagsBits.Administrator);
+    }
+    return new PermissionsBitField(perms).has(PermissionFlagsBits.Administrator);
+  } catch {
+    return false;
+  }
+}
+
+function memberHasAdminRole(member, roleId) {
+  if (!member?.roles) return false;
+  if (member.roles.cache?.has?.(roleId)) return true;
+  if (Array.isArray(member.roles)) return member.roles.includes(roleId);
+  if (typeof member.roles.includes === 'function') return member.roles.includes(roleId);
+  return false;
+}
+
 function memberIsOps(member, userId) {
-  if (!member) return userId === EXCLUSIVE_USER_ID;
   if (userId === EXCLUSIVE_USER_ID) return true;
+  if (!member) return false;
   if (member.guild?.ownerId === userId) return true;
-  if (member.permissions?.has(PermissionFlagsBits.Administrator)) return true;
-  if (ADMIN_ROLE_IDS.length && ADMIN_ROLE_IDS.some((id) => member.roles.cache.has(id))) return true;
+  if (memberHasAdminPerm(member)) return true;
+  if (ADMIN_ROLE_IDS.length && ADMIN_ROLE_IDS.some((id) => memberHasAdminRole(member, id))) return true;
   return false;
 }
 
@@ -728,14 +750,22 @@ function interactionAdapter(interaction) {
   let deferred = false;
   return {
     async defer({ ephemeral } = {}) {
-      if (!deferred) {
-        await interaction.deferReply({ ephemeral: !!ephemeral });
+      if (deferred || interaction.deferred || interaction.replied) {
         deferred = true;
+        return;
       }
+      await interaction.deferReply({ ephemeral: !!ephemeral });
+      deferred = true;
     },
     async reply(payload) {
       const { ephemeral, ...rest } = payload;
-      if (deferred) return interaction.editReply(rest);
+      if (deferred || interaction.deferred) {
+        deferred = true;
+        return interaction.editReply(rest);
+      }
+      if (interaction.replied) {
+        return interaction.followUp({ ...rest, ephemeral: !!ephemeral });
+      }
       return interaction.reply({ ...rest, ephemeral: !!ephemeral });
     },
   };
@@ -795,21 +825,29 @@ client.on('interactionCreate', async (interaction) => {
       return adapter.reply({ embeds: [helpEmbed()], ephemeral: true });
     }
 
-    // Guild-only ops commands
+    // Guild-only ops commands — defer immediately (Discord 3s ACK window)
     if (['status', 'announce', 'maintenance', 'outage', 'broadcast'].includes(commandName)) {
-      if (commandName === 'status' && interaction.options.getSubcommand() === 'view') {
+      const isStatusView =
+        commandName === 'status' && interaction.options.getSubcommand(false) === 'view';
+
+      await adapter.defer({ ephemeral: !isStatusView });
+
+      if (isStatusView) {
         if (!isCordfolGuild(interaction.guildId)) {
-          return adapter.reply({ content: '❌ This command is only available in the Cordfol server.', ephemeral: true });
+          return adapter.reply({ content: '❌ This command is only available in the Cordfol server.' });
         }
         return handleStatusView(adapter);
       }
 
       const gate = await assertOps(interaction);
-      if (!gate.ok) return adapter.reply({ content: gate.reply, ephemeral: true });
+      if (!gate.ok) return adapter.reply({ content: gate.reply });
 
       if (commandName === 'status') {
         const state = interaction.options.getString('state');
         const message = interaction.options.getString('message');
+        if (!state) {
+          return adapter.reply({ content: '❌ Missing status state. Use `/status set` with a state.' });
+        }
         return handleStatusSet({ state, message, user, ...adapter });
       }
 
@@ -849,9 +887,9 @@ client.on('interactionCreate', async (interaction) => {
       }
     }
   } catch (err) {
-    console.error(`[bot] interaction ${commandName} error:`, err.message);
+    console.error(`[bot] interaction ${commandName} error:`, err);
     try {
-      await adapter.reply({ content: '❌ Something went wrong.', ephemeral: true });
+      await adapter.reply({ content: '❌ Something went wrong.' });
     } catch { /* ignore */ }
   }
 });
