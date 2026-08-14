@@ -37,13 +37,22 @@ const ADMIN_ROLE_IDS = (process.env.ADMIN_ROLE_IDS || '')
   .map((s) => s.trim())
   .filter(Boolean);
 
-const DASHBOARD_LOGIN_URL = DASHBOARD_URL || 'https://dashboard.cordfol.org/dashboard';
+const DASHBOARD_LOGIN_URL = (() => {
+  const raw = DASHBOARD_URL || 'https://dashboard.cordfol.org/dashboard.html';
+  // Never advertise the old Vercel preview host in bot messages
+  if (/vercel\.app/i.test(raw)) return 'https://dashboard.cordfol.org/dashboard.html';
+  return raw;
+})();
+
 const PUBLIC_BASE_URL = (() => {
-  if (process.env.PUBLIC_BASE_URL) return process.env.PUBLIC_BASE_URL.replace(/\/$/, '');
+  const raw = (process.env.PUBLIC_BASE_URL || 'https://cordfol.org').replace(/\/$/, '');
   try {
-    const dashboardUrl = new URL(DASHBOARD_LOGIN_URL);
-    return `${dashboardUrl.protocol}//${dashboardUrl.host.replace(/^dashboard\./, '')}`;
-  } catch { return 'https://cordfol.org'; }
+    const host = new URL(raw).host;
+    if (!host || /vercel\.app$/i.test(host)) return 'https://cordfol.org';
+    return raw;
+  } catch {
+    return 'https://cordfol.org';
+  }
 })();
 const PUBLIC_HOST = (() => {
   try { return new URL(PUBLIC_BASE_URL).host; }
@@ -1016,12 +1025,12 @@ client.on('guildMemberAdd', async (member) => {
       .setTitle('Welcome to Cordfol')
       .setDescription(
         `Hey ${member}, welcome!\n\n` +
-        `• Create your verified profile at **[${PUBLIC_HOST}](${DASHBOARD_LOGIN_URL})**\n` +
+        `• Create your verified profile at **[cordfol.org](https://cordfol.org)**\n` +
         `• Use \`/verify\` or \`${BOT_PREFIX}verify\` to sync your roles\n` +
         `• \`${BOT_PREFIX}help\` for commands`
       )
       .setThumbnail(member.user.displayAvatarURL({ size: 128 }))
-      .setFooter({ text: `${PUBLIC_HOST} — Discord Identity, Verified.` })
+      .setFooter({ text: `cordfol.org — Discord Identity, Verified.` })
       .setTimestamp();
 
     await sendToChannel(channelId, { embeds: [embed] });
