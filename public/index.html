@@ -72,46 +72,104 @@
   filter:blur(18px);animation:pulse-glow 8s ease-in-out infinite;
 }
 @keyframes pulse-glow{0%,100%{opacity:0.7;transform:scale(1);}50%{opacity:1;transform:scale(1.04);}}
-.mock-wrap{position:relative;z-index:2;width:min(400px,100%);animation:float-card 7s ease-in-out infinite;}
+.mock-wrap{position:relative;z-index:2;width:min(340px,100%);animation:float-card 7s ease-in-out infinite;}
 @keyframes float-card{0%,100%{transform:translateY(0);}50%{transform:translateY(-8px);}}
 .mock-card{
-  background:rgba(14,14,14,0.88);border:1px solid rgba(255,255,255,0.09);
-  border-radius:22px;overflow:hidden;
-  box-shadow:0 30px 80px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.05);
-  backdrop-filter:blur(20px);
+  position:relative;
+  background:rgba(10,10,12,0.55);
+  border:1px solid rgba(255,255,255,0.08);
+  border-radius:28px;
+  overflow:hidden;
+  box-shadow:0 40px 100px rgba(0,0,0,0.55), 0 0 80px rgba(196,107,255,0.12);
+  backdrop-filter:blur(22px) saturate(1.15);
+  min-height:420px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:36px 28px 28px;
+  text-align:center;
 }
-.mock-top{display:flex;align-items:center;gap:7px;padding:13px 16px;border-bottom:1px solid var(--line);background:rgba(255,255,255,0.015);}
-.mock-dot{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,0.14);}
-.mock-dot:nth-child(1){background:#ff5f57;}
-.mock-dot:nth-child(2){background:#febc2e;}
-.mock-dot:nth-child(3){background:#28c840;}
-.mock-url{font-size:11px;color:var(--ink-faint);margin-left:8px;font-family:var(--font-mono);}
-.mock-body{padding:20px;}
-.mock-banner{height:88px;border-radius:14px;background:linear-gradient(125deg,#1f0d2e 0%,#5a2580 48%,#141420 100%);overflow:hidden;}
-.mock-banner img,.mock-banner video{width:100%;height:100%;object-fit:cover;border-radius:14px;}
-.mock-id{display:flex;align-items:flex-end;gap:12px;margin-top:-30px;margin-left:12px;margin-bottom:16px;}
+.mock-bg{
+  position:absolute;inset:0;z-index:0;
+  background:radial-gradient(ellipse 80% 60% at 50% 20%,rgba(196,107,255,0.22),transparent 60%),
+              linear-gradient(180deg,#0a0a0f 0%,#121018 100%);
+  overflow:hidden;
+}
+.mock-bg img,.mock-bg video{
+  width:100%;height:100%;object-fit:cover;opacity:0.45;filter:saturate(0.9) brightness(0.55);
+}
+.mock-bg::after{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(180deg,rgba(0,0,0,0.15) 0%,rgba(0,0,0,0.75) 100%);
+}
+.mock-stack{position:relative;z-index:1;width:100%;display:flex;flex-direction:column;align-items:center;gap:12px;}
 .mock-avatar{
-  width:60px;height:60px;border-radius:16px;border:3px solid #0e0e0e;background:#1a1a1a;
-  display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;
-  font-family:var(--font-display);font-weight:700;font-size:20px;
-  box-shadow:0 8px 20px rgba(0,0,0,0.35);
+  width:96px;height:96px;border-radius:50%;
+  background:#16161c;display:flex;align-items:center;justify-content:center;
+  overflow:hidden;flex-shrink:0;
+  font-family:var(--font-display);font-weight:800;font-size:32px;color:#fff;
+  box-shadow:0 0 0 3px rgba(255,255,255,0.12), 0 0 36px rgba(196,107,255,0.45), 0 12px 32px rgba(0,0,0,0.45);
+  animation:mock-avatar-float 5s ease-in-out infinite;
 }
-.mock-avatar img{width:100%;height:100%;object-fit:cover;border-radius:13px;}
-.mock-name{font-family:var(--font-display);font-weight:700;font-size:15px;letter-spacing:0.02em;}
-.mock-handle{font-size:11px;color:var(--ink-faint);margin-top:3px;}
-.mock-roles{display:flex;flex-direction:column;gap:7px;}
-.mock-role{
-  display:flex;align-items:center;justify-content:space-between;
-  padding:10px 12px;background:rgba(255,255,255,0.025);border:1px solid var(--line);
-  border-radius:11px;font-size:12px;
+@keyframes mock-avatar-float{0%,100%{transform:translateY(0);}50%{transform:translateY(-5px);}}
+.mock-avatar img{width:100%;height:100%;object-fit:cover;border-radius:50%;}
+.mock-name{
+  font-family:var(--font-display);font-weight:800;font-size:26px;letter-spacing:-0.02em;
+  line-height:1.1;text-transform:none;margin-top:4px;
 }
-.mock-role-left{display:flex;align-items:center;gap:9px;}
-.mock-check{width:15px;height:15px;border-radius:50%;background:linear-gradient(135deg,#dfa8ff,#c46bff);flex-shrink:0;position:relative;}
-.mock-check::after{content:'';position:absolute;left:4.5px;top:2px;width:4px;height:7px;border:solid #0a0a0a;border-width:0 1.5px 1.5px 0;transform:rotate(45deg);}
-.mock-role-proof{font-size:10px;color:var(--ink-faint);letter-spacing:0.04em;}
-.mock-stats{display:flex;gap:16px;margin-top:16px;padding-top:16px;border-top:1px solid var(--line);}
-.mock-stat-num{font-family:var(--font-display);font-weight:700;font-size:17px;}
-.mock-stat-label{font-size:10px;color:var(--ink-faint);margin-top:2px;text-transform:uppercase;letter-spacing:0.08em;}
+.mock-bio{font-size:13px;color:rgba(255,255,255,0.62);line-height:1.45;max-width:26ch;}
+.mock-pill{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:7px 12px 7px 7px;border-radius:999px;
+  background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);
+  backdrop-filter:blur(12px);font-size:11.5px;color:rgba(255,255,255,0.78);
+  margin-top:2px;
+}
+.mock-pill-face{
+  width:22px;height:22px;border-radius:50%;object-fit:cover;background:#222;flex-shrink:0;
+}
+.mock-pill-dot{width:7px;height:7px;border-radius:50%;background:#3dd68c;box-shadow:0 0 8px #3dd68c;flex-shrink:0;}
+.mock-socials{display:flex;gap:14px;align-items:center;justify-content:center;margin-top:4px;}
+.mock-social{
+  width:34px;height:34px;border-radius:50%;
+  display:inline-flex;align-items:center;justify-content:center;
+  background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);
+  color:#fff;transition:transform 0.2s,background 0.2s;
+}
+.mock-social:hover{transform:translateY(-2px);background:rgba(255,255,255,0.12);}
+.mock-social svg{width:15px;height:15px;fill:currentColor;}
+.mock-spotify{
+  width:100%;margin-top:6px;padding:10px 12px;border-radius:14px;
+  background:rgba(30,215,96,0.1);border:1px solid rgba(30,215,96,0.22);
+  display:flex;align-items:center;gap:10px;text-align:left;
+}
+.mock-spotify-art{
+  width:40px;height:40px;border-radius:8px;flex-shrink:0;
+  background:linear-gradient(135deg,#1db954,#191414);overflow:hidden;
+}
+.mock-spotify-art img{width:100%;height:100%;object-fit:cover;}
+.mock-spotify-meta{min-width:0;flex:1;}
+.mock-spotify-label{font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:rgba(30,215,96,0.9);font-weight:700;}
+.mock-spotify-track{font-size:12.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px;}
+.mock-spotify-artist{font-size:11px;color:rgba(255,255,255,0.5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.mock-roles{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:4px;}
+.mock-role-chip{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:5px 10px;border-radius:999px;font-size:11px;
+  background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);
+  color:rgba(255,255,255,0.85);
+}
+.mock-role-chip .dot{width:6px;height:6px;border-radius:50%;background:var(--glow,#c84dff);flex-shrink:0;}
+.mock-views{
+  position:absolute;z-index:2;left:16px;bottom:14px;
+  display:inline-flex;align-items:center;gap:6px;
+  font-size:11px;color:rgba(255,255,255,0.55);font-family:var(--font-mono);
+}
+.mock-views svg{width:13px;height:13px;opacity:0.8;}
+.mock-url-tag{
+  position:absolute;z-index:2;right:16px;top:14px;
+  font-size:10px;letter-spacing:0.06em;color:rgba(255,255,255,0.4);
+  font-family:var(--font-mono);padding:5px 9px;border-radius:999px;
+  background:rgba(0,0,0,0.35);border:1px solid rgba(255,255,255,0.08);
+}
 
 .scroll-cue{
   position:relative;z-index:2;display:flex;justify-content:center;padding:4px 0 48px;
@@ -302,25 +360,30 @@
     <div class="hero-glow" aria-hidden="true"></div>
     <div class="mock-wrap" id="heroPreview">
       <div class="mock-card">
-        <div class="mock-top">
-          <span class="mock-dot"></span><span class="mock-dot"></span><span class="mock-dot"></span>
-          <span class="mock-url" id="heroMockUrl">cordfol.org/…</span>
-        </div>
-        <div class="mock-body">
-          <div class="mock-banner" id="heroMockBanner"></div>
-          <div class="mock-id">
-            <div class="mock-avatar" id="heroMockAvatar">?</div>
-            <div>
-              <div class="mock-name" id="heroMockName">Loading…</div>
-              <div class="mock-handle" id="heroMockHandle">Verified Discord profile</div>
+        <div class="mock-bg" id="heroMockBg" aria-hidden="true"></div>
+        <div class="mock-url-tag" id="heroMockUrl">cordfol.org/…</div>
+        <div class="mock-stack">
+          <div class="mock-avatar" id="heroMockAvatar">?</div>
+          <div class="mock-name" id="heroMockName">Loading…</div>
+          <div class="mock-bio" id="heroMockBio">Verified Discord profile</div>
+          <div class="mock-pill" id="heroMockPill">
+            <span class="mock-pill-dot" aria-hidden="true"></span>
+            <span id="heroMockStatus">online</span>
+          </div>
+          <div class="mock-socials" id="heroMockSocials" aria-hidden="true"></div>
+          <div class="mock-spotify" id="heroMockSpotify" style="display:none">
+            <div class="mock-spotify-art" id="heroMockSpotifyArt"></div>
+            <div class="mock-spotify-meta">
+              <div class="mock-spotify-label">Listening on Spotify</div>
+              <div class="mock-spotify-track" id="heroMockSpotifyTrack">—</div>
+              <div class="mock-spotify-artist" id="heroMockSpotifyArtist">—</div>
             </div>
           </div>
           <div class="mock-roles" id="heroMockRoles"></div>
-          <div class="mock-stats">
-            <div><div class="mock-stat-num" id="heroStatRoles">—</div><div class="mock-stat-label">Roles</div></div>
-            <div><div class="mock-stat-num" id="heroStatViews">—</div><div class="mock-stat-label">Views</div></div>
-            <div><div class="mock-stat-num" id="heroStatSince">—</div><div class="mock-stat-label">Since</div></div>
-          </div>
+        </div>
+        <div class="mock-views" id="heroMockViews">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          <span id="heroStatViews">—</span>
         </div>
       </div>
     </div>
@@ -453,60 +516,125 @@
 <script>
 const OAUTH_LOGIN_URL = 'https://api.cordfol.org/api/auth/discord';
 const API_BASE = 'https://api.cordfol.org/api';
-const FEATURED_SLUG = 'gfxastro';
+const FEATURED_SLUG = 'fkastro';
 const CLAIM_COOKIE_NAME = 'cordfol_claim_slug';
 document.querySelectorAll('[data-oauth-link]').forEach(link => { link.href = OAUTH_LOGIN_URL; });
 document.getElementById('footerYear').textContent = new Date().getFullYear();
+
+const SOCIAL_ICONS = {
+  twitter: '<svg viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.727-8.835L1.254 2.25H8.08l4.253 5.622L18.244 2.25zm-1.161 17.52h1.833L7.084 4.126H5.117L17.083 19.77z"/></svg>',
+  github: '<svg viewBox="0 0 24 24"><path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg>',
+  youtube: '<svg viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>',
+  website: '<svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>',
+  tiktok: '<svg viewBox="0 0 24 24"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.88-2.88 2.89 2.89 0 012.88-2.88c.28 0 .56.04.82.12v-3.5a6.37 6.37 0 00-.82-.05A6.34 6.34 0 003.15 15.3a6.34 6.34 0 0010.86 4.48V13a8.27 8.27 0 004.77 1.52V11.1a4.85 4.85 0 01-.19-.41z"/></svg>',
+  instagram: '<svg viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>',
+};
 
 function renderHeroPreview(data) {
   if (!data || !data.profile) return;
   const p = data.profile;
   const roles = (data.roles || []).slice(0, 3);
+  const social = p.socialLinks || {};
+
   const urlEl = document.getElementById('heroMockUrl');
   const nameEl = document.getElementById('heroMockName');
-  const handleEl = document.getElementById('heroMockHandle');
+  const bioEl = document.getElementById('heroMockBio');
   const avatarEl = document.getElementById('heroMockAvatar');
-  const bannerEl = document.getElementById('heroMockBanner');
+  const bgEl = document.getElementById('heroMockBg');
   const rolesEl = document.getElementById('heroMockRoles');
+  const socialsEl = document.getElementById('heroMockSocials');
+  const statusEl = document.getElementById('heroMockStatus');
+  const viewsEl = document.getElementById('heroStatViews');
+
   if (urlEl) urlEl.textContent = `cordfol.org/${p.slug}`;
   if (nameEl) nameEl.textContent = p.displayName || p.slug;
-  if (handleEl) {
-    const bits = [];
-    if (roles[0]) bits.push(roles[0].roleName);
-    if (p.memberSince) bits.push(`Discord since ${p.memberSince}`);
-    handleEl.textContent = bits.join(' · ') || 'Verified Discord profile';
+  if (bioEl) bioEl.textContent = (p.bio && String(p.bio).trim()) || 'Verified Discord profile';
+  if (statusEl) {
+    const presence = data.presence;
+    if (presence && !presence.stale && presence.activity) statusEl.textContent = String(presence.activity).slice(0, 42);
+    else if (presence && !presence.stale && presence.status) statusEl.textContent = presence.status;
+    else statusEl.textContent = 'verified on Cordfol';
   }
-  if (avatarEl && p.avatarUrl) {
-    avatarEl.innerHTML = `<img src="${escapeHtml(p.avatarUrl)}" alt="" loading="eager" onerror="this.remove()"/>`;
-  } else if (avatarEl) {
-    avatarEl.textContent = (p.displayName || '?')[0].toUpperCase();
-  }
-  if (bannerEl) {
-    if (p.bannerUrl && !String(p.bannerUrl).startsWith('data:')) {
-      if (/\.(mp4|webm)(\?|$)/i.test(p.bannerUrl)) {
-        bannerEl.innerHTML = `<video autoplay muted loop playsinline src="${escapeHtml(p.bannerUrl)}"></video>`;
-      } else {
-        bannerEl.innerHTML = `<img src="${escapeHtml(p.bannerUrl)}" alt="" loading="eager"/>`;
-      }
-    } else if (data.theme?.accentColor) {
-      bannerEl.style.background = `linear-gradient(135deg, ${data.theme.accentColor}, #c84dff)`;
+
+  if (avatarEl) {
+    if (p.avatarUrl) {
+      avatarEl.innerHTML = `<img src="${escapeHtml(p.avatarUrl)}" alt="" loading="eager" onerror="this.remove()"/>`;
+    } else {
+      avatarEl.textContent = (p.displayName || '?')[0].toUpperCase();
     }
   }
-  if (rolesEl) {
-    rolesEl.innerHTML = roles.map(r => `
-      <div class="mock-role">
-        <div class="mock-role-left"><span class="mock-check"></span> ${escapeHtml(r.roleName)} · ${escapeHtml(r.guildName || 'Server')}</div>
-        <span class="mock-role-proof">${r.proofType === 'BOT' ? 'Bot proof' : 'Verified'}</span>
-      </div>`).join('');
+
+  // Soft status pill face = same avatar
+  const pill = document.getElementById('heroMockPill');
+  if (pill && p.avatarUrl) {
+    const existing = pill.querySelector('.mock-pill-face');
+    if (existing) existing.remove();
+    const img = document.createElement('img');
+    img.className = 'mock-pill-face';
+    img.src = p.avatarUrl;
+    img.alt = '';
+    pill.insertBefore(img, pill.firstChild);
   }
-  const statRoles = document.getElementById('heroStatRoles');
-  const statViews = document.getElementById('heroStatViews');
-  const statSince = document.getElementById('heroStatSince');
-  if (statRoles) statRoles.textContent = String((data.roles || []).length || 0);
-  if (statViews) statViews.textContent = p.viewCount ? formatNum(p.viewCount) : '0';
-  if (statSince) statSince.textContent = p.memberSince ? p.memberSince.split(' ').pop() : '—';
+
+  if (bgEl) {
+    const bgType = data.theme?.bgType;
+    const bgValue = data.theme?.bgValue;
+    const banner = p.bannerUrl;
+    const media = (bgType === 'gif' || bgType === 'video') && bgValue ? bgValue
+      : (banner && !String(banner).startsWith('data:') ? banner : null);
+    if (media && !String(media).startsWith('data:')) {
+      if (/\.(mp4|webm)(\?|$)/i.test(media) || bgType === 'video') {
+        bgEl.innerHTML = `<video autoplay muted loop playsinline src="${escapeHtml(media)}"></video>`;
+      } else {
+        bgEl.innerHTML = `<img src="${escapeHtml(media)}" alt="" loading="eager"/>`;
+      }
+    } else if (data.theme?.accentColor) {
+      bgEl.style.background = `radial-gradient(ellipse 80% 55% at 50% 18%, ${data.theme.accentColor}55, transparent 55%), linear-gradient(180deg,#09090c,#141018)`;
+    }
+  }
+
+  if (socialsEl) {
+    const keys = ['twitter','tiktok','instagram','youtube','github','website'].filter(k => social[k]);
+    socialsEl.innerHTML = keys.slice(0, 4).map(k =>
+      `<span class="mock-social" title="${k}">${SOCIAL_ICONS[k] || ''}</span>`
+    ).join('');
+  }
+
+  if (rolesEl) {
+    rolesEl.innerHTML = roles.map(r => {
+      const color = r.roleColor || '#c84dff';
+      return `<span class="mock-role-chip"><span class="dot" style="background:${escapeHtml(color)}"></span>${escapeHtml(r.roleName)}</span>`;
+    }).join('');
+  }
+
+  if (viewsEl) viewsEl.textContent = p.viewCount ? formatNum(p.viewCount) : '0';
+
+  // Spotify now-playing (best-effort)
+  const spotifyBox = document.getElementById('heroMockSpotify');
+  fetch(`${API_BASE}/spotify/now-playing/${encodeURIComponent(p.slug)}`)
+    .then(r => r.ok ? r.json() : null)
+    .then(np => {
+      if (!np || !spotifyBox) return;
+      const track = np.track || np.item || np;
+      const title = track.name || track.title || np.name;
+      const artist = track.artists
+        ? (Array.isArray(track.artists) ? track.artists.map(a => a.name || a).join(', ') : track.artists)
+        : (track.artist || np.artist || '');
+      const art = track.album?.images?.[0]?.url || track.image || np.albumArt || np.image || '';
+      if (!title) return;
+      document.getElementById('heroMockSpotifyTrack').textContent = title;
+      document.getElementById('heroMockSpotifyArtist').textContent = artist || 'Spotify';
+      const artEl = document.getElementById('heroMockSpotifyArt');
+      if (artEl && art) artEl.innerHTML = `<img src="${escapeHtml(art)}" alt=""/>`;
+      spotifyBox.style.display = 'flex';
+    }).catch(() => {});
+
   const wrap = document.getElementById('heroPreview');
-  if (wrap) wrap.style.cursor = 'pointer', wrap.onclick = () => { window.location.href = `/${p.slug}`; };
+  if (wrap) {
+    wrap.style.cursor = 'pointer';
+    wrap.onclick = () => { window.location.href = `/${p.slug}`; };
+    wrap.setAttribute('title', `Open cordfol.org/${p.slug}`);
+  }
 }
 
 fetch(`${API_BASE}/profile/${FEATURED_SLUG}`).then(r => r.ok ? r.json() : null).then(renderHeroPreview).catch(() => {});
