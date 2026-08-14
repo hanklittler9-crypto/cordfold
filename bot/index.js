@@ -19,6 +19,10 @@ const {
 } = require('discord.js');
 const statusStore = require('./status-store');
 const { createPool } = require('../pg-pool');
+const { createLogger } = require('./logging');
+const { createTickets } = require('./tickets');
+const { createModmail } = require('./modmail');
+const { createModeration } = require('./moderation');
 
 const {
   BOT_TOKEN,
@@ -31,8 +35,17 @@ const CORDFOL_GUILD_ID = process.env.CORDFOL_GUILD_ID || '1537671204465541182';
 const STATUS_CHANNEL_ID = process.env.STATUS_CHANNEL_ID || '';
 const ANNOUNCE_CHANNEL_ID = process.env.ANNOUNCE_CHANNEL_ID || '';
 const WELCOME_CHANNEL_ID = process.env.WELCOME_CHANNEL_ID || '';
+const LOG_CHANNEL_ID = process.env.LOG_CHANNEL_ID || '';
+const TICKET_CATEGORY_ID = process.env.TICKET_CATEGORY_ID || '';
+const TICKET_PANEL_CHANNEL_ID = process.env.TICKET_PANEL_CHANNEL_ID || '';
+const MODMAIL_CATEGORY_ID = process.env.MODMAIL_CATEGORY_ID || '';
+const DISCORD_INVITE_URL = process.env.DISCORD_INVITE_URL || 'https://discord.gg/wcrCgc6pMf';
 const BOT_PREFIX = (process.env.BOT_PREFIX || '.').trim() || '.';
 const ADMIN_ROLE_IDS = (process.env.ADMIN_ROLE_IDS || '')
+  .split(',')
+  .map((s) => s.trim())
+  .filter(Boolean);
+const STAFF_ROLE_IDS = (process.env.STAFF_ROLE_IDS || '')
   .split(',')
   .map((s) => s.trim())
   .filter(Boolean);
@@ -90,9 +103,11 @@ const client = new Client({
     GatewayIntentBits.GuildMembers,
     GatewayIntentBits.GuildPresences,
     GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.GuildModeration,
     GatewayIntentBits.MessageContent,
+    GatewayIntentBits.DirectMessages,
   ],
-  partials: [Partials.GuildMember],
+  partials: [Partials.GuildMember, Partials.Channel, Partials.Message],
 });
 
 // Cooldown management (5 minute cooldown per user per guild)
@@ -148,9 +163,12 @@ function memberIsOps(member, userId) {
   if (!member) return false;
   if (member.guild?.ownerId === userId) return true;
   if (memberHasAdminPerm(member)) return true;
-  if (ADMIN_ROLE_IDS.length && ADMIN_ROLE_IDS.some((id) => memberHasAdminRole(member, id))) return true;
+  const roleIds = [...new Set([...ADMIN_ROLE_IDS, ...STAFF_ROLE_IDS])];
+  if (roleIds.length && roleIds.some((id) => memberHasAdminRole(member, id))) return true;
   return false;
 }
+
+const isStaff = memberIsOps;
 
 async function resolveMember(guild, userId) {
   if (!guild) return null;
@@ -232,6 +250,11 @@ function helpEmbed() {
       `\`/maintenance\` · \`${BOT_PREFIX}maintenance [message]\``,
       `\`/outage\` · \`${BOT_PREFIX}outage [message]\``,
       `\`/broadcast\` · \`${BOT_PREFIX}broadcast <message>\` — status channel`,
+      `\`/ticket-panel\` — post support ticket panel`,
+      `\`/ticket close\` · \`${BOT_PREFIX}close\` — close ticket/modmail`,
+      `\`/warn\` \`/timeout\` \`/kick\` \`/ban\` \`/purge\` — moderation`,
+      `DM the bot — open modmail with staff`,
+      `Support: ${DISCORD_INVITE_URL}`,
     ].join('\n'),
   });
 
@@ -285,6 +308,48 @@ async function setAndBroadcastStatus({ state, message, user, alsoAnnounce = fals
 
   return { status, results };
 }
+
+// ── Community modules (logging / tickets / modmail / moderation) ──────────────
+
+const logger = createLogger({
+  client,
+  CORDFOL_GUILD_ID,
+  LOG_CHANNEL_ID,
+  PUBLIC_HOST,
+});
+logger.register();
+
+const tickets = createTickets({
+  client,
+  CORDFOL_GUILD_ID,
+  TICKET_CATEGORY_ID,
+  STAFF_ROLE_IDS,
+  ADMIN_ROLE_IDS,
+  BOT_PREFIX,
+  isStaff,
+  sendLog: logger.sendLog,
+  COLORS: { ...COLORS, ticket: COLORS.brand },
+});
+
+const modmail = createModmail({
+  client,
+  CORDFOL_GUILD_ID,
+  MODMAIL_CATEGORY_ID,
+  STAFF_ROLE_IDS,
+  ADMIN_ROLE_IDS,
+  BOT_PREFIX,
+  isStaff,
+  sendLog: logger.sendLog,
+  COLORS: { ...COLORS, modmail: COLORS.discord },
+});
+
+const moderation = createModeration({
+  BOT_PREFIX,
+  isStaff,
+  sendLog: logger.sendLog,
+  COLORS: { ...COLORS, mod: COLORS.brand },
+  CORDFOL_GUILD_ID,
+});
 
 // ── Slash command definitions ─────────────────────────────────────────────────
 
@@ -369,6 +434,9 @@ const guildCommands = [
       opt.setName('message').setDescription('Broadcast text').setRequired(true)
     )
     .toJSON(),
+  ...tickets.slashCommands(),
+  ...modmail.slashCommands(),
+  ...moderation.slashCommands(),
 ];
 
 async function registerCommands() {
@@ -799,15 +867,24 @@ client.once('ready', async () => {
   }
 });
 
-// ── Slash interactions ────────────────────────────────────────────────────────
+// ── Slash + button interactions ───────────────────────────────────────────────
 
 client.on('interactionCreate', async (interaction) => {
-  if (!interaction.isChatInputCommand()) return;
-
-  const { commandName, user } = interaction;
-  const adapter = interactionAdapter(interaction);
-
   try {
+    if (interaction.isButton()) {
+      await tickets.handleInteraction(interaction);
+      return;
+    }
+
+    if (!interaction.isChatInputCommand()) return;
+
+    const { commandName, user } = interaction;
+    const adapter = interactionAdapter(interaction);
+
+    if (await tickets.handleInteraction(interaction)) return;
+    if (await modmail.handleInteraction(interaction)) return;
+    if (await moderation.handleInteraction(interaction)) return;
+
     if (commandName === 'verify') {
       await handleVerify({
         user,
@@ -906,17 +983,34 @@ client.on('interactionCreate', async (interaction) => {
       }
     }
   } catch (err) {
-    console.error(`[bot] interaction ${commandName} error:`, err);
+    console.error('[bot] interaction error:', err);
     try {
+      const adapter = interactionAdapter(interaction);
       await adapter.reply({ content: '❌ Something went wrong.' });
     } catch { /* ignore */ }
   }
 });
 
-// ── Prefix commands ───────────────────────────────────────────────────────────
+// ── Prefix + modmail messages ─────────────────────────────────────────────────
 
 client.on('messageCreate', async (message) => {
-  if (message.author.bot || !message.guild) return;
+  if (message.author.bot) return;
+
+  if (!message.guild) {
+    try {
+      await modmail.handleDm(message);
+    } catch (err) {
+      console.error('[bot] modmail dm error:', err);
+    }
+    return;
+  }
+
+  try {
+    if (await modmail.handleStaffRelay(message)) return;
+  } catch (err) {
+    console.error('[bot] modmail relay error:', err);
+  }
+
   if (!message.content.startsWith(BOT_PREFIX)) return;
 
   const body = message.content.slice(BOT_PREFIX.length).trim();
@@ -929,6 +1023,10 @@ client.on('messageCreate', async (message) => {
   const user = message.author;
 
   try {
+    if (await tickets.handlePrefix(message, cmd)) return;
+    if (await modmail.handlePrefix(message, cmd)) return;
+    if (await moderation.handlePrefix(message, cmd, rest, argsText)) return;
+
     if (cmd === 'help' || cmd === 'commands') {
       return adapter.reply({ embeds: [helpEmbed()] });
     }
