@@ -17,8 +17,8 @@ const {
   EmbedBuilder,
   Partials,
 } = require('discord.js');
-const { Pool } = require('pg');
 const statusStore = require('./status-store');
+const { createPool } = require('../pg-pool');
 
 const {
   BOT_TOKEN,
@@ -54,11 +54,7 @@ function buildProfileUrl(slug) {
   return `${PUBLIC_BASE_URL}/${slug}`;
 }
 
-const db = new Pool({
-  connectionString: DATABASE_URL,
-  ssl: { rejectUnauthorized: false },
-  max: 10,
-});
+const db = createPool(DATABASE_URL, { max: 10 });
 
 const EXCLUSIVE_USER_ID = '1127435524022472805';
 
@@ -804,25 +800,29 @@ client.on('interactionCreate', async (interaction) => {
 
   try {
     if (commandName === 'verify') {
-      return handleVerify({
+      await handleVerify({
         user,
         guildId: interaction.guildId,
         guild: interaction.guild,
         ...adapter,
       });
+      return;
     }
 
     if (commandName === 'cordfol') {
-      return handleCordfol({ user, ...adapter });
+      await handleCordfol({ user, ...adapter });
+      return;
     }
 
     if (commandName === 'whois') {
       const target = interaction.options.getUser('user');
-      return handleWhois({ target, ...adapter });
+      await handleWhois({ target, ...adapter });
+      return;
     }
 
     if (commandName === 'help') {
-      return adapter.reply({ embeds: [helpEmbed()], ephemeral: true });
+      await adapter.reply({ embeds: [helpEmbed()], ephemeral: true });
+      return;
     }
 
     // Guild-only ops commands — defer immediately (Discord 3s ACK window)
@@ -834,52 +834,62 @@ client.on('interactionCreate', async (interaction) => {
 
       if (isStatusView) {
         if (!isCordfolGuild(interaction.guildId)) {
-          return adapter.reply({ content: '❌ This command is only available in the Cordfol server.' });
+          await adapter.reply({ content: '❌ This command is only available in the Cordfol server.' });
+          return;
         }
-        return handleStatusView(adapter);
+        await handleStatusView(adapter);
+        return;
       }
 
       const gate = await assertOps(interaction);
-      if (!gate.ok) return adapter.reply({ content: gate.reply });
+      if (!gate.ok) {
+        await adapter.reply({ content: gate.reply });
+        return;
+      }
 
       if (commandName === 'status') {
         const state = interaction.options.getString('state');
         const message = interaction.options.getString('message');
         if (!state) {
-          return adapter.reply({ content: '❌ Missing status state. Use `/status set` with a state.' });
+          await adapter.reply({ content: '❌ Missing status state. Use `/status set` with a state.' });
+          return;
         }
-        return handleStatusSet({ state, message, user, ...adapter });
+        await handleStatusSet({ state, message, user, ...adapter });
+        return;
       }
 
       if (commandName === 'announce') {
-        return handleAnnounce({
+        await handleAnnounce({
           title: interaction.options.getString('title'),
           message: interaction.options.getString('message'),
           user,
           ...adapter,
         });
+        return;
       }
 
       if (commandName === 'maintenance') {
-        return handleStatusSet({
+        await handleStatusSet({
           state: 'maintenance',
           message: interaction.options.getString('message') || 'Scheduled maintenance is in progress.',
           user,
           ...adapter,
         });
+        return;
       }
 
       if (commandName === 'outage') {
-        return handleStatusSet({
+        await handleStatusSet({
           state: 'down',
           message: interaction.options.getString('message') || 'Cordfol is currently down. We are investigating.',
           user,
           ...adapter,
         });
+        return;
       }
 
       if (commandName === 'broadcast') {
-        return handleBroadcast({
+        await handleBroadcast({
           message: interaction.options.getString('message'),
           user,
           ...adapter,
@@ -1119,6 +1129,24 @@ client.on('guildMemberUpdate', async (oldMember, newMember) => {
 });
 
 // ── Start ─────────────────────────────────────────────────────────────────────
-client.login(BOT_TOKEN);
+client.on('error', (err) => {
+  console.error('[bot] client error (non-fatal):', err.message);
+});
+
+client.on('shardError', (err) => {
+  console.error('[bot] shard error (non-fatal):', err.message);
+});
+
+process.on('unhandledRejection', (err) => {
+  console.error('[bot] unhandledRejection:', err);
+});
+
+if (!BOT_TOKEN) {
+  console.error('[bot] BOT_TOKEN missing — bot not started');
+} else {
+  client.login(BOT_TOKEN).catch((err) => {
+    console.error('[bot] login failed:', err.message);
+  });
+}
 
 module.exports = client;

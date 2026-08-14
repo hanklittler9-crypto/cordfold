@@ -7,11 +7,11 @@ require('dotenv').config();
 const express      = require('express');
 const session      = require('express-session');
 const connectPg    = require('connect-pg-simple');
-const { Pool }     = require('pg');
 const path         = require('path');
 const fs           = require('fs');
 const cors         = require('cors');
 const cookieParser = require('cookie-parser');
+const { createPool } = require('./pg-pool');
 
 const authRouter              = require('./discord');
 const { router: verifyRouter } = require('./scan');
@@ -70,10 +70,7 @@ app.use(express.json({ limit: EXPRESS_BODY_LIMIT }));
 app.use(express.urlencoded({ extended: true, limit: EXPRESS_BODY_LIMIT }));
 
 // ── Database ─────────────────────────────────────────────────────────────────
-const db = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false },
-});
+const db = createPool(process.env.DATABASE_URL);
 
 const { authRouter: spotifyAuthRouter, apiRouter: spotifyApiRouter, getNowPlayingForUser } = createSpotifyRouter(db);
 
