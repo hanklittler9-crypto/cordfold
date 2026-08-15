@@ -23,6 +23,7 @@ const { createLogger } = require('./logging');
 const { createTickets } = require('./tickets');
 const { createModmail } = require('./modmail');
 const { createModeration } = require('./moderation');
+const { ensureGuildOps } = require('./guild-setup');
 
 const {
   BOT_TOKEN,
@@ -35,10 +36,6 @@ const CORDFOL_GUILD_ID = process.env.CORDFOL_GUILD_ID || '1537671204465541182';
 const STATUS_CHANNEL_ID = process.env.STATUS_CHANNEL_ID || '';
 const ANNOUNCE_CHANNEL_ID = process.env.ANNOUNCE_CHANNEL_ID || '';
 const WELCOME_CHANNEL_ID = process.env.WELCOME_CHANNEL_ID || '';
-const LOG_CHANNEL_ID = process.env.LOG_CHANNEL_ID || '';
-const TICKET_CATEGORY_ID = process.env.TICKET_CATEGORY_ID || '';
-const TICKET_PANEL_CHANNEL_ID = process.env.TICKET_PANEL_CHANNEL_ID || '';
-const MODMAIL_CATEGORY_ID = process.env.MODMAIL_CATEGORY_ID || '';
 const DISCORD_INVITE_URL = process.env.DISCORD_INVITE_URL || 'https://discord.gg/wcrCgc6pMf';
 const BOT_PREFIX = (process.env.BOT_PREFIX || '.').trim() || '.';
 const ADMIN_ROLE_IDS = (process.env.ADMIN_ROLE_IDS || '')
@@ -49,6 +46,18 @@ const STAFF_ROLE_IDS = (process.env.STAFF_ROLE_IDS || '')
   .split(',')
   .map((s) => s.trim())
   .filter(Boolean);
+
+/** Mutable ops config — auto-setup fills channel IDs and modules read live */
+const ops = {
+  CORDFOL_GUILD_ID,
+  LOG_CHANNEL_ID: process.env.LOG_CHANNEL_ID || '',
+  TICKET_CATEGORY_ID: process.env.TICKET_CATEGORY_ID || '',
+  TICKET_PANEL_CHANNEL_ID: process.env.TICKET_PANEL_CHANNEL_ID || '',
+  MODMAIL_CATEGORY_ID: process.env.MODMAIL_CATEGORY_ID || '',
+  DISCORD_INVITE_URL,
+  ADMIN_ROLE_IDS,
+  STAFF_ROLE_IDS,
+};
 
 const DASHBOARD_LOGIN_URL = (() => {
   const raw = DASHBOARD_URL || 'https://dashboard.cordfol.org/dashboard.html';
@@ -251,6 +260,7 @@ function helpEmbed() {
       `\`/outage\` · \`${BOT_PREFIX}outage [message]\``,
       `\`/broadcast\` · \`${BOT_PREFIX}broadcast <message>\` — status channel`,
       `\`/ticket-panel\` — post support ticket panel`,
+      `\`/setup-ops\` — auto-create logs/tickets/modmail + write .env`,
       `\`/ticket close\` · \`${BOT_PREFIX}close\` — close ticket/modmail`,
       `\`/warn\` \`/timeout\` \`/kick\` \`/ban\` \`/purge\` — moderation`,
       `DM the bot — open modmail with staff`,
@@ -313,18 +323,14 @@ async function setAndBroadcastStatus({ state, message, user, alsoAnnounce = fals
 
 const logger = createLogger({
   client,
-  CORDFOL_GUILD_ID,
-  LOG_CHANNEL_ID,
+  ops,
   PUBLIC_HOST,
 });
 logger.register();
 
 const tickets = createTickets({
   client,
-  CORDFOL_GUILD_ID,
-  TICKET_CATEGORY_ID,
-  STAFF_ROLE_IDS,
-  ADMIN_ROLE_IDS,
+  ops,
   BOT_PREFIX,
   isStaff,
   sendLog: logger.sendLog,
@@ -333,10 +339,7 @@ const tickets = createTickets({
 
 const modmail = createModmail({
   client,
-  CORDFOL_GUILD_ID,
-  MODMAIL_CATEGORY_ID,
-  STAFF_ROLE_IDS,
-  ADMIN_ROLE_IDS,
+  ops,
   BOT_PREFIX,
   isStaff,
   sendLog: logger.sendLog,
@@ -348,7 +351,7 @@ const moderation = createModeration({
   isStaff,
   sendLog: logger.sendLog,
   COLORS: { ...COLORS, mod: COLORS.brand },
-  CORDFOL_GUILD_ID,
+  ops,
 });
 
 // ── Slash command definitions ─────────────────────────────────────────────────
@@ -433,6 +436,10 @@ const guildCommands = [
     .addStringOption((opt) =>
       opt.setName('message').setDescription('Broadcast text').setRequired(true)
     )
+    .toJSON(),
+  new SlashCommandBuilder()
+    .setName('setup-ops')
+    .setDescription('Auto-create logs/tickets/modmail channels and write IDs to .env (staff)')
     .toJSON(),
   ...tickets.slashCommands(),
   ...modmail.slashCommands(),
@@ -860,6 +867,16 @@ client.once('ready', async () => {
   console.log(`[bot] Logged in as ${client.user.tag}`);
   console.log(`[bot] In ${client.guilds.cache.size} servers`);
   console.log(`[bot] Prefix: ${BOT_PREFIX} | Cordfol guild: ${CORDFOL_GUILD_ID}`);
+
+  try {
+    const setup = await ensureGuildOps(client, ops);
+    if (setup.ok) {
+      console.log(`[bot] Ops ready · logs=${ops.LOG_CHANNEL_ID} tickets=${ops.TICKET_CATEGORY_ID} modmail=${ops.MODMAIL_CATEGORY_ID}`);
+    }
+  } catch (err) {
+    console.error('[bot] Auto channel setup failed:', err);
+  }
+
   await registerCommands();
 
   if (global.setBotClient) {
@@ -884,6 +901,36 @@ client.on('interactionCreate', async (interaction) => {
     if (await tickets.handleInteraction(interaction)) return;
     if (await modmail.handleInteraction(interaction)) return;
     if (await moderation.handleInteraction(interaction)) return;
+
+    if (commandName === 'setup-ops') {
+      await adapter.defer({ ephemeral: true });
+      if (!isCordfolGuild(interaction.guildId)) {
+        await adapter.reply({ content: '❌ Cordfol server only.' });
+        return;
+      }
+      if (!isStaff(interaction.member, interaction.user.id)) {
+        await adapter.reply({ content: '❌ Staff only.' });
+        return;
+      }
+      const setup = await ensureGuildOps(client, ops);
+      if (!setup.ok) {
+        await adapter.reply({
+          content: `❌ Setup failed: ${setup.reason || setup.error || 'unknown'}. Bot needs **Manage Channels**.`,
+        });
+        return;
+      }
+      const created = setup.created?.length ? setup.created.join('\n') : 'Nothing new — reused existing channels.';
+      await adapter.reply({
+        content:
+          `✅ Ops channels ready.\n` +
+          `**logs:** \`${ops.LOG_CHANNEL_ID}\`\n` +
+          `**tickets:** \`${ops.TICKET_CATEGORY_ID}\`\n` +
+          `**modmail:** \`${ops.MODMAIL_CATEGORY_ID}\`\n` +
+          `${setup.envFile ? `Wrote \`${setup.envFile}\`\n` : ''}` +
+          `${created}`,
+      });
+      return;
+    }
 
     if (commandName === 'verify') {
       await handleVerify({

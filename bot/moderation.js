@@ -14,7 +14,7 @@ function parseDuration(input) {
 }
 
 function createModeration(ctx) {
-  const { BOT_PREFIX, isStaff, sendLog, COLORS, CORDFOL_GUILD_ID } = ctx;
+  const { BOT_PREFIX, isStaff, sendLog, COLORS, ops } = ctx;
 
   function slashCommands() {
     return [
@@ -136,7 +136,7 @@ function createModeration(ctx) {
     if (!['warn', 'timeout', 'kick', 'ban', 'purge'].includes(name)) return false;
 
     await interaction.deferReply({ ephemeral: true });
-    if (String(interaction.guildId) !== String(CORDFOL_GUILD_ID)) {
+    if (String(interaction.guildId) !== String(ops.CORDFOL_GUILD_ID)) {
       await interaction.editReply({ content: '❌ Cordfol server only.' });
       return true;
     }
@@ -176,7 +176,7 @@ function createModeration(ctx) {
 
   async function handlePrefix(message, cmd, rest, argsText) {
     if (!['warn', 'timeout', 'kick', 'ban', 'purge'].includes(cmd)) return false;
-    if (String(message.guild?.id) !== String(CORDFOL_GUILD_ID)) {
+    if (String(message.guild?.id) !== String(ops.CORDFOL_GUILD_ID)) {
       await message.reply('❌ Cordfol server only.');
       return true;
     }

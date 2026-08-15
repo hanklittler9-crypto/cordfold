@@ -18,9 +18,10 @@ function truncate(text, max = 900) {
 }
 
 function createLogger(ctx) {
-  const { client, CORDFOL_GUILD_ID, LOG_CHANNEL_ID, PUBLIC_HOST } = ctx;
+  const { client, ops, PUBLIC_HOST } = ctx;
 
   async function sendLog({ title, description, color, fields = [] }) {
+    const LOG_CHANNEL_ID = ops.LOG_CHANNEL_ID;
     if (!LOG_CHANNEL_ID) return;
     try {
       const channel = await client.channels.fetch(LOG_CHANNEL_ID);
@@ -41,7 +42,7 @@ function createLogger(ctx) {
   }
 
   function isCordfolGuild(guildId) {
-    return guildId && String(guildId) === String(CORDFOL_GUILD_ID);
+    return guildId && String(guildId) === String(ops.CORDFOL_GUILD_ID);
   }
 
   function register() {

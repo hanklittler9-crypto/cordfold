@@ -29,17 +29,16 @@ function slugName(username) {
 function createModmail(ctx) {
   const {
     client,
-    CORDFOL_GUILD_ID,
-    MODMAIL_CATEGORY_ID,
-    STAFF_ROLE_IDS,
-    ADMIN_ROLE_IDS,
+    ops,
     BOT_PREFIX,
     isStaff,
     sendLog,
     COLORS,
   } = ctx;
 
-  const staffRoleIds = [...new Set([...(STAFF_ROLE_IDS || []), ...(ADMIN_ROLE_IDS || [])])];
+  function staffRoleIds() {
+    return [...new Set([...(ops.STAFF_ROLE_IDS || []), ...(ops.ADMIN_ROLE_IDS || [])])];
+  }
 
   function slashCommands() {
     return [
@@ -52,10 +51,11 @@ function createModmail(ctx) {
   }
 
   async function getGuild() {
-    return client.guilds.fetch(CORDFOL_GUILD_ID);
+    return client.guilds.fetch(ops.CORDFOL_GUILD_ID);
   }
 
   async function ensureThread(user) {
+    const MODMAIL_CATEGORY_ID = ops.MODMAIL_CATEGORY_ID;
     if (!MODMAIL_CATEGORY_ID) {
       return { ok: false, error: 'MODMAIL_CATEGORY_ID is not configured.' };
     }
@@ -86,7 +86,7 @@ function createModmail(ctx) {
         ],
       },
     ];
-    for (const roleId of staffRoleIds) {
+    for (const roleId of staffRoleIds()) {
       overwrites.push({
         id: roleId,
         allow: [
@@ -222,7 +222,7 @@ function createModmail(ctx) {
 
   async function handleStaffRelay(message) {
     if (!message.guild || message.author.bot) return false;
-    if (String(message.guild.id) !== String(CORDFOL_GUILD_ID)) return false;
+    if (String(message.guild.id) !== String(ops.CORDFOL_GUILD_ID)) return false;
     if (!isMailChannel(message.channel.id)) return false;
 
     // Don't relay commands

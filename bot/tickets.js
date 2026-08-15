@@ -34,17 +34,16 @@ function slugName(username) {
 function createTickets(ctx) {
   const {
     client,
-    CORDFOL_GUILD_ID,
-    TICKET_CATEGORY_ID,
-    STAFF_ROLE_IDS,
-    ADMIN_ROLE_IDS,
+    ops,
     BOT_PREFIX,
     isStaff,
     sendLog,
     COLORS,
   } = ctx;
 
-  const staffRoleIds = [...new Set([...(STAFF_ROLE_IDS || []), ...(ADMIN_ROLE_IDS || [])])];
+  function staffRoleIds() {
+    return [...new Set([...(ops.STAFF_ROLE_IDS || []), ...(ops.ADMIN_ROLE_IDS || [])])];
+  }
 
   function slashCommands() {
     return [
@@ -81,6 +80,7 @@ function createTickets(ctx) {
   }
 
   async function openTicket(member, guild) {
+    const TICKET_CATEGORY_ID = ops.TICKET_CATEGORY_ID;
     if (!TICKET_CATEGORY_ID) {
       return { ok: false, error: 'TICKET_CATEGORY_ID is not configured.' };
     }
@@ -117,7 +117,7 @@ function createTickets(ctx) {
       },
     ];
 
-    for (const roleId of staffRoleIds) {
+    for (const roleId of staffRoleIds()) {
       overwrites.push({
         id: roleId,
         allow: [
@@ -206,7 +206,7 @@ function createTickets(ctx) {
   async function handleInteraction(interaction) {
     if (interaction.isButton()) {
       if (interaction.customId === OPEN_BTN) {
-        if (String(interaction.guildId) !== String(CORDFOL_GUILD_ID)) {
+        if (String(interaction.guildId) !== String(ops.CORDFOL_GUILD_ID)) {
           await interaction.reply({ content: 'Tickets are only available in the Cordfol server.', ephemeral: true });
           return true;
         }
@@ -249,7 +249,7 @@ function createTickets(ctx) {
 
     if (interaction.commandName === 'ticket-panel') {
       await interaction.deferReply({ ephemeral: true });
-      if (String(interaction.guildId) !== String(CORDFOL_GUILD_ID)) {
+      if (String(interaction.guildId) !== String(ops.CORDFOL_GUILD_ID)) {
         await interaction.editReply({ content: '❌ Cordfol server only.' });
         return true;
       }
