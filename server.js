@@ -23,6 +23,8 @@ const {
   maybeSendSetupReminder,
 } = require('./email');
 const createSpotifyRouter = require('./spotify');
+const createHostedAppsRouter = require('./hosted-apps');
+const { buildProfile: aiBuildProfile, ollamaStatus } = require('./ai-builder');
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
@@ -73,6 +75,7 @@ app.use(express.urlencoded({ extended: true, limit: EXPRESS_BODY_LIMIT }));
 const db = createPool(process.env.DATABASE_URL);
 
 const { authRouter: spotifyAuthRouter, apiRouter: spotifyApiRouter, getNowPlayingForUser } = createSpotifyRouter(db);
+const hostedAppsRouter = createHostedAppsRouter(db);
 
 // ── Session Store ────────────────────────────────────────────────────────────
 const PgSession = connectPg(session);
@@ -305,10 +308,7 @@ app.get('/api/dashboard/profile', async (req, res) => {
       user: {
         discordId: user.discord_id,
         username: user.discord_username,
-        avatarUrl: user.avatar_url ||
-          (user.avatar_hash
-            ? `https://cdn.discordapp.com/avatars/${user.discord_id}/${user.avatar_hash}.${String(user.avatar_hash).startsWith('a_') ? 'gif' : 'png'}?size=128`
-            : null),
+        avatarUrl: user.avatar_url || discordAvatarFromUser(user),
         slug: user.slug,
         displayName: user.display_name,
         bio: user.bio,
@@ -319,10 +319,9 @@ app.get('/api/dashboard/profile', async (req, res) => {
         discordId: user.discord_id,
         displayName: user.display_name || user.discord_username,
         bio: user.bio,
-        avatarUrl: user.avatar_url ||
-          (user.avatar_hash
-            ? `https://cdn.discordapp.com/avatars/${user.discord_id}/${user.avatar_hash}.${String(user.avatar_hash).startsWith('a_') ? 'gif' : 'png'}?size=256`
-            : null),
+        avatarUrl: user.avatar_url || discordAvatarFromUser(user),
+        discordAvatarUrl: discordAvatarFromUser(user),
+        customAvatar: !!user.avatar_url,
         timezone: user.timezone || null,
         bannerUrl: user.banner_url,
         socialLinks: user.social_links || {},
@@ -472,10 +471,7 @@ app.get('/api/profile/:slug', async (req, res) => {
         memberSince: discordMemberSince(user.discord_id),
         displayName: user.display_name || user.discord_username,
         bio:         user.bio,
-        avatarUrl:   user.avatar_url ||
-          (user.avatar_hash
-            ? `https://cdn.discordapp.com/avatars/${user.discord_id}/${user.avatar_hash}.${String(user.avatar_hash).startsWith('a_') ? 'gif' : 'png'}?size=256`
-            : null),
+        avatarUrl:   user.avatar_url || discordAvatarFromUser(user),
         timezone:    user.timezone || null,
         bannerUrl:   user.banner_url,
         socialLinks: user.social_links,
@@ -561,6 +557,7 @@ app.post('/api/profile', async (req, res) => {
       slug,
       bio,
       bannerUrl,
+      avatarUrl,
       social_links,
       custom_links,
       email,
@@ -601,6 +598,10 @@ app.post('/api/profile', async (req, res) => {
 
     const cleanDisplay = normalizeDisplayOptions(display_options);
 
+    const nextAvatar = avatarUrl === ''
+      ? null
+      : (typeof avatarUrl === 'string' && avatarUrl.startsWith('http') ? String(avatarUrl).slice(0, 500) : undefined);
+
     await db.query(`
       UPDATE users SET
         display_name = $1,
@@ -614,9 +615,10 @@ app.post('/api/profile', async (req, res) => {
         email_role_alerts = $9,
         timezone = COALESCE(NULLIF(TRIM($10), ''), timezone),
         featured_invite = $11,
+        avatar_url = CASE WHEN $13::boolean THEN $14 ELSE avatar_url END,
         updated_at = NOW()
       WHERE id = $12
-    `, [display_name, slug, bio, bannerUrl, social_links, JSON.stringify(cleanLinks), email || '', JSON.stringify(cleanDisplay), email_role_alerts !== false, String(timezone || '').slice(0, 64), extractInviteCode(featured_invite), userId]);
+    `, [display_name, slug, bio, bannerUrl, social_links, JSON.stringify(cleanLinks), email || '', JSON.stringify(cleanDisplay), email_role_alerts !== false, String(timezone || '').slice(0, 64), extractInviteCode(featured_invite), userId, nextAvatar !== undefined, nextAvatar || null]);
 
     const themeRow = await db.query(`
       SELECT t.id, t.is_preset
@@ -833,10 +835,15 @@ app.post('/api/profile/media-upload', async (req, res) => {
     }
     if (!ext) return res.status(400).json({ error: 'Unsupported file type' });
 
-    const kindSafe = ['banner', 'bg'].includes(kind) ? kind : 'media';
+    const kindSafe = ['banner', 'bg', 'avatar'].includes(kind) ? kind : 'media';
+    if (kindSafe === 'avatar' && (ext === '.mp4' || ext === '.webm')) {
+      return res.status(400).json({ error: 'Avatar must be an image or GIF' });
+    }
     const isVideo = ext === '.mp4' || ext === '.webm';
     // BG stills/GIFs: 40MB; banner + any video + media picker: 100MB
-    const maxBytes = (kindSafe === 'bg' && !isVideo) ? MAX_BG_IMAGE_BYTES : MAX_MEDIA_BYTES;
+    const maxBytes = kindSafe === 'avatar'
+      ? 8 * 1024 * 1024
+      : ((kindSafe === 'bg' && !isVideo) ? MAX_BG_IMAGE_BYTES : MAX_MEDIA_BYTES);
     const maxMb = Math.round(maxBytes / (1024 * 1024));
     if (buf.length > maxBytes) {
       return res.status(400).json({ error: `File too large (max ${maxMb}MB)` });
@@ -852,6 +859,49 @@ app.post('/api/profile/media-upload', async (req, res) => {
   } catch (err) {
     console.error('[server] /api/profile/media-upload error:', err);
     res.status(500).json({ error: 'Upload failed' });
+  }
+});
+
+const aiBuildHits = new Map();
+function aiRateLimited(userId) {
+  const now = Date.now();
+  const last = aiBuildHits.get(userId) || 0;
+  if (now - last < 12000) return true;
+  aiBuildHits.set(userId, now);
+  return false;
+}
+
+app.get('/api/profile/ai-status', async (req, res) => {
+  try {
+    res.json(await ollamaStatus());
+  } catch (err) {
+    res.status(500).json({ available: false, error: err.message });
+  }
+});
+
+app.post('/api/profile/ai-build', async (req, res) => {
+  try {
+    const userId = req.session?.userId;
+    if (!userId) return res.status(401).json({ error: 'Not authenticated' });
+    if (aiRateLimited(userId)) {
+      return res.status(429).json({ error: 'Give the builder a few seconds, then try again.' });
+    }
+
+    const idea = String(req.body?.idea || '').trim();
+    if (idea.length < 8) {
+      return res.status(400).json({ error: 'Describe the vibe in a sentence or two.' });
+    }
+
+    const images = Array.isArray(req.body?.images) ? req.body.images.slice(0, 3) : [];
+    const colorHints = req.body?.colorHints && typeof req.body.colorHints === 'object'
+      ? req.body.colorHints
+      : {};
+
+    const build = await aiBuildProfile({ idea: idea.slice(0, 800), images, colorHints });
+    res.json({ ok: true, build });
+  } catch (err) {
+    console.error('[server] /api/profile/ai-build error:', err);
+    res.status(500).json({ error: 'AI builder failed' });
   }
 });
 
@@ -1038,7 +1088,16 @@ function normalizeDisplayOptions(raw) {
   for (const key of Object.keys(DEFAULT_DISPLAY_OPTIONS)) {
     out[key] = src[key] !== undefined ? !!src[key] : DEFAULT_DISPLAY_OPTIONS[key];
   }
+  out.tagline = String(src.tagline || '').slice(0, 80);
+  out.pronouns = String(src.pronouns || '').slice(0, 32);
+  out.avatarShape = ['circle', 'rounded', 'hex'].includes(src.avatarShape) ? src.avatarShape : 'circle';
   return out;
+}
+
+function discordAvatarFromUser(user) {
+  if (!user?.avatar_hash || !user?.discord_id) return null;
+  const ext = String(user.avatar_hash).startsWith('a_') ? 'gif' : 'png';
+  return `https://cdn.discordapp.com/avatars/${user.discord_id}/${user.avatar_hash}.${ext}?size=256`;
 }
 
 function referrerLabel(raw) {
@@ -1636,6 +1695,7 @@ app.get('/terms', (req, res) => {
 });
 
 app.use('/api/admin', adminRouter);
+app.use('/api/apps', hostedAppsRouter);
 
 // ── OG Image Cards (Discord/Twitter embed previews) ───────────────────────────
 const { createOgRoute } = require('./og');

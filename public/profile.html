@@ -196,6 +196,11 @@
         0 18px 40px rgba(0,0,0,0.4);
       animation: avatarFloat 5.5s ease-in-out infinite;
     }
+    .page.layout-centered .avatar.shape-rounded { border-radius: 28px !important; }
+    .page.layout-centered .avatar.shape-hex {
+      border-radius: 0 !important;
+      clip-path: polygon(50% 0%, 93% 25%, 93% 75%, 50% 100%, 7% 75%, 7% 25%);
+    }
     @keyframes avatarFloat {
       0%, 100% { transform: translateY(0); }
       50% { transform: translateY(-6px); }
@@ -696,6 +701,31 @@
       background: #222;
       object-fit: cover;
       box-shadow: 0 14px 36px rgba(0,0,0,0.42);
+    }
+    .avatar.shape-circle { border-radius: 50%; }
+    .avatar.shape-rounded { border-radius: 22px; }
+    .avatar.shape-hex {
+      border-radius: 0;
+      clip-path: polygon(50% 0%, 93% 25%, 93% 75%, 50% 100%, 7% 75%, 7% 25%);
+      border: none;
+    }
+    .page.layout-centered .avatar.shape-hex { border: none; }
+    .profile-tagline {
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 4px;
+      letter-spacing: 0.02em;
+    }
+    .profile-pronouns {
+      display: inline-flex;
+      margin-top: 8px;
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: lowercase;
+      padding: 3px 9px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      color: var(--muted);
     }
 
     /* ── Body ── */
@@ -3056,6 +3086,8 @@ async function renderProfile() {
             ${badgesHtml}
           </div>
           ${disp.showHandle ? `<div class="profile-tag" id="profileTag" title="Click to copy link">cordfol.org/${escapeHtml(p.slug)}</div>` : ''}
+          ${disp.tagline ? `<div class="profile-tagline">${escapeHtml(disp.tagline)}</div>` : ''}
+          ${disp.pronouns ? `<div class="profile-pronouns">${escapeHtml(disp.pronouns)}</div>` : ''}
           ${bioHtml}
           ${statusPillHtml}
         </div>
@@ -3076,6 +3108,8 @@ async function renderProfile() {
             ${badgesHtml}
           </div>
           ${disp.showHandle ? `<div class="profile-tag" id="profileTag" title="Click to copy link">cordfol.org/${escapeHtml(p.slug)}</div>` : ''}
+          ${disp.tagline ? `<div class="profile-tagline">${escapeHtml(disp.tagline)}</div>` : ''}
+          ${disp.pronouns ? `<div class="profile-pronouns">${escapeHtml(disp.pronouns)}</div>` : ''}
           ${presenceRowHtml}
         </div>
       </div>
@@ -3095,7 +3129,7 @@ async function renderProfile() {
     <div class="avatar-wrap">
       <div class="avatar-holder">
         <div class="avatar-ring"></div>
-        <img class="avatar" src="${escapeHtml(p.avatarUrl || '')}" alt="avatar" onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'"/>
+        <img class="avatar shape-${escapeHtml(disp.avatarShape || 'circle')}" src="${escapeHtml(p.avatarUrl || '')}" alt="avatar" onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'"/>
         ${presenceDotHtml}
       </div>
     </div>

@@ -1,0 +1,8 @@
+{
+  "name": "cordfol-hosted-bot",
+  "private": true,
+  "main": "index.js",
+  "dependencies": {
+    "discord.js": "^14.14.0"
+  }
+}

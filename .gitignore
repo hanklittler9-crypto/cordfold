@@ -1,5 +1,6 @@
 .env
 node_modules/
+data/hosted-apps/
 .DS_Store
 bot/data/site-status.json
 bot/data/tickets.json

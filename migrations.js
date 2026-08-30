@@ -40,6 +40,26 @@ const MIGRATIONS = [
     UNIQUE (profile_user_id, author_user_id)
   )`,
   `CREATE INDEX IF NOT EXISTS idx_guestbook_profile ON guestbook_entries (profile_user_id, pinned DESC, created_at DESC)`,
+  `CREATE TABLE IF NOT EXISTS hosted_apps (
+    id TEXT PRIMARY KEY,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    name VARCHAR(40) NOT NULL,
+    slug VARCHAR(48) NOT NULL,
+    kind VARCHAR(20) NOT NULL DEFAULT 'discord_bot',
+    status VARCHAR(20) NOT NULL DEFAULT 'stopped',
+    runtime VARCHAR(20),
+    container_id TEXT,
+    pid INTEGER,
+    prefix VARCHAR(8) DEFAULT '!',
+    status_text VARCHAR(80),
+    commands JSONB DEFAULT '[]'::jsonb,
+    token_enc TEXT,
+    last_error TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE (user_id, slug)
+  )`,
+  `CREATE INDEX IF NOT EXISTS idx_hosted_apps_user ON hosted_apps (user_id, created_at DESC)`,
 ];
 
 async function runMigrations(db) {
