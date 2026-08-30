@@ -21,10 +21,13 @@ const {
   sendVerificationEmail,
   isConfigured: emailConfigured,
   maybeSendSetupReminder,
+  maybeSendWelcomeEmail,
+  sendWelcomeEmail,
+  sendMarketingEmail,
 } = require('./email');
 const createSpotifyRouter = require('./spotify');
 const createHostedAppsRouter = require('./hosted-apps');
-const { buildProfile: aiBuildProfile, ollamaStatus } = require('./ai-builder');
+const { buildProfile: aiBuildProfile, chatTurn: aiChatTurn, ollamaStatus } = require('./ai-builder');
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
@@ -747,6 +750,9 @@ app.post('/api/profile', async (req, res) => {
 
     // Setup reminder goes to the email they entered in profile — not on signup
     if (email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      maybeSendWelcomeEmail(db, userId).catch(err =>
+        console.error('[server] Welcome email error:', err.message)
+      );
       maybeSendSetupReminder(db, userId).catch(err =>
         console.error('[server] Setup reminder error:', err.message)
       );
@@ -905,6 +911,63 @@ app.post('/api/profile/ai-build', async (req, res) => {
   }
 });
 
+app.post('/api/profile/ai-chat', async (req, res) => {
+  try {
+    const userId = req.session?.userId;
+    if (!userId) return res.status(401).json({ error: 'Not authenticated' });
+    if (aiRateLimited(userId)) {
+      return res.status(429).json({ error: 'Give it a few seconds.' });
+    }
+
+    const history = Array.isArray(req.body?.history) ? req.body.history.slice(-12).map((m) => ({
+      role: m.role === 'assistant' ? 'assistant' : 'user',
+      content: String(m.content || '').slice(0, 800),
+    })).filter((m) => m.content) : [];
+    if (!history.length) return res.status(400).json({ error: 'Say something first.' });
+
+    const images = Array.isArray(req.body?.images) ? req.body.images.slice(0, 3) : [];
+    const colorHints = req.body?.colorHints && typeof req.body.colorHints === 'object' ? req.body.colorHints : {};
+    const result = await aiChatTurn({
+      history,
+      images,
+      colorHints,
+      currentBuild: req.body?.currentBuild || null,
+    });
+    res.json({ ok: true, ...result });
+  } catch (err) {
+    console.error('[server] /api/profile/ai-chat error:', err);
+    res.status(500).json({ error: 'Chat failed' });
+  }
+});
+
+app.post('/api/profile/email-preview', async (req, res) => {
+  try {
+    const userId = req.session?.userId;
+    if (!userId) return res.status(401).json({ error: 'Not authenticated' });
+    if (!emailConfigured()) return res.status(503).json({ error: 'SMTP is not set on the server yet.' });
+
+    const row = await db.query(
+      'SELECT email, display_name, discord_username, slug FROM users WHERE id = $1',
+      [userId]
+    );
+    const u = row.rows[0];
+    const to = String(req.body?.email || u?.email || '').trim();
+    if (!to || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)) {
+      return res.status(400).json({ error: 'Add an email on your profile first.' });
+    }
+    const kind = req.body?.kind === 'marketing' ? 'marketing' : 'welcome';
+    const payload = { to, displayName: u.display_name || u.discord_username, slug: u.slug };
+    const sent = kind === 'marketing'
+      ? await sendMarketingEmail(payload)
+      : await sendWelcomeEmail(payload);
+    if (!sent) return res.status(500).json({ error: 'Email did not send. Check SMTP_USER / SMTP_PASS.' });
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('[server] /api/profile/email-preview error:', err);
+    res.status(500).json({ error: err.message || 'Email failed' });
+  }
+});
+
 // ── Email Verification ────────────────────────────────────────────────────────
 app.post('/api/profile/verify-email', async (req, res) => {
   try {
@@ -955,7 +1018,7 @@ app.post('/api/profile/verify-email', async (req, res) => {
 app.get('/api/auth/verify-email', async (req, res) => {
   const { token } = req.query;
   if (!token) {
-    return res.redirect('https://dashboard.cordfol.org/dashboard.html?email=invalid');
+    return res.redirect('https://cordfol.org/dashboard.html?email=invalid');
   }
 
   try {
@@ -965,12 +1028,12 @@ app.get('/api/auth/verify-email', async (req, res) => {
     `, [token]);
 
     if (row.rowCount === 0) {
-      return res.redirect('https://dashboard.cordfol.org/dashboard.html?email=invalid');
+      return res.redirect('https://cordfol.org/dashboard.html?email=invalid');
     }
 
     const user = row.rows[0];
     if (new Date(user.email_verify_expires) < new Date()) {
-      return res.redirect('https://dashboard.cordfol.org/dashboard.html?email=expired');
+      return res.redirect('https://cordfol.org/dashboard.html?email=expired');
     }
 
     await db.query(`
@@ -981,10 +1044,14 @@ app.get('/api/auth/verify-email', async (req, res) => {
       WHERE id = $1
     `, [user.id]);
 
-    res.redirect('https://dashboard.cordfol.org/dashboard.html?email=verified');
+    maybeSendWelcomeEmail(db, user.id).catch((err) =>
+      console.error('[server] welcome after verify:', err.message)
+    );
+
+    res.redirect('https://cordfol.org/dashboard.html?email=verified');
   } catch (err) {
     console.error('[server] /api/auth/verify-email error:', err);
-    res.redirect('https://dashboard.cordfol.org/dashboard.html?email=error');
+    res.redirect('https://cordfol.org/dashboard.html?email=error');
   }
 });
 
@@ -1090,7 +1157,14 @@ function normalizeDisplayOptions(raw) {
   }
   out.tagline = String(src.tagline || '').slice(0, 80);
   out.pronouns = String(src.pronouns || '').slice(0, 32);
+  out.currently = String(src.currently || '').slice(0, 80);
+  out.discordAdd = String(src.discordAdd || '').slice(0, 40);
+  out.tabTitle = String(src.tabTitle || '').slice(0, 40);
   out.avatarShape = ['circle', 'rounded', 'hex'].includes(src.avatarShape) ? src.avatarShape : 'circle';
+  out.entryConfetti = !!src.entryConfetti;
+  out.showCurrently = src.showCurrently !== false;
+  out.showAddDiscord = src.showAddDiscord !== false;
+  out.showReactions = src.showReactions !== false;
   return out;
 }
 
@@ -1362,6 +1436,43 @@ app.post('/api/guestbook/entry/:id/pin', async (req, res) => {
     res.json({ ok: true, pinned: result.rows[0].pinned });
   } catch (err) {
     console.error('[server] guestbook PIN error:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+app.get('/api/profile/:slug/reactions', async (req, res) => {
+  try {
+    const ownerId = await guestbookOwnerId(req.params.slug);
+    if (!ownerId) return res.status(404).json({ error: 'Not found' });
+    const count = await db.query(
+      `SELECT COUNT(*)::int AS n FROM profile_reactions WHERE profile_user_id = $1 AND kind = 'fire'`,
+      [ownerId]
+    );
+    res.json({ fire: count.rows[0].n });
+  } catch (err) {
+    console.error('[server] reactions GET error:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+app.post('/api/profile/:slug/react', async (req, res) => {
+  try {
+    const ownerId = await guestbookOwnerId(req.params.slug);
+    if (!ownerId) return res.status(404).json({ error: 'Not found' });
+    const key = String(req.body?.visitorKey || '').replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 80);
+    if (key.length < 8) return res.status(400).json({ error: 'Missing visitor' });
+    await db.query(`
+      INSERT INTO profile_reactions (profile_user_id, visitor_key, kind)
+      VALUES ($1, $2, 'fire')
+      ON CONFLICT (profile_user_id, visitor_key, kind) DO NOTHING
+    `, [ownerId, key]);
+    const count = await db.query(
+      `SELECT COUNT(*)::int AS n FROM profile_reactions WHERE profile_user_id = $1 AND kind = 'fire'`,
+      [ownerId]
+    );
+    res.json({ fire: count.rows[0].n });
+  } catch (err) {
+    console.error('[server] reactions POST error:', err);
     res.status(500).json({ error: 'Server error' });
   }
 });

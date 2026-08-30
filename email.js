@@ -1,15 +1,15 @@
 const nodemailer = require('nodemailer');
 
 const PUBLIC_HOST = 'cordfol.org';
-const DASHBOARD_URL = 'https://dashboard.cordfol.org/dashboard.html';
+const DASHBOARD_URL = process.env.DASHBOARD_URL || 'https://cordfol.org/dashboard.html';
 const API_BASE = process.env.PUBLIC_API_URL || 'https://api.cordfol.org';
 
 let transporter = null;
 
 function getTransporter() {
   if (transporter) return transporter;
-  const user = process.env.SMTP_USER;
-  const pass = process.env.SMTP_PASS;
+  const user = String(process.env.SMTP_USER || '').trim();
+  const pass = String(process.env.SMTP_PASS || '').replace(/\s+/g, '');
   if (!user || !pass) return null;
 
   transporter = nodemailer.createTransport({
@@ -151,6 +151,54 @@ async function sendSetupReminderEmail({ to, displayName, slug }) {
   });
 }
 
+async function sendWelcomeEmail({ to, displayName, slug }) {
+  const name = displayName || 'there';
+  const profileUrl = slug ? `https://${PUBLIC_HOST}/${slug}` : `https://${PUBLIC_HOST}`;
+  return sendMail({
+    to,
+    subject: 'Welcome to Cordfol — AI just built pages like yours',
+    text: `Hey ${name},\n\nYour Cordfol is live-ish. Open the AI builder, drop a photo, and talk it into the page you actually want:\n${DASHBOARD_URL}\n\nYour link: ${profileUrl}`,
+    html: renderEmail({
+      preheader: 'AI builder, custom photos, verified Discord roles — not another guns clone.',
+      kicker: 'Welcome',
+      title: 'You have a page. Now make it yours.',
+      bodyHtml: `
+        <p style="margin:0 0 12px;">Hey ${esc(name)},</p>
+        <p style="margin:0 0 12px;">Guns.lol gives you a pretty card. Cordfol gives you a chat that designs the page, your own photos (not just Discord), and roles Discord actually confirms.</p>
+        <p style="margin:0 0 4px;">— Open <strong style="color:#f5f7fb;">AI Builder</strong> and talk to it</p>
+        <p style="margin:0 0 4px;">— Drop a face / banner / vibe photo in the chat</p>
+        <p style="margin:0 0 12px;">— Hit Save. Share ${esc(profileUrl)}</p>
+      `,
+      ctaLabel: 'Open AI Builder',
+      ctaUrl: `${DASHBOARD_URL}#ai`,
+      footNote: 'Role-change alerts stay on unless you turn them off in the dashboard.',
+    }),
+  });
+}
+
+async function sendMarketingEmail({ to, displayName, slug }) {
+  const name = displayName || 'there';
+  const profileUrl = slug ? `https://${PUBLIC_HOST}/${slug}` : `https://${PUBLIC_HOST}`;
+  return sendMail({
+    to,
+    subject: 'Your Cordfol can look nothing like guns.lol',
+    text: `Hey ${name},\n\nThe AI builder is a chat now. Describe the vibe, attach photos, keep talking until it slaps.\n${DASHBOARD_URL}\n\n${profileUrl}`,
+    html: renderEmail({
+      preheader: 'Chat the look. Attach photos. Verified roles stay real.',
+      kicker: 'AI drop',
+      title: 'Talk the page into existence',
+      bodyHtml: `
+        <p style="margin:0 0 12px;">Hey ${esc(name)},</p>
+        <p style="margin:0 0 12px;">The builder is a chatbot now — not a one-box form. Tell it “darker”, drop your pfp, ask for hex avatar + fireflies. It applies the look live.</p>
+        <p style="margin:0 0 12px;">Still the only bio link that proves Discord roles instead of letting you type them.</p>
+      `,
+      ctaLabel: 'Chat the builder',
+      ctaUrl: `${DASHBOARD_URL}#ai`,
+      footNote: `Your page: ${profileUrl}`,
+    }),
+  });
+}
+
 // ── Role change alert ─────────────────────────────────────────────────────────
 // Sent when a re-scan finds verified roles that went inactive (left server,
 // role removed, etc). Only sent to verified emails.
@@ -199,6 +247,35 @@ function profileNeedsSetup(user) {
 
   const slugLooksDefault = !slug || slug === username || /^[a-z0-9]+\d+$/.test(slug);
   return !bio || slugLooksDefault || !displayName;
+}
+
+async function maybeSendWelcomeEmail(db, userId) {
+  if (!isConfigured()) return false;
+  try {
+    const row = await db.query(`
+      SELECT email, discord_username, display_name, slug, welcome_sent_at
+      FROM users WHERE id = $1
+    `, [userId]);
+    if (!row.rowCount) return false;
+    const user = row.rows[0];
+    const to = String(user.email || '').trim();
+    if (!to || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)) return false;
+    if (user.welcome_sent_at) return false;
+
+    const sent = await sendWelcomeEmail({
+      to,
+      displayName: user.display_name || user.discord_username,
+      slug: user.slug,
+    });
+    if (sent) {
+      await db.query('UPDATE users SET welcome_sent_at = NOW() WHERE id = $1', [userId]);
+      console.log('[email] Welcome sent to', to);
+    }
+    return sent;
+  } catch (err) {
+    console.error('[email] Welcome failed:', err.message);
+    return false;
+  }
 }
 
 async function maybeSendSetupReminder(db, userId) {
@@ -272,7 +349,9 @@ module.exports = {
   renderEmail,
   sendVerificationEmail,
   sendSetupReminderEmail,
-  sendRoleChangeEmail,
+  sendWelcomeEmail,
+  sendMarketingEmail,
+  maybeSendWelcomeEmail,
   maybeSendSetupReminder,
   maybeSendRoleChangeAlert,
   profileNeedsSetup,

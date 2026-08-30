@@ -727,6 +727,27 @@
       border: 1px solid var(--border);
       color: var(--muted);
     }
+    .profile-currently {
+      margin-top: 10px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .profile-currently b { color: var(--text); font-weight: 600; }
+    .add-me-btn, .fire-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      margin-top: 12px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.04);
+      color: var(--text);
+      font-size: 12px;
+      cursor: pointer;
+    }
+    .add-me-btn:hover, .fire-btn:hover { border-color: rgba(255,255,255,0.22); }
+    .profile-react-row { display: flex; gap: 8px; flex-wrap: wrap; }
 
     /* ── Body ── */
     .card-body {
@@ -2917,7 +2938,7 @@ async function renderProfile() {
   applyBackground(t);
   applyCardTheme(t);
   initParticles(t.particles, t.accentColor, t.particleStyle);
-  document.title = `${p.displayName} — Cordfol`;
+  document.title = disp.tabTitle || `${p.displayName} — Cordfol`;
 
   // Custom CSS
   if (t.customCss) {
@@ -3088,8 +3109,13 @@ async function renderProfile() {
           ${disp.showHandle ? `<div class="profile-tag" id="profileTag" title="Click to copy link">cordfol.org/${escapeHtml(p.slug)}</div>` : ''}
           ${disp.tagline ? `<div class="profile-tagline">${escapeHtml(disp.tagline)}</div>` : ''}
           ${disp.pronouns ? `<div class="profile-pronouns">${escapeHtml(disp.pronouns)}</div>` : ''}
+          ${disp.showCurrently !== false && disp.currently ? `<div class="profile-currently">currently <b>${escapeHtml(disp.currently)}</b></div>` : ''}
           ${bioHtml}
           ${statusPillHtml}
+          <div class="profile-react-row">
+            ${disp.showAddDiscord !== false && disp.discordAdd ? `<button type="button" class="add-me-btn" id="addDiscordBtn">Add me · ${escapeHtml(disp.discordAdd)}</button>` : ''}
+            ${disp.showReactions !== false ? `<button type="button" class="fire-btn" id="fireBtn">🔥 <span id="fireCount">0</span></button>` : ''}
+          </div>
         </div>
       </div>
       ${socialsHtml}
@@ -3110,7 +3136,12 @@ async function renderProfile() {
           ${disp.showHandle ? `<div class="profile-tag" id="profileTag" title="Click to copy link">cordfol.org/${escapeHtml(p.slug)}</div>` : ''}
           ${disp.tagline ? `<div class="profile-tagline">${escapeHtml(disp.tagline)}</div>` : ''}
           ${disp.pronouns ? `<div class="profile-pronouns">${escapeHtml(disp.pronouns)}</div>` : ''}
+          ${disp.showCurrently !== false && disp.currently ? `<div class="profile-currently">currently <b>${escapeHtml(disp.currently)}</b></div>` : ''}
           ${presenceRowHtml}
+          <div class="profile-react-row">
+            ${disp.showAddDiscord !== false && disp.discordAdd ? `<button type="button" class="add-me-btn" id="addDiscordBtn">Add me · ${escapeHtml(disp.discordAdd)}</button>` : ''}
+            ${disp.showReactions !== false ? `<button type="button" class="fire-btn" id="fireBtn">🔥 <span id="fireCount">0</span></button>` : ''}
+          </div>
         </div>
       </div>
       ${bioHtml}
@@ -3167,6 +3198,58 @@ async function renderProfile() {
   if (disp.showLocalTime !== false && p.timezone) startLocalClock(p.timezone);
   if (disp.showGuestbook !== false) initGuestbook(p.slug);
   initProfilePolish(!t.tiltCard);
+  initAddDiscord(disp.discordAdd);
+  if (disp.showReactions !== false) initFire(p.slug);
+  if (disp.entryConfetti) burstConfetti();
+}
+
+function visitorKey() {
+  try {
+    let k = localStorage.getItem('cordfol_visitor');
+    if (!k) { k = 'v_' + Math.random().toString(36).slice(2) + Date.now().toString(36); localStorage.setItem('cordfol_visitor', k); }
+    return k;
+  } catch { return 'v_anon'; }
+}
+function initAddDiscord(handle) {
+  const btn = document.getElementById('addDiscordBtn');
+  if (!btn || !handle) return;
+  btn.onclick = () => {
+    copyToClipboard(handle);
+    btn.textContent = 'Copied Discord';
+    setTimeout(() => { btn.textContent = `Add me · ${handle}`; }, 1400);
+  };
+}
+async function initFire(slug) {
+  const btn = document.getElementById('fireBtn');
+  const countEl = document.getElementById('fireCount');
+  if (!btn || !countEl) return;
+  try {
+    const res = await fetch(`${API_BASE}/profile/${encodeURIComponent(slug)}/reactions`);
+    const data = await res.json();
+    countEl.textContent = data.fire || 0;
+  } catch { /* ignore */ }
+  btn.onclick = async () => {
+    try {
+      const res = await fetch(`${API_BASE}/profile/${encodeURIComponent(slug)}/react`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ visitorKey: visitorKey() }),
+      });
+      const data = await res.json();
+      countEl.textContent = data.fire || 0;
+    } catch { /* ignore */ }
+  };
+}
+function burstConfetti() {
+  const colors = ['#c46bff', '#3dd68c', '#f0b429', '#ff4d6d', '#4cc9f0'];
+  for (let i = 0; i < 28; i++) {
+    const d = document.createElement('div');
+    d.style.cssText = `position:fixed;top:-10px;left:${Math.random()*100}%;width:8px;height:12px;background:${colors[i%colors.length]};z-index:80;border-radius:2px;pointer-events:none;transform:rotate(${Math.random()*360}deg)`;
+    document.body.appendChild(d);
+    const x = (Math.random() - 0.5) * 160;
+    const y = 180 + Math.random() * 420;
+    d.animate([{ transform: d.style.transform, opacity: 1 }, { transform: `translate(${x}px, ${y}px) rotate(400deg)`, opacity: 0 }], { duration: 1400 + Math.random() * 900, easing: 'cubic-bezier(.2,.7,.2,1)' }).onfinish = () => d.remove();
+  }
 }
 
 // ── Guestbook ──

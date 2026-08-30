@@ -183,6 +183,81 @@ Color hints from their photos: ${JSON.stringify(colorHints || {})}
 Make it feel custom to THEIR idea, not generic SaaS. High contrast text on card.`;
 }
 
+function chatPrompt(history, colorHints, currentBuild) {
+  const last = history.map((m) => `${m.role}: ${m.content}`).join('\n').slice(-2400);
+  return `You are Cordfol's profile designer — a sharp chat bot, not a form.
+Talk like a good creative director. Short. Then apply a full look.
+Return ONLY JSON:
+{
+  "say": "1-3 sentences to the user, casual",
+  "build": {
+    "displayName": "optional or null",
+    "tagline": "max 72 chars",
+    "bio": "max 220 chars",
+    "pronouns": "",
+    "currently": "optional what they're doing now",
+    "accentColor": "#RRGGBB",
+    "textColor": "#RRGGBB",
+    "cardColor": "#RRGGBB",
+    "backgroundType": "gradient" or "solid",
+    "backgroundValue": "css",
+    "layout": "centered" | "card" | "left" | "magazine",
+    "font": one of ${ALLOWED_FONTS.join(', ')},
+    "nameEffect": one of ${ALLOWED_EFFECTS.join(', ')},
+    "particleStyle": one of ${ALLOWED_PARTICLES.join(', ')},
+    "effects": { "glassmorphism": true, "particles": true, "animatedBg": true, "typewriterBio": true, "tiltCard": true, "entrySplash": false, "entryConfetti": false },
+    "avatarShape": "circle" | "rounded" | "hex",
+    "tabTitle": "optional browser tab text"
+  }
+}
+If they only asked a question, still return a build that matches the conversation.
+Photos may be attached — use them as the vibe. High contrast text.
+Current build: ${JSON.stringify(currentBuild || {}).slice(0, 700)}
+Color hints: ${JSON.stringify(colorHints || {})}
+Chat:\n${last}`;
+}
+
+async function chatTurn({ history = [], images = [], colorHints = {}, currentBuild = null }) {
+  const idea = [...history].reverse().find((m) => m.role === 'user')?.content || 'dark neon profile';
+  const fallback = heuristicBuild(idea, colorHints);
+  const status = await ollamaStatus();
+  if (!status.available) {
+    return {
+      say: 'Ollama is offline, so I mixed a look locally. Start the model and I’ll actually chat the page with you.',
+      build: { ...fallback, source: 'heuristic' },
+    };
+  }
+
+  const visionImages = images.slice(0, 3).map((img) => String(img).replace(/^data:[^;]+;base64,/, '')).filter(Boolean);
+  const model = (visionImages.length && OLLAMA_VISION_MODEL) ? OLLAMA_VISION_MODEL : OLLAMA_MODEL;
+
+  try {
+    const content = await ollamaChat({
+      model,
+      prompt: chatPrompt(history, colorHints, currentBuild),
+      images: visionImages.length && OLLAMA_VISION_MODEL ? visionImages : undefined,
+    });
+    const parsed = parseModelJson(content);
+    if (!parsed) {
+      return { say: 'Got a messy model reply — I still laid down a look you can keep editing.', build: fallback };
+    }
+    const build = sanitizeBuild({ ...(parsed.build || parsed), source: 'ollama' }, fallback);
+    if (parsed.build?.currently) build.currently = String(parsed.build.currently).slice(0, 80);
+    if (parsed.build?.tabTitle) build.tabTitle = String(parsed.build.tabTitle).slice(0, 40);
+    if (parsed.build?.effects?.entryConfetti) build.effects.entryConfetti = true;
+    return {
+      say: String(parsed.say || 'Applied. Say “darker”, “less effects”, or drop another photo.').slice(0, 400),
+      build,
+    };
+  } catch (err) {
+    console.error('[ai-builder] chat failed:', err.message);
+    return {
+      say: 'Model hiccup — used a local mix. Try again in a few seconds.',
+      build: fallback,
+    };
+  }
+}
+
 async function buildProfile({ idea, images = [], colorHints = {} }) {
   const fallback = heuristicBuild(idea, colorHints);
   const status = await ollamaStatus();
@@ -208,4 +283,4 @@ async function buildProfile({ idea, images = [], colorHints = {} }) {
   }
 }
 
-module.exports = { buildProfile, ollamaStatus };
+module.exports = { buildProfile, chatTurn, ollamaStatus };

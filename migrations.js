@@ -60,6 +60,17 @@ const MIGRATIONS = [
     UNIQUE (user_id, slug)
   )`,
   `CREATE INDEX IF NOT EXISTS idx_hosted_apps_user ON hosted_apps (user_id, created_at DESC)`,
+  `ALTER TABLE users ADD COLUMN IF NOT EXISTS welcome_sent_at TIMESTAMPTZ`,
+  `ALTER TABLE users ADD COLUMN IF NOT EXISTS email_marketing BOOLEAN DEFAULT true`,
+  `ALTER TABLE users ADD COLUMN IF NOT EXISTS marketing_sent_at TIMESTAMPTZ`,
+  `CREATE TABLE IF NOT EXISTS profile_reactions (
+    profile_user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    visitor_key VARCHAR(80) NOT NULL,
+    kind VARCHAR(16) NOT NULL DEFAULT 'fire',
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    PRIMARY KEY (profile_user_id, visitor_key, kind)
+  )`,
+  `CREATE INDEX IF NOT EXISTS idx_profile_reactions_profile ON profile_reactions (profile_user_id, kind)`,
 ];
 
 async function runMigrations(db) {
