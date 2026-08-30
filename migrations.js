@@ -42,7 +42,7 @@ const MIGRATIONS = [
   `CREATE INDEX IF NOT EXISTS idx_guestbook_profile ON guestbook_entries (profile_user_id, pinned DESC, created_at DESC)`,
   `CREATE TABLE IF NOT EXISTS hosted_apps (
     id TEXT PRIMARY KEY,
-    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     name VARCHAR(40) NOT NULL,
     slug VARCHAR(48) NOT NULL,
     kind VARCHAR(20) NOT NULL DEFAULT 'discord_bot',
