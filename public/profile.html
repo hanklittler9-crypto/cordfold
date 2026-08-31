@@ -846,6 +846,47 @@
       0%, 100% { filter: brightness(1); }
       50% { filter: brightness(1.4); text-shadow: 0 0 18px rgba(var(--accent-rgb), 0.9); }
     }
+    .fx-name-glitch {
+      position: relative;
+      display: inline-block;
+      animation: glitchSkew 2.8s infinite;
+    }
+    .fx-name-glitch::before,
+    .fx-name-glitch::after {
+      content: attr(data-text);
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      pointer-events: none;
+    }
+    .fx-name-glitch::before {
+      color: #00fff0;
+      animation: glitchA 2s infinite;
+      clip-path: inset(0 0 55% 0);
+      opacity: 0.75;
+    }
+    .fx-name-glitch::after {
+      color: #ff2a6d;
+      animation: glitchB 1.7s infinite;
+      clip-path: inset(50% 0 0 0);
+      opacity: 0.75;
+    }
+    @keyframes glitchSkew {
+      0%, 90%, 100% { transform: none; }
+      92% { transform: skewX(8deg); }
+      94% { transform: skewX(-6deg); }
+    }
+    @keyframes glitchA {
+      0%, 80%, 100% { transform: translate(0); }
+      85% { transform: translate(-2px, 1px); }
+      90% { transform: translate(2px, -1px); }
+    }
+    @keyframes glitchB {
+      0%, 80%, 100% { transform: translate(0); }
+      82% { transform: translate(2px, -1px); }
+      88% { transform: translate(-2px, 1px); }
+    }
 
     /* ── Featured Discord server card ── */
     .server-card {
@@ -1008,6 +1049,7 @@
     .p-badge.b-views1k, .p-badge.b-views10k { background: linear-gradient(135deg, #FF3366, #FF8C00); border-color: rgba(255,51,102,0.45); }
     .p-badge.b-bot { background: linear-gradient(135deg, #5865F2, #3b4170); border-color: rgba(88,101,242,0.5); }
     .p-badge.b-music { background: linear-gradient(135deg, #1DB954, #14833b); border-color: rgba(29,185,84,0.45); }
+    .p-badge.b-ai { background: linear-gradient(135deg, #c46bff, #5865F2); border-color: rgba(196,107,255,0.5); }
 
     /* ── Avatar accent ring ── */
     .avatar-ring {
@@ -1549,6 +1591,22 @@
       animation: linkShine 0.65s ease;
     }
     @keyframes linkShine { to { transform: translateX(120%); } }
+    .custom-link-block.spotlight {
+      padding: 18px 22px;
+      font-size: 16px;
+      letter-spacing: 0.01em;
+      border-color: rgba(var(--accent-rgb, 88, 101, 242), 0.45);
+      box-shadow: 0 0 28px rgba(var(--accent-rgb, 88, 101, 242), 0.2);
+      background: rgba(var(--accent-rgb, 88, 101, 242), 0.1);
+    }
+    .avatar.tap-pulse {
+      animation: avatarTap 0.42s ease;
+    }
+    @keyframes avatarTap {
+      0% { transform: scale(1); }
+      40% { transform: scale(1.08); filter: brightness(1.18); }
+      100% { transform: scale(1); }
+    }
     .custom-link-block:hover {
       transform: translateY(-2px);
       background: rgba(var(--accent-rgb, 88, 101, 242), 0.12);
@@ -3001,8 +3059,8 @@ async function renderProfile() {
   const customLinks = Array.isArray(p.customLinks) ? p.customLinks.filter(l => l && l.title && l.url) : [];
   const customLinksHtml = (disp.showCustomLinks && customLinks.length) ? `
     <div class="custom-links">
-      ${customLinks.map(l => `
-        <a class="custom-link-block" href="${escapeHtml(l.url)}" target="_blank" rel="noopener noreferrer" onclick="trackEvent('link_click','${escapeHtml(l.title)}','custom')">${escapeHtml(l.title)}</a>
+      ${customLinks.map((l, i) => `
+        <a class="custom-link-block${disp.spotlightLink && i === 0 ? ' spotlight' : ''}" href="${escapeHtml(l.url)}" target="_blank" rel="noopener noreferrer" onclick="trackEvent('link_click','${escapeHtml(l.title)}','custom')">${escapeHtml(l.title)}</a>
       `).join('')}
     </div>
   ` : '';
@@ -3030,6 +3088,7 @@ async function renderProfile() {
     views10k: '💎',
     bot: '🤖',
     music: '🎵',
+    ai: '✦',
   };
   const badgeList = (disp.showBadges !== false && Array.isArray(p.badges)) ? p.badges : [];
   const badgesHtml = badgeList.length ? `
@@ -3103,7 +3162,7 @@ async function renderProfile() {
         <div class="profile-heading">
           ${disp.showVerifiedBadge ? '<div class="profile-kicker"><span class="cf-verified-mark">✓</span> Verified by Cordfol</div>' : ''}
           <div class="profile-name">
-            <span class="${t.nameEffect && t.nameEffect !== 'none' ? `fx-name-${escapeHtml(t.nameEffect)}` : ''}">${escapeHtml(p.displayName)}</span>
+            <span class="${t.nameEffect && t.nameEffect !== 'none' ? `fx-name-${escapeHtml(t.nameEffect)}` : ''}" data-text="${escapeHtml(p.displayName)}">${escapeHtml(p.displayName)}</span>
             ${badgesHtml}
           </div>
           ${disp.showHandle ? `<div class="profile-tag" id="profileTag" title="Click to copy link">cordfol.org/${escapeHtml(p.slug)}</div>` : ''}
@@ -3130,7 +3189,7 @@ async function renderProfile() {
         <div class="profile-heading">
           ${disp.showVerifiedBadge ? '<div class="profile-kicker"><span class="cf-verified-mark">✓</span> Verified by Cordfol</div>' : ''}
           <div class="profile-name">
-            <span class="${t.nameEffect && t.nameEffect !== 'none' ? `fx-name-${escapeHtml(t.nameEffect)}` : ''}">${escapeHtml(p.displayName)}</span>
+            <span class="${t.nameEffect && t.nameEffect !== 'none' ? `fx-name-${escapeHtml(t.nameEffect)}` : ''}" data-text="${escapeHtml(p.displayName)}">${escapeHtml(p.displayName)}</span>
             ${badgesHtml}
           </div>
           ${disp.showHandle ? `<div class="profile-tag" id="profileTag" title="Click to copy link">cordfol.org/${escapeHtml(p.slug)}</div>` : ''}
@@ -3160,7 +3219,7 @@ async function renderProfile() {
     <div class="avatar-wrap">
       <div class="avatar-holder">
         <div class="avatar-ring"></div>
-        <img class="avatar shape-${escapeHtml(disp.avatarShape || 'circle')}" src="${escapeHtml(p.avatarUrl || '')}" alt="avatar" onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'"/>
+        <img class="avatar shape-${escapeHtml(disp.avatarShape || 'circle')}" id="profileAvatar" src="${escapeHtml(p.avatarUrl || '')}" alt="avatar" onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'"/>
         ${presenceDotHtml}
       </div>
     </div>
@@ -3201,8 +3260,20 @@ async function renderProfile() {
   initAddDiscord(disp.discordAdd);
   if (disp.showReactions !== false) initFire(p.slug);
   if (disp.entryConfetti) burstConfetti();
+  initAvatarTap();
 }
 
+function initAvatarTap() {
+  const av = document.getElementById('profileAvatar');
+  if (!av) return;
+  av.style.cursor = 'pointer';
+  av.title = 'tap';
+  av.addEventListener('click', () => {
+    av.classList.remove('tap-pulse');
+    void av.offsetWidth;
+    av.classList.add('tap-pulse');
+  });
+}
 function visitorKey() {
   try {
     let k = localStorage.getItem('cordfol_visitor');

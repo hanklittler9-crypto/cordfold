@@ -102,6 +102,14 @@ app.use(session({
   },
 }));
 
+// ── OG images first so Discord never hits a stale public/preview.png ─────────
+const { createOgRoute, createHomeOgRoute, createDiscoverOgRoute } = require('./og');
+app.get('/og/home.png', createHomeOgRoute(db));
+app.get('/og/discover.png', createDiscoverOgRoute(db));
+app.get('/preview.png', createHomeOgRoute(db));
+app.get('/og/:slug.png', createOgRoute(db));
+app.get('/og/:slug', createOgRoute(db));
+
 // ── Static Files ─────────────────────────────────────────────────────────────
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -462,6 +470,10 @@ app.get('/api/profile/:slug', async (req, res) => {
     if (user.spotify_enabled && user.spotify_public) {
       badges.push({ id: 'music', label: 'Music Connected' });
     }
+    const savedDisplay = user.display_options && typeof user.display_options === 'object' ? user.display_options : {};
+    if (savedDisplay.aiDesigned) {
+      badges.push({ id: 'ai', label: 'AI Designed' });
+    }
 
     const featuredServerPromise = resolveFeaturedServer(user.featured_invite);
 
@@ -660,7 +672,7 @@ app.post('/api/profile', async (req, res) => {
     const layout = ['centered', 'left', 'card', 'magazine'].includes(theme.layout)
       ? theme.layout
       : 'centered';
-    const nameEffect = ['none', 'glow', 'gradient', 'rainbow', 'sparkle'].includes(theme.nameEffect)
+    const nameEffect = ['none', 'glow', 'gradient', 'rainbow', 'sparkle', 'glitch'].includes(theme.nameEffect)
       ? theme.nameEffect
       : 'none';
     const particleStyle = ['dots', 'snow', 'rain', 'sakura', 'fireflies'].includes(theme.particleStyle)
@@ -1147,6 +1159,8 @@ const DEFAULT_DISPLAY_OPTIONS = {
   showRoles: true,
   showSocials: true,
   showSpotifyWidget: true,
+  spotlightLink: false,
+  aiDesigned: false,
 };
 
 function normalizeDisplayOptions(raw) {
@@ -1165,6 +1179,8 @@ function normalizeDisplayOptions(raw) {
   out.showCurrently = src.showCurrently !== false;
   out.showAddDiscord = src.showAddDiscord !== false;
   out.showReactions = src.showReactions !== false;
+  out.aiDesigned = !!src.aiDesigned;
+  out.spotlightLink = !!src.spotlightLink;
   return out;
 }
 
@@ -1807,11 +1823,6 @@ app.get('/terms', (req, res) => {
 
 app.use('/api/admin', adminRouter);
 app.use('/api/apps', hostedAppsRouter);
-
-// ── OG Image Cards (Discord/Twitter embed previews) ───────────────────────────
-const { createOgRoute } = require('./og');
-app.get('/og/:slug.png', createOgRoute(db));
-app.get('/og/:slug', createOgRoute(db));
 
 // ── QR code for profile links ─────────────────────────────────────────────────
 const QRCode = require('qrcode');

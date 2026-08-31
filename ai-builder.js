@@ -5,7 +5,7 @@ const OLLAMA_TIMEOUT_MS = Number(process.env.OLLAMA_TIMEOUT_MS || 90000);
 
 const ALLOWED_FONTS = ['DM Sans', 'Space Mono', 'Bebas Neue', 'Instrument Serif', 'Syne', 'IBM Plex Mono'];
 const ALLOWED_LAYOUTS = ['centered', 'left', 'card', 'magazine'];
-const ALLOWED_EFFECTS = ['none', 'glow', 'gradient', 'rainbow', 'sparkle'];
+const ALLOWED_EFFECTS = ['none', 'glow', 'gradient', 'rainbow', 'sparkle', 'glitch'];
 const ALLOWED_PARTICLES = ['dots', 'snow', 'rain', 'sakura', 'fireflies'];
 const ALLOWED_SHAPES = ['circle', 'rounded', 'hex'];
 
@@ -18,6 +18,7 @@ const STYLE_PACKS = [
   { keys: ['gold', 'luxury', 'rich', 'vip'], accent: '#f0b429', card: '#16120a', text: '#fff6d8', bg: 'linear-gradient(135deg,#0c0a06,#3a2a0a)', font: 'Instrument Serif', nameEffect: 'gradient', particles: true, particleStyle: 'dots', layout: 'magazine' },
   { keys: ['green', 'mint', 'matrix', 'slime'], accent: '#3dd68c', card: '#08140f', text: '#e8fff3', bg: 'linear-gradient(135deg,#03120b,#0c2a1a)', font: 'IBM Plex Mono', nameEffect: 'glow', particles: true, particleStyle: 'dots', layout: 'centered' },
   { keys: ['anime', 'weeb', 'manga'], accent: '#7c5cff', card: '#14101f', text: '#f3eeff', bg: 'linear-gradient(135deg,#0c0818,#2a1650)', font: 'Syne', nameEffect: 'rainbow', particles: true, particleStyle: 'sakura', layout: 'centered' },
+  { keys: ['glitch', 'error', 'corrupt', 'vhs'], accent: '#00fff0', card: '#0a0610', text: '#f4f0ff', bg: 'linear-gradient(135deg,#05030a,#1a0820 50%,#ff2a6d)', font: 'IBM Plex Mono', nameEffect: 'glitch', particles: true, particleStyle: 'dots', layout: 'centered' },
 ];
 
 function hexOk(value, fallback) {

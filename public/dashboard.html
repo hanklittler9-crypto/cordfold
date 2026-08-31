@@ -222,7 +222,20 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
 .lp-body{padding:10px 18px 18px;display:flex;flex-direction:column;gap:10px;}
 .lp-kicker{display:inline-flex;align-items:center;gap:6px;padding:5px 9px;border-radius:999px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--muted2);width:max-content;}
 .lp-kicker::before{content:'';width:7px;height:7px;border-radius:50%;background:var(--neon);box-shadow:0 0 14px rgba(0,255,178,0.6);}
-.lp-name{font-size:18px;font-weight:500;color:#f1f5f9;letter-spacing:-0.02em;}
+.lp-name{font-size:18px;font-weight:500;color:#f1f5f9;letter-spacing:-0.02em;position:relative;display:inline-block;}
+.lp-name.fx-name-glow{text-shadow:0 0 12px rgba(196,107,255,0.85),0 0 28px rgba(196,107,255,0.4);}
+.lp-name.fx-name-gradient{background:linear-gradient(90deg,#c46bff,#fff 55%,#c46bff);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;}
+.lp-name.fx-name-rainbow{background:linear-gradient(90deg,#ff5f6d,#ffc371,#47e891,#4facfe,#b06ab3,#ff5f6d);background-size:300% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:nameRainbow 6s linear infinite;}
+.lp-name.fx-name-sparkle{animation:nameSparkle 2.4s ease-in-out infinite;}
+.lp-name.fx-name-glitch{animation:glitchSkew 2.8s infinite;}
+.lp-name.fx-name-glitch::before,.lp-name.fx-name-glitch::after{content:attr(data-text);position:absolute;left:0;top:0;width:100%;pointer-events:none;}
+.lp-name.fx-name-glitch::before{color:#00fff0;animation:glitchA 2s infinite;clip-path:inset(0 0 55% 0);opacity:0.7;}
+.lp-name.fx-name-glitch::after{color:#ff2a6d;animation:glitchB 1.7s infinite;clip-path:inset(50% 0 0 0);opacity:0.7;}
+@keyframes nameRainbow{to{background-position:300% 0;}}
+@keyframes nameSparkle{0%,100%{filter:brightness(1);}50%{filter:brightness(1.35);text-shadow:0 0 16px rgba(196,107,255,0.8);}}
+@keyframes glitchSkew{0%,90%,100%{transform:none;}92%{transform:skewX(8deg);}94%{transform:skewX(-6deg);}}
+@keyframes glitchA{0%,80%,100%{transform:translate(0);}85%{transform:translate(-2px,1px);}90%{transform:translate(2px,-1px);}}
+@keyframes glitchB{0%,80%,100%{transform:translate(0);}82%{transform:translate(2px,-1px);}88%{transform:translate(-2px,1px);}}
 .lp-tag{display:inline-flex;align-items:center;padding:7px 10px;border-radius:999px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:0.7px;color:var(--muted2);width:max-content;}
 .lp-bio{font-size:12px;color:rgba(245,247,251,0.62);line-height:1.6;max-width:30ch;}
 .lp-summary{display:flex;flex-wrap:wrap;gap:6px;}
@@ -335,6 +348,10 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
 .ai-chips{display:flex;flex-wrap:wrap;gap:6px;padding:0 12px 10px;}
 .ai-chip{font-size:11px;padding:6px 10px;border-radius:999px;border:1px solid var(--border);background:rgba(255,255,255,0.03);color:var(--text);cursor:pointer;}
 .ai-chip:hover{border-color:rgba(196,107,255,0.4);}
+.ai-studio{display:grid;grid-template-columns:1.15fr 0.85fr;gap:14px;align-items:stretch;}
+.ai-remix-row{display:flex;gap:8px;padding:0 18px 12px;}
+.ai-remix-row .field-input{flex:1;}
+@media (max-width:900px){.ai-studio{grid-template-columns:1fr;}}
 .section-divider{display:flex;align-items:center;gap:12px;margin:20px 0 16px;}
 .section-divider span{font-size:10px;font-family:'IBM Plex Mono',monospace;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);white-space:nowrap;}
 .section-divider::before,.section-divider::after{content:'';flex:1;height:1px;background:var(--border);}
@@ -424,18 +441,25 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
     <!-- AI BUILDER TAB -->
     <div class="tab" id="tab-ai">
       <div class="page-title">AI Builder Chat</div>
-      <div class="page-sub">Talk the page into existence. Attach photos. Say “darker”, “hex avatar”, “use this as my pfp”. Guns can’t do this.</div>
+      <div class="page-sub">Talk, drop photos, remix someone else’s page. The preview on the right updates live — guns can’t do this.</div>
+      <div class="ai-studio">
       <div class="card" style="border-color:rgba(196,107,255,0.22);padding:0;overflow:hidden">
         <div class="card-title" style="padding:16px 18px 0">Studio <span class="wifi-pill" id="aiStatusPill">CHECKING AI</span></div>
+        <div class="ai-remix-row">
+          <input class="field-input" id="aiRemixInput" placeholder="Remix: cordfol.org/someone or just their handle"/>
+          <button class="btn btn-ghost" type="button" onclick="remixFromSlug()">Remix</button>
+          <button class="btn btn-ghost" type="button" onclick="surpriseLook()">Surprise</button>
+        </div>
         <div class="ai-chat">
           <div class="ai-chat-log" id="aiChatLog">
-            <div class="ai-bubble bot">Drop a photo and tell me the vibe. I’ll design the page, then we keep talking until it slaps. Try “midnight rave, neon purple, hex pfp”.</div>
+            <div class="ai-bubble bot">Drop a photo, paste someone’s Cordfol, or just talk. I’ll restyle the preview on the right until it slaps.</div>
           </div>
           <div class="ai-chips">
             <button type="button" class="ai-chip" onclick="aiChip('midnight rave, neon purple, hex avatar, fireflies, cocky short bio')">Midnight rave</button>
             <button type="button" class="ai-chip" onclick="aiChip('make it darker and higher contrast')">Darker</button>
             <button type="button" class="ai-chip" onclick="aiChip('less effects, clean guns-style stack')">Cleaner</button>
             <button type="button" class="ai-chip" onclick="aiChip('use the attached photo as my profile pic and pull colors from it')">Use my photo</button>
+            <button type="button" class="ai-chip" onclick="aiChip('glitch name, matrix green, hex pfp')">Glitch</button>
           </div>
           <div class="ai-chat-thumbs" id="aiChatThumbs"></div>
           <div class="ai-chat-input">
@@ -446,7 +470,21 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
           </div>
         </div>
       </div>
-      <div class="hint-text" style="margin-top:12px" id="aiHint">Each reply updates the Profile preview. Hit Save when you like it.</div>
+      <div class="card preview-card">
+        <div class="preview-title">LIVE — UPDATES AS YOU CHAT</div>
+        <div class="live-preview" id="aiLivePreview">
+          <div class="lp-banner"></div>
+          <div class="lp-avatar-wrap"><div class="lp-avatar">?</div></div>
+          <div class="lp-body">
+            <div class="lp-kicker">Verified profile</div>
+            <div class="lp-name">User</div>
+            <div class="lp-tag">cordfol.org/yourname</div>
+            <div class="lp-bio">Your bio here.</div>
+          </div>
+        </div>
+        <div class="hint-text" style="margin:12px 0 0" id="aiHint">Chat applies here instantly. Save on Profile when you like it.</div>
+      </div>
+      </div>
     </div>
 
     <!-- VERIFY TAB -->
@@ -581,6 +619,7 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
               <div class="fx-card active" id="disp-showPresence" onclick="toggleDisplayOpt('showPresence')"><div><div class="fx-label">Discord presence</div><div class="fx-sub">Status dot + activity text</div></div><div class="toggle on" id="disp-toggle-showPresence"></div></div>
               <div class="fx-card active" id="disp-showBio" onclick="toggleDisplayOpt('showBio')"><div><div class="fx-label">Bio</div><div class="fx-sub">Your bio paragraph</div></div><div class="toggle on" id="disp-toggle-showBio"></div></div>
               <div class="fx-card active" id="disp-showCustomLinks" onclick="toggleDisplayOpt('showCustomLinks')"><div><div class="fx-label">Custom links</div><div class="fx-sub">Link buttons you added above</div></div><div class="toggle on" id="disp-toggle-showCustomLinks"></div></div>
+              <div class="fx-card" id="disp-spotlightLink" onclick="toggleDisplayOpt('spotlightLink')"><div><div class="fx-label">Spotlight first link</div><div class="fx-sub">Make your top custom link bigger</div></div><div class="toggle" id="disp-toggle-spotlightLink"></div></div>
               <div class="fx-card active" id="disp-showViews" onclick="toggleDisplayOpt('showViews')"><div><div class="fx-label">View count</div><div class="fx-sub">"747 Views" chip</div></div><div class="toggle on" id="disp-toggle-showViews"></div></div>
               <div class="fx-card active" id="disp-showMemberSince" onclick="toggleDisplayOpt('showMemberSince')"><div><div class="fx-label">Member since</div><div class="fx-sub">"Jul 2023 on Discord" chip</div></div><div class="toggle on" id="disp-toggle-showMemberSince"></div></div>
               <div class="fx-card active" id="disp-showLocalTime" onclick="toggleDisplayOpt('showLocalTime')"><div><div class="fx-label">Local time</div><div class="fx-sub">Your current time-of-day chip</div></div><div class="toggle on" id="disp-toggle-showLocalTime"></div></div>
@@ -680,6 +719,7 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
               <div class="font-btn" data-effect="gradient" style="background:linear-gradient(90deg,#5865F2,#fff);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent" onclick="setNameEffect('gradient',this)">Gradient<br><span style="font-size:10px;opacity:0.5;-webkit-text-fill-color:rgba(255,255,255,0.5)">Two-tone</span></div>
               <div class="font-btn" data-effect="rainbow" style="background:linear-gradient(90deg,#ff5f6d,#ffc371,#47e891,#4facfe,#b06ab3);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent" onclick="setNameEffect('rainbow',this)">Rainbow<br><span style="font-size:10px;opacity:0.5;-webkit-text-fill-color:rgba(255,255,255,0.5)">Animated</span></div>
               <div class="font-btn" data-effect="sparkle" onclick="setNameEffect('sparkle',this)">✦ Sparkle<br><span style="font-size:10px;opacity:0.5">Pulsing shine</span></div>
+              <div class="font-btn" data-effect="glitch" onclick="setNameEffect('glitch',this)">// Glitch<br><span style="font-size:10px;opacity:0.5">RGB split</span></div>
             </div>
             <div class="grid-2">
               <div class="field">
@@ -1197,6 +1237,7 @@ const DEFAULT_DISPLAY_OPTS={
   showBadges:true,showVerifiedBadge:true,showHandle:true,showPresence:true,showBio:true,
   showCustomLinks:true,showViews:true,showMemberSince:true,showLocalTime:true,showRoleStats:true,
   showRoles:true,showSocials:true,showSpotifyWidget:true,showGuestbook:true,showServerCard:true,
+  spotlightLink:false,aiDesigned:false,
 };
 let displayOpts={...DEFAULT_DISPLAY_OPTS};
 
@@ -1246,6 +1287,8 @@ function collectDisplayOptions(){
     tabTitle:document.getElementById('profileTabTitle')?.value||'',
     avatarShape:currentAvatarShape||'circle',
     entryConfetti:!!activeFx.confetti,
+    aiDesigned:!!displayOpts.aiDesigned,
+    spotlightLink:!!displayOpts.spotlightLink,
   };
 }
 
@@ -1404,6 +1447,7 @@ function setNameEffect(effect,btn){
   document.querySelectorAll('#nameEffectRow .font-btn').forEach(b=>b.classList.remove('selected'));
   btn.classList.add('selected');
   markProfileDirty();
+  updatePreview();
 }
 
 function setParticleStyle(style,btn){
@@ -1611,56 +1655,67 @@ function sendVerifyEmail(){
 }
 
 // ── Live preview ──
-function updatePreview(){
-  const name=document.getElementById('displayName').value||'User';
-  const bio=document.getElementById('bioText').value||'';
-  const slugVal=document.getElementById('slug').value;
-  const accent=document.getElementById('accentColorInput').value;
-  const textCol=document.getElementById('textColorInput').value;
-  const cardCol=document.getElementById('cardColorInput').value;
-  const cardOpacity=parseInt(document.getElementById('cardOpacityInput').value||92);
-  const musicUrl=document.getElementById('musicUrlInput')?.value;
-
-  // Banner
-  const banner=document.getElementById('previewBanner');
-  banner.innerHTML='';
-  if(currentBannerData.value){
-    if(currentBannerData.value.startsWith('linear-gradient')){
-      banner.style.background=currentBannerData.value;
-    } else if(currentBannerData.value.match(/\.(mp4|webm)/i)||currentBannerData.value.startsWith('data:video')){
-      banner.style.background='#111';
-      const v=document.createElement('video');v.autoplay=true;v.muted=true;v.loop=true;v.playsInline=true;v.src=currentBannerData.value;banner.appendChild(v);
+function paintLivePreview(root){
+  if(!root) return;
+  const name=document.getElementById('displayName')?.value||'User';
+  const bio=document.getElementById('bioText')?.value||'';
+  const slugVal=document.getElementById('slug')?.value||'';
+  const accent=document.getElementById('accentColorInput')?.value||'#5865F2';
+  const cardCol=document.getElementById('cardColorInput')?.value||'#111111';
+  const cardOpacity=parseInt(document.getElementById('cardOpacityInput')?.value||92);
+  const banner=root.querySelector('.lp-banner');
+  if(banner){
+    banner.innerHTML='';
+    if(currentBannerData.value){
+      if(currentBannerData.value.startsWith('linear-gradient')){
+        banner.style.background=currentBannerData.value;
+      } else if(currentBannerData.value.match(/\.(mp4|webm)/i)||currentBannerData.value.startsWith('data:video')){
+        banner.style.background='#111';
+        const v=document.createElement('video');v.autoplay=true;v.muted=true;v.loop=true;v.playsInline=true;v.src=currentBannerData.value;banner.appendChild(v);
+      } else {
+        banner.style.background='#111';
+        const img=document.createElement('img');img.className='lp-banner-media';img.src=currentBannerData.value;banner.appendChild(img);
+      }
     } else {
-      banner.style.background='#111';
-      const img=document.createElement('img');img.className='lp-banner-media';img.src=currentBannerData.value;banner.appendChild(img);
+      banner.style.background=`linear-gradient(135deg,${accent},${accent}cc 48%,rgba(0,255,178,0.72))`;
     }
-  } else {
-    banner.style.background=`linear-gradient(135deg,${accent},${accent}cc 48%,rgba(0,255,178,0.72))`;
   }
-
-  // Name, bio, tag
-  const prevAv=document.getElementById('previewAvatar');
-  if(currentAvatarUrl){
-    prevAv.textContent='';
-    prevAv.style.background='transparent';
-    prevAv.innerHTML=`<img src="${escapeHtmlDash(currentAvatarUrl)}" alt=""/>`;
-  }else{
-    prevAv.innerHTML='';
-    prevAv.textContent=name[0]||'?';
-    prevAv.style.background=`linear-gradient(135deg,${accent},${accent}cc)`;
+  const prevAv=root.querySelector('.lp-avatar');
+  if(prevAv){
+    prevAv.style.borderRadius=currentAvatarShape==='circle'?'50%':currentAvatarShape==='hex'?'14px':'18px';
+    prevAv.style.clipPath=currentAvatarShape==='hex'?'polygon(50% 0%,93% 25%,93% 75%,50% 100%,7% 75%,7% 25%)':'none';
+    if(currentAvatarUrl){
+      prevAv.textContent='';
+      prevAv.style.background='transparent';
+      prevAv.innerHTML=`<img src="${escapeHtmlDash(currentAvatarUrl)}" alt=""/>`;
+    }else{
+      prevAv.innerHTML='';
+      prevAv.textContent=name[0]||'?';
+      prevAv.style.background=`linear-gradient(135deg,${accent},${accent}cc)`;
+    }
   }
-  document.getElementById('previewName').textContent=name;
+  const nameEl=root.querySelector('.lp-name');
+  if(nameEl){
+    nameEl.textContent=name;
+    nameEl.setAttribute('data-text',name);
+    nameEl.className='lp-name'+(currentNameEffect&&currentNameEffect!=='none'?' fx-name-'+currentNameEffect:'');
+  }
   const tagline=document.getElementById('profileTagline')?.value||'';
-  document.getElementById('previewTag').textContent=tagline||`${PUBLIC_HOST}/${slugVal||'yourname'}`;
-  document.getElementById('previewBio').textContent=bio.slice(0,88)+(bio.length>88?'...':'');
-  document.getElementById('previewHandleState').textContent=slugVal?`${PUBLIC_HOST}/${slugVal}`:'Needs a handle';
-
-  // Card bg
+  const tagEl=root.querySelector('.lp-tag');
+  if(tagEl) tagEl.textContent=tagline||`${PUBLIC_HOST}/${slugVal||'yourname'}`;
+  const bioEl=root.querySelector('.lp-bio');
+  if(bioEl) bioEl.textContent=bio.slice(0,88)+(bio.length>88?'...':'');
   const hex=cardCol.replace('#','');
   const r=parseInt(hex.substring(0,2),16),g2=parseInt(hex.substring(2,4),16),b=parseInt(hex.substring(4,6),16);
-  document.getElementById('livePreview').style.background=`rgba(${r},${g2},${b},${cardOpacity/100})`;
-  if(activeFx.glassmorphism) document.getElementById('livePreview').style.backdropFilter='blur(18px)';
-  else document.getElementById('livePreview').style.backdropFilter='none';
+  root.style.background=`rgba(${r||17},${g2||17},${b||17},${cardOpacity/100})`;
+  root.style.backdropFilter=activeFx.glassmorphism?'blur(18px)':'none';
+}
+function updatePreview(){
+  paintLivePreview(document.getElementById('livePreview'));
+  paintLivePreview(document.getElementById('aiLivePreview'));
+  const slugVal=document.getElementById('slug')?.value||'';
+  const handle=document.getElementById('previewHandleState');
+  if(handle) handle.textContent=slugVal?`${PUBLIC_HOST}/${slugVal}`:'Needs a handle';
 }
 
 // ── Nav / tabs ──
@@ -1673,7 +1728,7 @@ function switchTab(tab){
   if(tab==='analytics') initChart();
   if(tab==='spotify') refreshSpotifyStatus();
   if(tab==='apps') loadHostedApps();
-  if(tab==='ai') refreshAiStatus();
+  if(tab==='ai'){refreshAiStatus();updatePreview();}
 }
 
 function toggleUserMenu(){
@@ -2944,6 +2999,87 @@ function aiChip(text){
   document.getElementById('aiChatInput').value=text;
   sendAiChat();
 }
+function parseRemixSlug(raw){
+  let s=String(raw||'').trim();
+  s=s.replace(/^https?:\/\//i,'');
+  s=s.replace(/^(www\.)?cordfol\.org\//i,'');
+  s=s.replace(/^\/+/,'');
+  s=s.split(/[/?#]/)[0];
+  return s.toLowerCase().replace(/[^a-z0-9-]/g,'').slice(0,32);
+}
+function applyLookPack(pack){
+  if(pack.accent) document.getElementById('accentColorInput').value=pack.accent;
+  if(pack.text) document.getElementById('textColorInput').value=pack.text;
+  if(pack.card) document.getElementById('cardColorInput').value=pack.card;
+  if(pack.layout) currentLayout=pack.layout;
+  if(pack.font) currentFont=pack.font;
+  if(pack.nameEffect) currentNameEffect=pack.nameEffect;
+  if(pack.particleStyle) currentParticleStyle=pack.particleStyle;
+  if(pack.shape) currentAvatarShape=pack.shape;
+  if(pack.bg){currentBgType='gradient';currentBgData={type:'gradient',value:pack.bg};}
+  document.querySelectorAll('#nameEffectRow .font-btn').forEach(btn=>btn.classList.toggle('selected',btn.dataset.effect===currentNameEffect));
+  document.querySelectorAll('[data-shape]').forEach(btn=>btn.classList.toggle('active',btn.dataset.shape===currentAvatarShape));
+  if(typeof pack.particles==='boolean'){
+    activeFx.particles=pack.particles;
+    document.getElementById('fx-particles')?.classList.toggle('active',pack.particles);
+    document.getElementById('fx-toggle-particles')?.classList.toggle('on',pack.particles);
+  }
+  displayOpts.aiDesigned=true;
+  markProfileDirty();
+  updatePreview();
+}
+const SURPRISE_LOOKS=[
+  {label:'midnight rave',accent:'#c46bff',text:'#f6edff',card:'#12081c',bg:'linear-gradient(135deg,#090014,#2a0850 55%,#00ffb2)',font:'Syne',nameEffect:'glow',shape:'hex',particles:true,particleStyle:'fireflies',layout:'centered'},
+  {label:'void glitch',accent:'#ff4d6d',text:'#f5f5f5',card:'#0a0a0a',bg:'linear-gradient(135deg,#050505,#1a0a12)',font:'IBM Plex Mono',nameEffect:'glitch',shape:'rounded',particles:false,particleStyle:'dots',layout:'centered'},
+  {label:'soft kawaii',accent:'#ff7ad9',text:'#ffe8f7',card:'#2a1224',bg:'linear-gradient(135deg,#1a0814,#4a1738 60%,#ff7ad9)',font:'Syne',nameEffect:'sparkle',shape:'circle',particles:true,particleStyle:'sakura',layout:'centered'},
+  {label:'gold magazine',accent:'#f0b429',text:'#fff6d8',card:'#16120a',bg:'linear-gradient(135deg,#0c0a06,#3a2a0a)',font:'Instrument Serif',nameEffect:'gradient',shape:'rounded',particles:true,particleStyle:'dots',layout:'magazine'},
+  {label:'matrix mint',accent:'#3dd68c',text:'#e8fff3',card:'#08140f',bg:'linear-gradient(135deg,#03120b,#0c2a1a)',font:'IBM Plex Mono',nameEffect:'glitch',shape:'hex',particles:true,particleStyle:'dots',layout:'centered'},
+  {label:'ice left',accent:'#4cc9f0',text:'#e8f6ff',card:'#0b1520',bg:'linear-gradient(135deg,#031018,#0b2a44)',font:'Space Mono',nameEffect:'glow',shape:'circle',particles:true,particleStyle:'snow',layout:'left'},
+];
+function surpriseLook(){
+  const pack=SURPRISE_LOOKS[Math.floor(Math.random()*SURPRISE_LOOKS.length)];
+  applyLookPack(pack);
+  displayOpts.spotlightLink=true;
+  syncDisplayToggleUI('spotlightLink');
+  appendAiBubble('bot','Rolled '+pack.label+'. Preview updated — keep chatting or Save on Profile.');
+  showToast('OK','Surprise: '+pack.label,'success');
+}
+async function remixFromSlug(){
+  const slug=parseRemixSlug(document.getElementById('aiRemixInput')?.value);
+  if(!slug){showToast('ERR','Paste a cordfol.org handle.','error');return;}
+  try{
+    const res=await fetch(`${API_BASE}/profile/${encodeURIComponent(slug)}`);
+    const data=await res.json().catch(()=>({}));
+    if(!res.ok) throw new Error(data.error||'Profile not found');
+    const th=data.theme||{};
+    const disp=data.profile?.displayOptions||{};
+    applyLookPack({
+      accent:th.accentColor,text:th.textColor,card:th.cardColor,
+      layout:th.layout,font:th.font,nameEffect:th.nameEffect,
+      particleStyle:th.particleStyle,shape:disp.avatarShape,
+      bg:th.bgValue||'',particles:!!th.particles,
+    });
+    if(th.bgType==='solid'&&th.backgroundColor){
+      currentBgType='solid';
+      currentBgData={type:'solid',value:th.backgroundColor};
+    }else if(th.bgType&&th.bgValue){
+      currentBgType=th.bgType;
+      currentBgData={type:th.bgType,value:th.bgValue};
+    }
+    activeFx={...activeFx,anim:!!th.animatedBg,particles:!!th.particles,glassmorphism:th.glassmorphism!==false,tilt:th.tiltCard!==false,typewriter:!!th.typewriterBio,splash:!!th.entrySplash};
+    Object.keys(activeFx).forEach(key=>{
+      document.getElementById('fx-'+key)?.classList.toggle('active',!!activeFx[key]);
+      document.getElementById('fx-toggle-'+key)?.classList.toggle('on',!!activeFx[key]);
+    });
+    updatePreview();
+    appendAiBubble('bot','Grabbed '+slug+'\'s vibe. Your name and bio stay yours.');
+    document.getElementById('aiChatInput').value='Remix '+slug+'\'s look for me — keep my name and bio, steal the vibe, make it slightly different';
+    sendAiChat();
+  }catch(err){
+    appendAiBubble('bot',err.message||'Could not find that profile.');
+    showToast('ERR',err.message||'Could not remix.','error');
+  }
+}
 function appendAiBubble(role,text){
   const log=document.getElementById('aiChatLog');
   const div=document.createElement('div');
@@ -3071,6 +3207,10 @@ async function applyAiBuild(build, files){
     }catch{}
   }
   document.querySelectorAll('[data-shape]').forEach(btn=>btn.classList.toggle('active',btn.dataset.shape===currentAvatarShape));
+  document.querySelectorAll('#nameEffectRow .font-btn').forEach(btn=>btn.classList.toggle('selected',btn.dataset.effect===currentNameEffect));
+  displayOpts.aiDesigned=true;
+  displayOpts.spotlightLink=true;
+  syncDisplayToggleUI('spotlightLink');
   syncAvatarPreview();
   markProfileDirty();
   updatePreview();
