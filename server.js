@@ -105,7 +105,9 @@ app.use(session({
 // ── OG images first so Discord never hits a stale public/preview.png ─────────
 const { createOgRoute, createHomeOgRoute, createDiscoverOgRoute } = require('./og');
 app.get('/og/home.png', createHomeOgRoute(db));
+app.get('/og/card.jpg', createHomeOgRoute(db, 'jpeg'));
 app.get('/og/discover.png', createDiscoverOgRoute(db));
+app.get('/og/discover.jpg', createDiscoverOgRoute(db, 'jpeg'));
 app.get('/preview.png', createHomeOgRoute(db));
 app.get('/og/:slug.png', createOgRoute(db));
 app.get('/og/:slug', createOgRoute(db));

@@ -168,10 +168,15 @@ function createOgRoute(db) {
   };
 }
 
-function sendPng(res, buffer, maxAge = 600) {
-  res.set('Content-Type', 'image/png');
+function sendImage(res, buffer, format = 'png', maxAge = 600) {
+  res.set('Content-Type', format === 'jpeg' ? 'image/jpeg' : 'image/png');
   res.set('Cache-Control', `public, max-age=${maxAge}`);
   return res.send(buffer);
+}
+
+async function rasterize(svg, format = 'png') {
+  const img = sharp(Buffer.from(svg));
+  return format === 'jpeg' ? img.jpeg({ quality: 88 }).toBuffer() : img.png().toBuffer();
 }
 
 function buildHomeSvg({ name, bio, slug, accent, avatarData, viewCount, hasSpotify }) {
@@ -297,11 +302,12 @@ async function loadFeaturedProfile(db, slug) {
   };
 }
 
-function createHomeOgRoute(db) {
+function createHomeOgRoute(db, format = 'png') {
   const featuredSlug = String(process.env.FEATURED_OG_SLUG || 'fkastro').toLowerCase();
+  const cacheKey = `__home__:${format}`;
   return async function homeOgHandler(req, res) {
-    const cached = cache.get('__home__');
-    if (cached && cached.expires > Date.now()) return sendPng(res, cached.buffer);
+    const cached = cache.get(cacheKey);
+    if (cached && cached.expires > Date.now()) return sendImage(res, cached.buffer, format);
 
     try {
       let featured = await loadFeaturedProfile(db, featuredSlug);
@@ -320,9 +326,9 @@ function createHomeOgRoute(db) {
         viewCount: 0,
         hasSpotify: false,
       });
-      const buffer = await sharp(Buffer.from(svg)).png().toBuffer();
-      cache.set('__home__', { buffer, expires: Date.now() + CACHE_TTL });
-      return sendPng(res, buffer);
+      const buffer = await rasterize(svg, format);
+      cache.set(cacheKey, { buffer, expires: Date.now() + CACHE_TTL });
+      return sendImage(res, buffer, format);
     } catch (err) {
       console.error('[og] home image failed:', err.message);
       return res.status(500).send('Image generation failed');
@@ -330,10 +336,11 @@ function createHomeOgRoute(db) {
   };
 }
 
-function createDiscoverOgRoute(db) {
+function createDiscoverOgRoute(db, format = 'png') {
+  const cacheKey = `__discover__:${format}`;
   return async function discoverOgHandler(req, res) {
-    const cached = cache.get('__discover__');
-    if (cached && cached.expires > Date.now()) return sendPng(res, cached.buffer);
+    const cached = cache.get(cacheKey);
+    if (cached && cached.expires > Date.now()) return sendImage(res, cached.buffer, format);
 
     try {
       const rows = await db.query(`
@@ -379,9 +386,9 @@ function createDiscoverOgRoute(db) {
       }));
 
       const svg = buildDiscoverSvg(profiles);
-      const buffer = await sharp(Buffer.from(svg)).png().toBuffer();
-      cache.set('__discover__', { buffer, expires: Date.now() + CACHE_TTL });
-      return sendPng(res, buffer);
+      const buffer = await rasterize(svg, format);
+      cache.set(cacheKey, { buffer, expires: Date.now() + CACHE_TTL });
+      return sendImage(res, buffer, format);
     } catch (err) {
       console.error('[og] discover image failed:', err.message);
       return res.status(500).send('Image generation failed');
