@@ -80,8 +80,16 @@ body.brand-body::before {
   transition: color 0.2s var(--ease);
 }
 
-.brand-announce a:hover {
-  color: #dfa8ff;
+.brand-announce.warn {
+  background: #c41e3a;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+  color: #fff;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.brand-announce.warn strong {
+  font-weight: 800;
 }
 
 .brand-nav {
