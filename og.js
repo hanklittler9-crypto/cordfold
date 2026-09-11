@@ -348,7 +348,6 @@ function createDiscoverOgRoute(db, format = 'png') {
                u.bio, u.discord_id, u.avatar_hash, u.avatar_url,
                t.accent_color,
                COALESCE(v7.views, 0) AS views_7d,
-               COALESCE(va.views, 0) AS views_all,
                COALESCE(r.role_count, 0) AS role_count
         FROM users u
         LEFT JOIN themes t ON t.id = u.theme_id
@@ -358,15 +357,11 @@ function createDiscoverOgRoute(db, format = 'png') {
           GROUP BY user_id
         ) v7 ON v7.user_id = u.id
         LEFT JOIN (
-          SELECT user_id, COUNT(*) AS views FROM analytics_events
-          WHERE type = 'profile_view' GROUP BY user_id
-        ) va ON va.user_id = u.id
-        LEFT JOIN (
           SELECT user_id, COUNT(*) AS role_count FROM verified_roles
           WHERE is_active = true AND is_public = true GROUP BY user_id
         ) r ON r.user_id = u.id
         WHERE u.slug IS NOT NULL
-        ORDER BY COALESCE(v7.views, 0) DESC, COALESCE(va.views, 0) DESC
+        ORDER BY COALESCE(v7.views, 0) DESC
         LIMIT 3
       `);
 
@@ -379,7 +374,7 @@ function createDiscoverOgRoute(db, format = 'png') {
           bio: row.bio || '',
           accent: row.accent_color,
           views7d: Number(row.views_7d),
-          viewsAll: Number(row.views_all),
+          viewsAll: 0,
           roleCount: Number(row.role_count),
           avatarData: avatarUrl ? await fetchAvatarBase64(avatarUrl) : null,
         };

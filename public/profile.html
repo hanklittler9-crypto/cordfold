@@ -545,6 +545,12 @@
     }
     .page.layout-centered .role-proof { display: none; }
     .page.layout-centered .role-server { display: none; }
+    .role-when {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+    .page.layout-centered .role-when { display: block; }
     .page.layout-centered .role-pin-tag {
       font-size: 9px;
       padding: 2px 6px;
@@ -1599,6 +1605,10 @@
       box-shadow: 0 0 28px rgba(var(--accent-rgb, 88, 101, 242), 0.2);
       background: rgba(var(--accent-rgb, 88, 101, 242), 0.1);
     }
+    body.secret-invert {
+      filter: hue-rotate(180deg) saturate(1.35);
+      transition: filter 0.28s ease;
+    }
     .avatar.tap-pulse {
       animation: avatarTap 0.42s ease;
     }
@@ -2208,6 +2218,11 @@
       .profile-actions {
         bottom: 18px;
         right: 16px;
+        gap: 7px;
+      }
+      .action-btn {
+        width: 42px;
+        height: 42px;
       }
     }
     @media (prefers-reduced-motion: reduce) {
@@ -2295,6 +2310,18 @@
   <button class="action-btn" id="qrBtn" title="QR Code">
     <span class="action-tooltip">QR Code</span>
     <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h2v2h-2zM18 14h3v3h-3zM14 18h2v3h-2zM18 18h1v1h-1zM21 18h1v1h-1zM21 21h1v1h-1z"/></svg>
+  </button>
+  <button class="action-btn" id="remixBtn" title="Remix this look">
+    <span class="action-tooltip">Remix</span>
+    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+  </button>
+  <button class="action-btn" id="paletteBtn" title="Steal this palette">
+    <span class="action-tooltip">Steal palette</span>
+    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="13.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="10.5" r="2.5"/><circle cx="8.5" cy="7.5" r="2.5"/><circle cx="6.5" cy="12.5" r="2.5"/><path d="M12 22a2 2 0 0 0 2-2c0-2.2-3-5.4-3-5.4S8 17.8 8 20a2 2 0 0 0 2 2h2z"/></svg>
+  </button>
+  <button class="action-btn" id="nextBtn" title="Next random profile">
+    <span class="action-tooltip">Next random</span>
+    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></svg>
   </button>
 </div>
 
@@ -2631,6 +2658,12 @@ function showCopyToast(text) {
   document.body.appendChild(toast);
   
   setTimeout(() => toast.remove(), 2000);
+}
+
+function formatRoleWhen(raw) {
+  const d = new Date(raw);
+  if (Number.isNaN(d.getTime())) return '';
+  return d.toLocaleString('en-US', { month: 'short', year: 'numeric' });
 }
 
 function copyToClipboard(text) {
@@ -2973,13 +3006,50 @@ async function renderProfile() {
   };
   document.getElementById('shareBtn').onclick = () => openShareModal(window._shareProfile);
   document.getElementById('qrBtn').onclick = () => openShareModal(window._shareProfile);
+  const remixBtn = document.getElementById('remixBtn');
+  if (remixBtn) {
+    remixBtn.onclick = () => {
+      trackEvent('share', 'Remix look');
+      window.location.href = `https://cordfol.org/dashboard.html?remix=${encodeURIComponent(p.slug)}`;
+    };
+  }
+  const paletteBtn = document.getElementById('paletteBtn');
+  if (paletteBtn) {
+    paletteBtn.onclick = () => {
+      const theme = window._profileTheme || {};
+      const lines = [
+        theme.backgroundColor || getComputedStyle(document.documentElement).getPropertyValue('--bg').trim() || '#0d0d0d',
+        theme.cardColor || getComputedStyle(document.documentElement).getPropertyValue('--surface').trim() || '#111111',
+        theme.accentColor || getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#5865F2',
+        theme.textColor || getComputedStyle(document.documentElement).getPropertyValue('--text').trim() || '#f0f0f0',
+      ].map((hex) => String(hex).trim());
+      navigator.clipboard.writeText(lines.join('\n')).then(() => {
+        showCopyToast('Palette copied');
+      }).catch(() => showCopyToast('Failed to copy'));
+      trackEvent('share', 'Steal palette');
+    };
+  }
+  const nextBtn = document.getElementById('nextBtn');
+  if (nextBtn) {
+    nextBtn.onclick = () => {
+      trackEvent('share', 'Next random');
+      window.location.href = `/random?not=${encodeURIComponent(p.slug)}`;
+    };
+  }
   document.getElementById('shareModal').addEventListener('click', e => {
     if (e.target === e.currentTarget) closeShareModal();
   });
   document.getElementById('shareCloseBtn')?.addEventListener('click', closeShareModal);
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape') closeShareModal();
+    if ((e.key === 'r' || e.key === 'R') && !e.metaKey && !e.ctrlKey && !e.altKey) {
+      const tag = (e.target && e.target.tagName) || '';
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || e.target.isContentEditable) return;
+      window.location.href = `/random?not=${encodeURIComponent(p.slug)}`;
+    }
   });
+
+  window._profileTheme = t;
 
   // Apply theme
   const root = document.documentElement;
@@ -3031,6 +3101,7 @@ async function renderProfile() {
               ${r.isPinned ? '<span class="role-pin-tag">Pinned</span>' : ''}
             </div>
             <div class="role-server">${escapeHtml(r.guildName || 'Unknown Server')}</div>
+            ${r.verifiedAt ? `<div class="role-when">since ${escapeHtml(formatRoleWhen(r.verifiedAt))}</div>` : ''}
           </div>
           <div class="role-proof ${r.proofType === 'BOT' ? 'bot' : ''}">${r.proofType === 'BOT' ? 'Bot Verified' : r.proofType === 'OAUTH' ? 'OAuth Verified' : escapeHtml(r.proofType)}</div>
         </div>`;
@@ -3268,10 +3339,20 @@ function initAvatarTap() {
   if (!av) return;
   av.style.cursor = 'pointer';
   av.title = 'tap';
+  let taps = [];
   av.addEventListener('click', () => {
     av.classList.remove('tap-pulse');
     void av.offsetWidth;
     av.classList.add('tap-pulse');
+    const now = Date.now();
+    taps = taps.filter((t) => now - t < 900);
+    taps.push(now);
+    if (taps.length >= 3) {
+      taps = [];
+      burstConfetti();
+      document.body.classList.add('secret-invert');
+      setTimeout(() => document.body.classList.remove('secret-invert'), 720);
+    }
   });
 }
 function visitorKey() {
@@ -3300,6 +3381,7 @@ async function initFire(slug) {
     countEl.textContent = data.fire || 0;
   } catch { /* ignore */ }
   btn.onclick = async () => {
+    burstConfetti();
     try {
       const res = await fetch(`${API_BASE}/profile/${encodeURIComponent(slug)}/react`, {
         method: 'POST',
@@ -3312,7 +3394,8 @@ async function initFire(slug) {
   };
 }
 function burstConfetti() {
-  const colors = ['#c46bff', '#3dd68c', '#f0b429', '#ff4d6d', '#4cc9f0'];
+  const theme = window._profileTheme || {};
+  const colors = [theme.accentColor, '#c46bff', '#3dd68c', '#f0b429', '#ff4d6d', '#4cc9f0'].filter(Boolean);
   for (let i = 0; i < 28; i++) {
     const d = document.createElement('div');
     d.style.cssText = `position:fixed;top:-10px;left:${Math.random()*100}%;width:8px;height:12px;background:${colors[i%colors.length]};z-index:80;border-radius:2px;pointer-events:none;transform:rotate(${Math.random()*360}deg)`;

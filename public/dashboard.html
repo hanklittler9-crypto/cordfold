@@ -21,8 +21,6 @@ body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);disp
 body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 46% 34% at 88% 0%,rgba(196,107,255,0.12),transparent 65%),radial-gradient(ellipse 34% 28% at 0% 100%,rgba(88,101,242,0.06),transparent 60%);pointer-events:none;}
 body::after{content:'';position:fixed;inset:0;opacity:0.028;pointer-events:none;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");}
 .topbar{height:60px;min-height:60px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 22px;background:rgba(0,0,0,0.82);backdrop-filter:blur(18px);position:relative;z-index:50;flex-shrink:0;}
-.maint-banner{background:#c41e3a;color:#fff;text-align:center;padding:11px 18px;font-size:13px;font-weight:600;flex-shrink:0;z-index:60;}
-.maint-banner strong{font-weight:800;}
 .topbar-logo{display:inline-flex;align-items:center;gap:10px;font-family:'Syne',sans-serif;font-size:15px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;color:var(--text);text-decoration:none;}
 .topbar-logo img{width:22px;height:22px;display:block;flex-shrink:0;}
 .topbar-logo span{color:rgba(255,255,255,0.45);}
@@ -375,10 +373,6 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
 </style>
 </head>
 <body>
-
-<div class="maint-banner" role="status">
-  <strong>Maintenance:</strong> Cordfol will be down from 8 AM to around 3 PM MDT on September 11.
-</div>
 
 <div class="topbar">
   <a href="/" class="topbar-logo"><img src="/logo.svg" alt=""/>CORD<span>FOL</span></a>
@@ -1767,7 +1761,7 @@ async function triggerScan(btn){
   finally{setTimeout(()=>{btn.disabled=false;btn.classList.remove('loading');},2500);}
 }
 
-const taken=['admin','discord','cordfol','pro','verify','api'];
+const taken=['admin','discord','cordfol','pro','verify','api','discover','compare','random','dashboard','login','logout','privacy','terms','status','og'];
 async function checkSlug(el){
   const hint=document.getElementById('slug-hint');
   const v=el.value.toLowerCase().replace(/[^a-z0-9\-]/g,'');
@@ -3227,7 +3221,7 @@ window.onload=()=>{
   document.getElementById('profileUrl').textContent=`Customize your public page at ${PUBLIC_HOST}/...`;
   initPresets();
   initThemePresets();
-  checkSession();
+  const sessionReady=checkSession();
   updatePreview();
   initDirtyTracking();
   const params=new URLSearchParams(window.location.search);
@@ -3255,8 +3249,17 @@ window.onload=()=>{
   else if(spotifyStatus==='login_required') showToast('ERR','Discord session expired — log in again, then connect Spotify.','error');
   else if(spotifyStatus==='csrf') showToast('ERR','Spotify session expired — try connecting again.','error');
   else if(spotifyStatus==='no_code') showToast('ERR','Spotify did not return a code. Try again.','error');
-  if(emailStatus||spotifyStatus||spotifySid||spotifyReason) window.history.replaceState({},'','/dashboard.html');
-  if(location.hash==='#ai') switchTab('ai');
+  const remixSlug=(params.get('remix')||'').trim();
+  if(emailStatus||spotifyStatus||spotifySid||spotifyReason) window.history.replaceState({},'','/dashboard.html'+(remixSlug?('?remix='+encodeURIComponent(remixSlug)):''));
+  if(location.hash==='#ai'||remixSlug) switchTab('ai');
+  if(remixSlug){
+    const inp=document.getElementById('aiRemixInput');
+    if(inp) inp.value=remixSlug;
+    sessionReady.then(()=>{
+      if(document.getElementById('userInfo')?.style.display==='none') return;
+      remixFromSlug();
+    });
+  }
 };
 async function sendProfileEmail(kind){
   const email=document.getElementById('emailInput')?.value?.trim();

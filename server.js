@@ -113,7 +113,16 @@ app.get('/og/:slug.png', createOgRoute(db));
 app.get('/og/:slug', createOgRoute(db));
 
 // ── Static Files ─────────────────────────────────────────────────────────────
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'public'), {
+  etag: true,
+  setHeaders(res, filePath) {
+    if (/\.(png|jpe?g|gif|webp|svg|woff2?)$/i.test(filePath)) {
+      res.setHeader('Cache-Control', 'public, max-age=86400');
+    } else if (/\.html$/i.test(filePath)) {
+      res.setHeader('Cache-Control', 'no-cache');
+    }
+  },
+}));
 
 // ── Token Auth ────────────────────────────────────────────────────────────────
 app.get('/api/auth/token', async (req, res) => {
@@ -1500,14 +1509,15 @@ let discoverCache = { data: null, at: 0 };
 app.get('/api/discover', async (req, res) => {
   try {
     if (discoverCache.data && Date.now() - discoverCache.at < 5 * 60 * 1000) {
+      res.set('Cache-Control', 'public, max-age=60');
       return res.json(discoverCache.data);
     }
     const rows = await db.query(`
       SELECT u.slug, COALESCE(u.display_name, u.discord_username) AS name,
-             u.bio, u.discord_id, u.avatar_hash, u.avatar_url, u.plan, u.created_at,
+             u.bio, u.discord_id, u.avatar_hash, u.avatar_url, u.plan,
+             u.spotify_enabled, u.spotify_public, u.display_options,
              t.accent_color,
              COALESCE(v7.views, 0)  AS views_7d,
-             COALESCE(va.views, 0)  AS views_all,
              COALESCE(r.role_count, 0) AS role_count
       FROM users u
       LEFT JOIN themes t ON t.id = u.theme_id
@@ -1517,15 +1527,11 @@ app.get('/api/discover', async (req, res) => {
         GROUP BY user_id
       ) v7 ON v7.user_id = u.id
       LEFT JOIN (
-        SELECT user_id, COUNT(*) AS views FROM analytics_events
-        WHERE type = 'profile_view' GROUP BY user_id
-      ) va ON va.user_id = u.id
-      LEFT JOIN (
         SELECT user_id, COUNT(*) AS role_count FROM verified_roles
         WHERE is_active = true AND is_public = true GROUP BY user_id
       ) r ON r.user_id = u.id
       WHERE u.slug IS NOT NULL
-      ORDER BY COALESCE(v7.views, 0) DESC, COALESCE(va.views, 0) DESC
+      ORDER BY COALESCE(v7.views, 0) DESC
       LIMIT 24
     `);
     const data = {
@@ -1538,11 +1544,13 @@ app.get('/api/discover', async (req, res) => {
         accent: /^#[0-9a-fA-F]{6}$/.test(row.accent_color || '') ? row.accent_color : '#5865F2',
         pro: String(row.plan).toUpperCase() === 'PRO',
         views7d: Number(row.views_7d),
-        viewsAll: Number(row.views_all),
         roleCount: Number(row.role_count),
+        spotify: !!(row.spotify_enabled && row.spotify_public),
+        aiDesigned: !!(row.display_options && row.display_options.aiDesigned),
       })),
     };
     discoverCache = { data, at: Date.now() };
+    res.set('Cache-Control', 'public, max-age=60');
     res.json(data);
   } catch (err) {
     console.error('[server] /api/discover error:', err);
@@ -1822,6 +1830,40 @@ app.get('/privacy', (req, res) => {
 app.get('/terms', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'terms.html'));
 });
+app.get('/compare', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'compare.html'));
+});
+app.get('/api/random', async (req, res) => {
+  try {
+    const n = Math.min(4, Math.max(1, parseInt(req.query.n, 10) || 1));
+    const row = await db.query(`
+      SELECT slug FROM users
+      WHERE slug IS NOT NULL AND slug <> ''
+      ORDER BY RANDOM()
+      LIMIT $1
+    `, [n]);
+    res.set('Cache-Control', 'no-store');
+    return res.json({ slugs: row.rows.map((r) => r.slug) });
+  } catch {
+    return res.status(500).json({ error: 'Server error' });
+  }
+});
+app.get('/random', async (req, res) => {
+  try {
+    const not = String(req.query.not || '').toLowerCase().replace(/[^a-z0-9-]/g, '').slice(0, 32);
+    const row = await db.query(`
+      SELECT slug FROM users
+      WHERE slug IS NOT NULL AND slug <> ''
+        ${not ? 'AND slug <> $1' : ''}
+      ORDER BY RANDOM()
+      LIMIT 1
+    `, not ? [not] : []);
+    if (!row.rowCount) return res.redirect('/discover');
+    return res.redirect(302, `/${row.rows[0].slug}`);
+  } catch {
+    return res.redirect('/discover');
+  }
+});
 
 app.use('/api/admin', adminRouter);
 app.use('/api/apps', hostedAppsRouter);
@@ -1877,12 +1919,14 @@ app.get('/api/qr/:slug', async (req, res) => {
 });
 
 // ── Public Profile Page (with per-user OG tags for link previews) ────────────
-let profileTemplate = null;
+let profileTemplate = { html: null, mtime: 0 };
 function getProfileTemplate() {
-  if (!profileTemplate) {
-    profileTemplate = fs.readFileSync(path.join(__dirname, 'public', 'profile.html'), 'utf8');
+  const filePath = path.join(__dirname, 'public', 'profile.html');
+  const mtime = fs.statSync(filePath).mtimeMs;
+  if (!profileTemplate.html || mtime !== profileTemplate.mtime) {
+    profileTemplate = { html: fs.readFileSync(filePath, 'utf8'), mtime };
   }
-  return profileTemplate;
+  return profileTemplate.html;
 }
 
 function escapeAttr(s) {
@@ -1894,7 +1938,7 @@ function escapeAttr(s) {
 }
 
 app.get('/:slug', async (req, res) => {
-  const reserved = ['api', 'dashboard', 'login', 'logout', 'static', 'status', 'admin', 'og', 'privacy', 'terms', 'discover'];
+  const reserved = ['api', 'dashboard', 'login', 'logout', 'static', 'status', 'admin', 'og', 'privacy', 'terms', 'discover', 'compare', 'random'];
   if (String(req.params.slug || '').toLowerCase() === 'discover') {
     return res.sendFile(path.join(__dirname, 'public', 'discover.html'));
   }

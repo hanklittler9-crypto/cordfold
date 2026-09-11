@@ -29,7 +29,18 @@
 .wrap{position:relative;z-index:1;max-width:1180px;margin:0 auto;padding:100px 5vw 80px;}
 .eyebrow{font-size:12px;font-weight:600;letter-spacing:0.14em;color:var(--ink-faint);margin-bottom:14px;text-transform:uppercase;}
 .title{font-family:var(--font-display);font-weight:800;font-size:clamp(36px,5.5vw,64px);line-height:0.98;letter-spacing:-0.03em;margin-bottom:14px;text-transform:uppercase;}
-.sub{font-size:15px;color:var(--ink-soft);max-width:480px;line-height:1.65;margin-bottom:46px;}
+.sub{font-size:15px;color:var(--ink-soft);max-width:480px;line-height:1.65;margin-bottom:22px;}
+.filters{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;}
+.tools{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:36px;}
+.filter-btn,.tool-btn{
+  border:1px solid var(--line);background:rgba(255,255,255,0.03);color:var(--ink-soft);
+  border-radius:999px;padding:8px 14px;font-size:12px;font-weight:600;letter-spacing:0.04em;
+  text-transform:uppercase;cursor:pointer;font-family:var(--font-body);text-decoration:none;
+}
+.filter-btn:hover,.tool-btn:hover{border-color:var(--line-strong);color:var(--ink);}
+.filter-btn.on,.tool-btn.on{background:#fff;color:#050505;border-color:#fff;}
+.p-card.pick{outline:2px solid #fff;outline-offset:2px;}
+.compare-hint{font-size:13px;color:var(--ink-soft);margin:-20px 0 28px;}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:18px;}
 .p-card{
   background:rgba(255,255,255,0.03);border:1px solid var(--line);border-radius:16px;padding:22px;
@@ -60,9 +71,6 @@ footer a{color:var(--ink-soft);}
 </style>
 </head>
 <body class="brand-body">
-<div class="brand-announce warn" role="status">
-  <strong>Maintenance:</strong> Cordfol will be down from 8 AM to around 3 PM MDT on September 11.
-</div>
 <nav class="brand-nav">
   <a class="brand-logo" href="/">
     <img class="brand-mark" src="/logo.svg" alt="" width="22" height="22"/>
@@ -75,6 +83,19 @@ footer a{color:var(--ink-soft);}
   <div class="eyebrow">Trending this week</div>
   <h1 class="title">Discover verified profiles.</h1>
   <p class="sub">The most-viewed Cordfol profiles over the last 7 days — real people, real Discord roles, verified automatically.</p>
+  <div class="filters" id="filters">
+    <button type="button" class="filter-btn on" data-filter="all">All</button>
+    <button type="button" class="filter-btn" data-filter="roles">Has roles</button>
+    <button type="button" class="filter-btn" data-filter="spotify">Spotify</button>
+    <button type="button" class="filter-btn" data-filter="pro">Pro</button>
+    <button type="button" class="filter-btn" data-filter="ai">AI designed</button>
+  </div>
+  <div class="tools">
+    <a class="tool-btn" href="/random">Random profile</a>
+    <button type="button" class="tool-btn" id="compareToggle">Compare two</button>
+    <a class="tool-btn" href="/compare">Open compare</a>
+  </div>
+  <div class="compare-hint" id="compareHint" hidden>Pick two cards.</div>
   <div class="grid" id="grid"><div class="loading">Loading trending profiles…</div></div>
 
   <div class="cta-strip">
@@ -103,34 +124,90 @@ function fmt(n) {
   return String(n);
 }
 
+let allProfiles = [];
+let activeFilter = 'all';
+let compareMode = false;
+let comparePicks = [];
+
+function matchesFilter(p) {
+  if (activeFilter === 'roles') return Number(p.roleCount) > 0;
+  if (activeFilter === 'spotify') return !!p.spotify;
+  if (activeFilter === 'pro') return !!p.pro;
+  if (activeFilter === 'ai') return !!p.aiDesigned;
+  return true;
+}
+
+function renderGrid() {
+  const grid = document.getElementById('grid');
+  const profiles = allProfiles.filter(matchesFilter);
+  if (!profiles.length) {
+    grid.innerHTML = '<div class="empty">Nothing in this filter yet.</div>';
+    return;
+  }
+  grid.innerHTML = profiles.map((p, i) => `
+    <a class="p-card${comparePicks.includes(p.slug) ? ' pick' : ''}" href="/${esc(p.slug)}" data-slug="${esc(p.slug)}" style="--p-accent:${esc(p.accent || '#c84dff')}">
+      <div class="p-rank ${i < 3 && activeFilter === 'all' ? 'top' : ''}">#${i + 1}</div>
+      <div class="p-head">
+        <img class="p-avatar" src="${esc(p.avatarUrl || 'https://cdn.discordapp.com/embed/avatars/0.png')}" alt="" loading="lazy" onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'"/>
+        <div style="min-width:0">
+          <div class="p-name"><span>${esc(p.name)}</span>${p.pro ? '<span class="p-pro">PRO</span>' : ''}</div>
+          <div class="p-handle">cordfol.org/${esc(p.slug)}</div>
+        </div>
+      </div>
+      <div class="p-bio">${esc(p.bio) || 'No bio yet.'}</div>
+      <div class="p-stats">
+        <span><b>${fmt(p.views7d)}</b> views this week</span>
+        <span><b>${p.roleCount}</b> roles</span>
+      </div>
+    </a>
+  `).join('');
+}
+
+document.getElementById('filters').addEventListener('click', (e) => {
+  const btn = e.target.closest('[data-filter]');
+  if (!btn) return;
+  activeFilter = btn.dataset.filter;
+  document.querySelectorAll('.filter-btn').forEach((b) => b.classList.toggle('on', b === btn));
+  renderGrid();
+});
+
+document.getElementById('compareToggle').addEventListener('click', () => {
+  compareMode = !compareMode;
+  comparePicks = [];
+  document.getElementById('compareToggle').classList.toggle('on', compareMode);
+  document.getElementById('compareHint').hidden = !compareMode;
+  document.getElementById('compareHint').textContent = 'Pick two cards.';
+  renderGrid();
+});
+
+document.getElementById('grid').addEventListener('click', (e) => {
+  if (!compareMode) return;
+  const card = e.target.closest('[data-slug]');
+  if (!card) return;
+  e.preventDefault();
+  const slug = card.dataset.slug;
+  if (comparePicks.includes(slug)) comparePicks = comparePicks.filter((s) => s !== slug);
+  else if (comparePicks.length < 2) comparePicks.push(slug);
+  if (comparePicks.length === 2) {
+    window.location.href = `/compare?a=${encodeURIComponent(comparePicks[0])}&b=${encodeURIComponent(comparePicks[1])}`;
+    return;
+  }
+  document.getElementById('compareHint').textContent = comparePicks.length ? `Picked ${comparePicks[0]}. Pick one more.` : 'Pick two cards.';
+  renderGrid();
+});
+
 async function load() {
   const grid = document.getElementById('grid');
   try {
     const res = await fetch(`${API_BASE}/discover`);
     if (!res.ok) throw new Error('bad status');
     const data = await res.json();
-    const profiles = data.profiles || [];
-    if (!profiles.length) {
+    allProfiles = data.profiles || [];
+    if (!allProfiles.length) {
       grid.innerHTML = '<div class="empty">No trending profiles yet — be the first.</div>';
       return;
     }
-    grid.innerHTML = profiles.map((p, i) => `
-      <a class="p-card" href="/${esc(p.slug)}" style="--p-accent:${esc(p.accent || '#c84dff')}">
-        <div class="p-rank ${i < 3 ? 'top' : ''}">#${i + 1}</div>
-        <div class="p-head">
-          <img class="p-avatar" src="${esc(p.avatarUrl || 'https://cdn.discordapp.com/embed/avatars/0.png')}" alt="" loading="lazy" onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'"/>
-          <div style="min-width:0">
-            <div class="p-name"><span>${esc(p.name)}</span>${p.pro ? '<span class="p-pro">PRO</span>' : ''}</div>
-            <div class="p-handle">cordfol.org/${esc(p.slug)}</div>
-          </div>
-        </div>
-        <div class="p-bio">${esc(p.bio) || 'No bio yet.'}</div>
-        <div class="p-stats">
-          <span><b>${fmt(p.views7d)}</b> views this week</span>
-          <span><b>${p.roleCount}</b> roles</span>
-        </div>
-      </a>
-    `).join('');
+    renderGrid();
   } catch {
     grid.innerHTML = '<div class="empty">Could not load trending profiles. Try again in a minute.</div>';
   }
