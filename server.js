@@ -28,6 +28,7 @@ const {
 const createSpotifyRouter = require('./spotify');
 const createHostedAppsRouter = require('./hosted-apps');
 const { buildProfile: aiBuildProfile, chatTurn: aiChatTurn, ollamaStatus } = require('./ai-builder');
+const { isProPlan, ensureFounderPro, proLimits } = require('./pro');
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
@@ -321,12 +322,18 @@ app.get('/api/dashboard/profile', async (req, res) => {
     }
 
     const user = userResult.rows[0];
+    if (user.discord_id) {
+      const upgraded = await ensureFounderPro(db, user.discord_id);
+      if (upgraded) user.plan = upgraded.plan;
+    }
+    const limits = proLimits(user.plan);
     const rawMusic = user.music_url || null;
     const musicIsEmbedded = rawMusic && String(rawMusic).startsWith('data:');
 
     res.set('Cache-Control', 'private, no-store, must-revalidate');
     res.json({
       authenticated: true,
+      limits,
       user: {
         discordId: user.discord_id,
         username: user.discord_username,
@@ -434,8 +441,8 @@ app.get('/api/profile/:slug', async (req, res) => {
       ORDER BY display_order ASC, verified_at DESC
     `, [slug]);
 
-    const visitorId = req.session?.userId || null;
-    if (!visitorId || visitorId !== user.id) {
+    const visitorId = await resolveUserId(req);
+    if (!visitorId || String(visitorId) !== String(user.id)) {
       db.query(`
         INSERT INTO analytics_events (id, user_id, type, metadata, created_at)
         SELECT gen_random_uuid(), u.id, 'profile_view',
@@ -491,6 +498,7 @@ app.get('/api/profile/:slug', async (req, res) => {
     res.set('Cache-Control', 'private, no-store, must-revalidate');
     res.set('Pragma', 'no-cache');
     res.json({
+      isOwner: !!(visitorId && String(visitorId) === String(user.id)),
       profile: {
         slug,
         discordId:   user.discord_id,
@@ -604,9 +612,10 @@ app.post('/api/profile', async (req, res) => {
       });
     }
 
-    // Sanitize custom links: max 10, each needs a title + http(s) URL
+    const ownerPlan = await db.query('SELECT plan FROM users WHERE id = $1', [userId]);
+    const limits = proLimits(ownerPlan.rows[0]?.plan);
     const cleanLinks = (Array.isArray(custom_links) ? custom_links : [])
-      .slice(0, 10)
+      .slice(0, limits.customLinks)
       .map(l => ({
         title: String(l?.title || '').trim().slice(0, 60),
         url: String(l?.url || '').trim().slice(0, 500),
@@ -623,6 +632,7 @@ app.post('/api/profile', async (req, res) => {
     }
 
     const cleanDisplay = normalizeDisplayOptions(display_options);
+    if (!limits.pro) cleanDisplay.hideBrand = false;
 
     const nextAvatar = avatarUrl === ''
       ? null
@@ -701,7 +711,7 @@ app.post('/api/profile', async (req, res) => {
       theme.animatedBg ? true : false,
       musicUrl,
       theme.musicAutoplay ? true : false,
-      theme.customCss || null,
+      limits.customCss ? (theme.customCss || null) : null,
       bgType,
       bgValue,
       layout,
@@ -942,19 +952,22 @@ app.post('/api/profile/ai-chat', async (req, res) => {
       return res.status(429).json({ error: 'Give it a few seconds.' });
     }
 
-    const history = Array.isArray(req.body?.history) ? req.body.history.slice(-12).map((m) => ({
+    const planRow = await db.query('SELECT plan FROM users WHERE id = $1', [userId]);
+    const pro = isProPlan(planRow.rows[0]?.plan);
+    const history = Array.isArray(req.body?.history) ? req.body.history.slice(pro ? -24 : -12).map((m) => ({
       role: m.role === 'assistant' ? 'assistant' : 'user',
-      content: String(m.content || '').slice(0, 800),
+      content: String(m.content || '').slice(0, pro ? 1400 : 800),
     })).filter((m) => m.content) : [];
     if (!history.length) return res.status(400).json({ error: 'Say something first.' });
 
-    const images = Array.isArray(req.body?.images) ? req.body.images.slice(0, 3) : [];
+    const images = Array.isArray(req.body?.images) ? req.body.images.slice(0, pro ? 6 : 3) : [];
     const colorHints = req.body?.colorHints && typeof req.body.colorHints === 'object' ? req.body.colorHints : {};
     const result = await aiChatTurn({
       history,
       images,
       colorHints,
       currentBuild: req.body?.currentBuild || null,
+      pro,
     });
     res.json({ ok: true, ...result });
   } catch (err) {
@@ -1172,6 +1185,7 @@ const DEFAULT_DISPLAY_OPTIONS = {
   showSpotifyWidget: true,
   spotlightLink: false,
   aiDesigned: false,
+  hideBrand: false,
 };
 
 function normalizeDisplayOptions(raw) {
@@ -1192,6 +1206,7 @@ function normalizeDisplayOptions(raw) {
   out.showReactions = src.showReactions !== false;
   out.aiDesigned = !!src.aiDesigned;
   out.spotlightLink = !!src.spotlightLink;
+  out.hideBrand = !!src.hideBrand;
   return out;
 }
 
@@ -1223,6 +1238,10 @@ app.get('/api/analytics', async (req, res) => {
   try {
     const userId = await resolveUserId(req);
     if (!userId) return res.status(401).json({ error: 'Not authenticated' });
+    const planRow = await db.query('SELECT plan FROM users WHERE id = $1', [userId]);
+    if (!isProPlan(planRow.rows[0]?.plan)) {
+      return res.status(403).json({ error: 'Analytics is a Pro feature.', needsPro: true });
+    }
 
     const [totals, daily, referrers, topClicks] = await Promise.all([
       db.query(`

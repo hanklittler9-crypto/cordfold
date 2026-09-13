@@ -24,6 +24,7 @@ const { createTickets } = require('./tickets');
 const { createModmail } = require('./modmail');
 const { createModeration } = require('./moderation');
 const { ensureGuildOps } = require('./guild-setup');
+const { setUserPlanByDiscordId, isProPlan } = require('../pro');
 
 const {
   BOT_TOKEN,
@@ -245,6 +246,7 @@ function helpEmbed() {
           `\`/whois\` · \`${BOT_PREFIX}whois @user\` — look up a profile`,
           `\`/help\` · \`${BOT_PREFIX}help\` — this message`,
           `\`${BOT_PREFIX}ping\` — latency check`,
+          `\`/pro\` · \`${BOT_PREFIX}pro give|take|check @user\` — founder only`,
         ].join('\n'),
       }
     )
@@ -440,6 +442,25 @@ const guildCommands = [
   new SlashCommandBuilder()
     .setName('setup-ops')
     .setDescription('Auto-create logs/tickets/modmail channels and write IDs to .env (staff)')
+    .toJSON(),
+  new SlashCommandBuilder()
+    .setName('pro')
+    .setDescription('Give or take Cordfol Pro (founder only)')
+    .addSubcommand((sub) =>
+      sub.setName('give').setDescription('Grant Pro').addUserOption((opt) =>
+        opt.setName('user').setDescription('Who gets Pro').setRequired(true)
+      )
+    )
+    .addSubcommand((sub) =>
+      sub.setName('take').setDescription('Remove Pro').addUserOption((opt) =>
+        opt.setName('user').setDescription('Who loses Pro').setRequired(true)
+      )
+    )
+    .addSubcommand((sub) =>
+      sub.setName('check').setDescription('See if they have Pro').addUserOption((opt) =>
+        opt.setName('user').setDescription('Who to check').setRequired(true)
+      )
+    )
     .toJSON(),
   ...tickets.slashCommands(),
   ...modmail.slashCommands(),
@@ -756,6 +777,41 @@ async function handleStatusView({ reply }) {
   return reply({ embeds: [statusEmbed(status)], ephemeral: false });
 }
 
+async function handlePro({ actorId, action, target, reply, defer }) {
+  if (defer) await defer({ ephemeral: true });
+  if (String(actorId) !== EXCLUSIVE_USER_ID) {
+    return reply({ content: '❌ Only Astro can grant or take Pro.', ephemeral: true });
+  }
+  if (!target?.id) {
+    return reply({ content: '❌ Mention a Discord user.', ephemeral: true });
+  }
+
+  if (action === 'check') {
+    const row = await db.query(
+      'SELECT slug, plan, discord_username FROM users WHERE discord_id = $1',
+      [String(target.id)]
+    );
+    if (!row.rowCount) {
+      return reply({ content: `❌ <@${target.id}> has no Cordfol account yet. They need to sign in once.` });
+    }
+    const plan = isProPlan(row.rows[0].plan) ? 'PRO' : 'FREE';
+    return reply({
+      content: `${plan === 'PRO' ? '⭐' : '•'} **${row.rows[0].discord_username}** is **${plan}** · ${PUBLIC_HOST}/${row.rows[0].slug}`,
+    });
+  }
+
+  const next = action === 'take' ? 'FREE' : 'PRO';
+  const updated = await setUserPlanByDiscordId(db, target.id, next);
+  if (!updated) {
+    return reply({ content: `❌ <@${target.id}> has no Cordfol account yet. They need to sign in at ${PUBLIC_HOST} first.` });
+  }
+  return reply({
+    content: next === 'PRO'
+      ? `✅ Pro granted to **${updated.discord_username}** · ${buildProfileUrl(updated.slug)}`
+      : `✅ Pro removed from **${updated.discord_username}**. They're back on Free.`,
+  });
+}
+
 async function handleStatusSet({ state, message, user, reply }) {
   const defaults = {
     up: 'All systems operational.',
@@ -958,6 +1014,13 @@ client.on('interactionCreate', async (interaction) => {
       return;
     }
 
+    if (commandName === 'pro') {
+      const action = interaction.options.getSubcommand();
+      const target = interaction.options.getUser('user');
+      await handlePro({ actorId: user.id, action, target, ...adapter });
+      return;
+    }
+
     // Guild-only ops commands — defer immediately (Discord 3s ACK window)
     if (['status', 'announce', 'maintenance', 'outage', 'broadcast'].includes(commandName)) {
       const isStatusView =
@@ -1094,6 +1157,15 @@ client.on('messageCreate', async (message) => {
 
     if (cmd === 'cordfol' || cmd === 'profile') {
       return handleCordfol({ user, ...adapter });
+    }
+
+    if (cmd === 'pro') {
+      const action = (rest[0] || '').toLowerCase();
+      const target = message.mentions.users.first();
+      if (!['give', 'take', 'check'].includes(action) || !target) {
+        return adapter.reply({ content: `Usage: \`${BOT_PREFIX}pro give|take|check @user\`` });
+      }
+      return handlePro({ actorId: user.id, action, target, reply: adapter.reply });
     }
 
     if (cmd === 'whois') {

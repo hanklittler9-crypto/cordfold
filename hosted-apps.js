@@ -2,7 +2,12 @@ const express = require('express');
 const crypto = require('crypto');
 const runner = require('./hosted-apps-runner');
 
-const MAX_APPS = Number(process.env.APPS_MAX_PER_USER || 3);
+const MAX_APPS_FREE = Number(process.env.APPS_MAX_PER_USER || 3);
+const MAX_APPS_PRO = Number(process.env.APPS_MAX_PER_PRO || 10);
+
+function maxAppsFor(user) {
+  return String(user?.plan || '').toUpperCase() === 'PRO' ? MAX_APPS_PRO : MAX_APPS_FREE;
+}
 const ALLOWED_IDS = String(process.env.APPS_ALLOWED_DISCORD_IDS || '')
   .split(',')
   .map((s) => s.trim())
@@ -75,7 +80,7 @@ function createHostedAppsRouter(db) {
     }
     if (!userId) return null;
     const row = await db.query(
-      'SELECT id, discord_id, discord_username FROM users WHERE id = $1',
+      'SELECT id, discord_id, discord_username, plan FROM users WHERE id = $1',
       [userId]
     );
     return row.rows[0] || null;
@@ -123,7 +128,7 @@ function createHostedAppsRouter(db) {
       }
       res.json({
         apps,
-        max: MAX_APPS,
+        max: maxAppsFor(req.appUser),
         docker: await runner.dockerAvailable(),
         offWifi: true,
       });
@@ -139,8 +144,14 @@ function createHostedAppsRouter(db) {
       if (name.length < 2) return res.status(400).json({ error: 'Name needs at least 2 characters.' });
 
       const count = await db.query('SELECT COUNT(*)::int AS n FROM hosted_apps WHERE user_id = $1', [req.appUser.id]);
-      if (count.rows[0].n >= MAX_APPS) {
-        return res.status(400).json({ error: `You can host ${MAX_APPS} apps on this server.` });
+      const max = maxAppsFor(req.appUser);
+      if (count.rows[0].n >= max) {
+        return res.status(400).json({
+          error: max > MAX_APPS_FREE
+            ? `You can host ${max} apps on Pro.`
+            : `Free hosts ${MAX_APPS_FREE} apps. Pro unlocks ${MAX_APPS_PRO}.`,
+          needsPro: count.rows[0].n >= MAX_APPS_FREE,
+        });
       }
 
       const id = crypto.randomBytes(8).toString('hex');

@@ -19,6 +19,10 @@ const STYLE_PACKS = [
   { keys: ['green', 'mint', 'matrix', 'slime'], accent: '#3dd68c', card: '#08140f', text: '#e8fff3', bg: 'linear-gradient(135deg,#03120b,#0c2a1a)', font: 'IBM Plex Mono', nameEffect: 'glow', particles: true, particleStyle: 'dots', layout: 'centered' },
   { keys: ['anime', 'weeb', 'manga'], accent: '#7c5cff', card: '#14101f', text: '#f3eeff', bg: 'linear-gradient(135deg,#0c0818,#2a1650)', font: 'Syne', nameEffect: 'rainbow', particles: true, particleStyle: 'sakura', layout: 'centered' },
   { keys: ['glitch', 'error', 'corrupt', 'vhs'], accent: '#00fff0', card: '#0a0610', text: '#f4f0ff', bg: 'linear-gradient(135deg,#05030a,#1a0820 50%,#ff2a6d)', font: 'IBM Plex Mono', nameEffect: 'glitch', particles: true, particleStyle: 'dots', layout: 'centered' },
+  { keys: ['sunset', 'warm', 'orange', 'ember'], accent: '#ff7a3d', card: '#1a100c', text: '#fff1e6', bg: 'linear-gradient(145deg,#120804,#3a1408 55%,#ff7a3d)', font: 'Instrument Serif', nameEffect: 'gradient', particles: true, particleStyle: 'fireflies', layout: 'magazine' },
+  { keys: ['royal', 'purple', 'velvet'], accent: '#a855f7', card: '#14081c', text: '#f6edff', bg: 'linear-gradient(160deg,#080510,#2a1050)', font: 'Syne', nameEffect: 'glow', particles: true, particleStyle: 'dots', layout: 'card' },
+  { keys: ['paper', 'editorial', 'serif', 'magazine'], accent: '#c9a962', card: '#121110', text: '#f5f0e8', bg: 'linear-gradient(160deg,#0a0a0a,#1a1814)', font: 'Instrument Serif', nameEffect: 'none', particles: false, particleStyle: 'dots', layout: 'magazine' },
+  { keys: ['acid', 'lime', 'toxic'], accent: '#c6ff3d', card: '#10140a', text: '#f4ffe8', bg: 'linear-gradient(135deg,#070a03,#1a2408)', font: 'Bebas Neue', nameEffect: 'glow', particles: true, particleStyle: 'rain', layout: 'card' },
 ];
 
 function hexOk(value, fallback) {
@@ -184,10 +188,12 @@ Color hints from their photos: ${JSON.stringify(colorHints || {})}
 Make it feel custom to THEIR idea, not generic SaaS. High contrast text on card.`;
 }
 
-function chatPrompt(history, colorHints, currentBuild) {
-  const last = history.map((m) => `${m.role}: ${m.content}`).join('\n').slice(-2400);
-  return `You are Cordfol's profile designer — a sharp chat bot, not a form.
-Talk like a good creative director. Short. Then apply a full look.
+function chatPrompt(history, colorHints, currentBuild, pro) {
+  const last = history.map((m) => `${m.role}: ${m.content}`).join('\n').slice(pro ? -4200 : -2400);
+  return `You are Cordfol's profile designer — a sharp creative director, not a form wizard.
+Talk short and specific. If they say "darker", "less effects", "hex pfp", or "keep my bio", mutate the CURRENT build instead of starting over.
+Never invent a new display name unless they asked. Keep high contrast text on the card.
+${pro ? 'This user is PRO — be bolder. Richer gradients, tighter type, more distinctive layouts. Offer one extra idea in "say".' : 'Free user — still make it slap, but keep effects from turning into soup.'}
 Return ONLY JSON:
 {
   "say": "1-3 sentences to the user, casual",
@@ -213,12 +219,12 @@ Return ONLY JSON:
 }
 If they only asked a question, still return a build that matches the conversation.
 Photos may be attached — use them as the vibe. High contrast text.
-Current build: ${JSON.stringify(currentBuild || {}).slice(0, 700)}
+Current build: ${JSON.stringify(currentBuild || {}).slice(0, pro ? 1200 : 700)}
 Color hints: ${JSON.stringify(colorHints || {})}
 Chat:\n${last}`;
 }
 
-async function chatTurn({ history = [], images = [], colorHints = {}, currentBuild = null }) {
+async function chatTurn({ history = [], images = [], colorHints = {}, currentBuild = null, pro = false }) {
   const idea = [...history].reverse().find((m) => m.role === 'user')?.content || 'dark neon profile';
   const fallback = heuristicBuild(idea, colorHints);
   const status = await ollamaStatus();
@@ -235,7 +241,7 @@ async function chatTurn({ history = [], images = [], colorHints = {}, currentBui
   try {
     const content = await ollamaChat({
       model,
-      prompt: chatPrompt(history, colorHints, currentBuild),
+      prompt: chatPrompt(history, colorHints, currentBuild, pro),
       images: visionImages.length && OLLAMA_VISION_MODEL ? visionImages : undefined,
     });
     const parsed = parseModelJson(content);

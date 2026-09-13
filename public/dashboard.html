@@ -26,6 +26,14 @@ body::after{content:'';position:fixed;inset:0;opacity:0.028;pointer-events:none;
 .topbar-logo span{color:rgba(255,255,255,0.45);}
 .topbar-right{display:flex;align-items:center;gap:12px;}
 .plan-badge{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:1px;padding:5px 10px;border-radius:999px;background:rgba(255,255,255,0.05);color:var(--muted2);border:1px solid var(--border);}
+.plan-badge.pro{background:rgba(240,180,41,0.12);color:var(--amber);border-color:rgba(240,180,41,0.28);}
+.topbar-quick{display:none;align-items:center;gap:8px;}
+.topbar-quick.show{display:flex;}
+.publish-dock{position:sticky;bottom:8px;z-index:40;display:none;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:18px;padding:12px 14px;background:rgba(8,8,8,0.94);border:1px solid var(--border);border-radius:16px;backdrop-filter:blur(16px);box-shadow:var(--shadow);}
+.publish-dock.show{display:flex;}
+.dock-status{font-size:12px;color:var(--muted2);line-height:1.45;}
+.dock-status.dirty{color:var(--amber);}
+.dock-actions{display:flex;gap:8px;flex-wrap:wrap;}
 .user-trigger{display:flex;align-items:center;gap:8px;padding:6px 12px 6px 6px;border-radius:14px;cursor:pointer;border:1px solid transparent;transition:background 0.15s,border-color 0.15s;position:relative;}
 .user-trigger:hover{background:rgba(255,255,255,0.04);border-color:var(--border);}
 .user-avatar{width:32px;height:32px;border-radius:14px;background:linear-gradient(135deg,var(--discord),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:500;color:white;flex-shrink:0;box-shadow:0 10px 24px rgba(88,101,242,0.28);}
@@ -258,10 +266,22 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
 .modal-overlay.open{opacity:1;pointer-events:all;}
 .modal{background:linear-gradient(180deg,rgba(17,19,26,0.98),rgba(13,15,22,0.94));border:1px solid var(--border);border-radius:18px;padding:28px;width:360px;transform:scale(0.95);transition:transform 0.2s;box-shadow:var(--shadow);}
 .modal-overlay.open .modal{transform:scale(1);}
-.modal.wide{width:520px;}
+.modal.wide{width:min(520px,92vw);}
 .modal-title{font-size:16px;font-weight:500;margin-bottom:8px;}
 .modal-desc{font-size:13px;color:var(--muted2);line-height:1.6;margin-bottom:24px;}
 .modal-actions{display:flex;gap:10px;justify-content:flex-end;}
+.pro-list{display:flex;flex-direction:column;gap:8px;margin:0 0 22px;}
+.pro-list div{font-size:13px;color:var(--text);padding:8px 10px;border-radius:10px;background:rgba(255,255,255,0.03);border:1px solid var(--border);}
+.home-hero{min-height:calc(100vh - 200px);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:36px 12px 90px;}
+.home-title{font-family:'Syne',sans-serif;font-weight:800;font-size:clamp(28px,4.4vw,44px);letter-spacing:-0.03em;text-align:center;margin-bottom:28px;}
+.home-prompt{width:min(720px,100%);background:#161616;border:1px solid rgba(255,255,255,0.08);border-radius:28px;padding:16px 18px 12px;box-shadow:0 24px 80px rgba(0,0,0,0.35);}
+.home-prompt textarea{width:100%;min-height:54px;max-height:140px;background:transparent;border:none;color:var(--text);font:400 15px 'Outfit',sans-serif;resize:none;outline:none;}
+.home-prompt-bar{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:8px;}
+.home-model{font-size:12px;color:var(--muted2);padding:6px 10px;border-radius:999px;border:1px solid var(--border);}
+.home-chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:16px;width:min(720px,100%);}
+.locked-card{position:relative;}
+.locked-card::after{content:'PRO';position:absolute;top:12px;right:12px;font-size:10px;letter-spacing:0.08em;font-family:'IBM Plex Mono',monospace;color:var(--amber);border:1px solid rgba(240,180,41,0.3);padding:3px 7px;border-radius:999px;}
+.theme-card.locked{opacity:0.72;}
 
 /* ── First-time onboarding wizard ── */
 .onboard-overlay{position:fixed;inset:0;z-index:800;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(0,0,0,0.72);backdrop-filter:blur(14px);opacity:0;pointer-events:none;transition:opacity 0.25s;}
@@ -364,12 +384,13 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
   .sidebar-section-label,.sidebar-spacer,.sidebar-bot-cta{display:none;}
   .nav-item{flex-shrink:0;white-space:nowrap;margin:0;padding:9px 13px;}
   .nav-dot,.notif-dot{display:none;}
-  .main{padding:4px 0 20px;}
+  .main{padding:4px 0 12px;}
+  .publish-dock{bottom:6px;}
   .grid-2,.grid-3,.metrics,.split-panels,.bot-compare,.fx-grid,.layout-options{grid-template-columns:1fr;}
   .custom-link-row{flex-wrap:wrap;}
   .custom-link-row .cl-title,.custom-link-row .cl-url{flex:1 1 100%!important;}
 }
-@media (max-width:640px){.topbar{padding:0 14px;}.plan-badge{display:none;}.card{padding:18px;}.theme-grid{grid-template-columns:1fr 1fr;}.btn-row{flex-wrap:wrap;}.preset-grid{grid-template-columns:repeat(3,1fr);}.gradient-presets{grid-template-columns:repeat(3,1fr);}.theme-preset-grid{grid-template-columns:repeat(2,1fr);}.layout-options{grid-template-columns:repeat(2,1fr);}.font-options{grid-template-columns:repeat(2,1fr);}}
+@media (max-width:640px){.topbar{padding:0 14px;}.plan-badge{display:none;}.topbar-quick .btn{height:34px;padding:0 10px;font-size:9px;letter-spacing:0.6px;}.card{padding:18px;}.theme-grid{grid-template-columns:1fr 1fr;}.btn-row{flex-wrap:wrap;}.preset-grid{grid-template-columns:repeat(3,1fr);}.gradient-presets{grid-template-columns:repeat(3,1fr);}.theme-preset-grid{grid-template-columns:repeat(2,1fr);}.layout-options{grid-template-columns:repeat(2,1fr);}.font-options{grid-template-columns:repeat(2,1fr);}}
 </style>
 </head>
 <body>
@@ -377,6 +398,10 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
 <div class="topbar">
   <a href="/" class="topbar-logo"><img src="/logo.svg" alt=""/>CORD<span>FOL</span></a>
   <div class="topbar-right" id="topbarRight">
+    <div class="topbar-quick" id="topbarQuick">
+      <button class="btn btn-ghost" type="button" onclick="copyProfileLink()">Copy link</button>
+      <a class="btn btn-ghost" id="topbarViewLive" href="#" target="_blank" rel="noopener noreferrer">View live</a>
+    </div>
     <button id="loginBtn" class="btn btn-primary" onclick="goToDiscordLogin()">Login with Discord</button>
     <div id="userInfo" style="display:none">
       <div class="plan-badge" id="planBadge">FREE PLAN</div>
@@ -416,13 +441,15 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
 <div class="layout">
   <div class="sidebar">
     <div class="sidebar-section-label">Main</div>
+    <div class="nav-item active" data-tab="home" onclick="switchTab('home')"><span class="nav-icon">HM</span> Home</div>
     <div class="nav-item" data-tab="ai" onclick="switchTab('ai')"><span class="nav-icon">AI</span> AI Builder<div class="nav-dot dot-green"></div></div>
-    <div class="nav-item active" data-tab="verify" onclick="switchTab('verify')"><span class="nav-icon">VR</span> Verify Roles<div class="nav-dot dot-green"></div></div>
+    <div class="nav-item" data-tab="verify" onclick="switchTab('verify')"><span class="nav-icon">VR</span> Verify Roles<div class="nav-dot dot-green"></div></div>
     <div class="nav-item" data-tab="profile" onclick="switchTab('profile')"><span class="nav-icon">PF</span> Profile</div>
     <div class="nav-item" data-tab="spotify" onclick="switchTab('spotify')"><span class="nav-icon">SP</span> Spotify<div class="nav-dot dot-green" id="spotifyNavDot" style="display:none"></div></div>
     <div class="nav-item" data-tab="theme" onclick="switchTab('theme')"><span class="nav-icon">TH</span> Theme<div class="nav-dot dot-amber"></div></div>
     <div class="nav-item" id="statusNavLink" data-tab="status" onclick="switchTab('status')" style="display:none"><span class="nav-icon">⭐</span> Creator Status</div>
     <div class="nav-item" data-tab="analytics" onclick="switchTab('analytics')"><span class="nav-icon">AN</span> Analytics</div>
+    <div class="nav-item" data-tab="pro" onclick="switchTab('pro')"><span class="nav-icon">PR</span> Pro</div>
     <div class="sidebar-section-label" style="margin-top:8px;">Server Bot</div>
     <div class="nav-item" data-tab="bot" onclick="switchTab('bot')"><span class="nav-icon">BT</span> Bot Setup<div class="notif-dot"></div></div>
     <div class="nav-item" data-tab="apps" onclick="switchTab('apps')"><span class="nav-icon">AP</span> Hosted Apps<div class="nav-dot dot-green"></div></div>
@@ -437,6 +464,26 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
   </div>
 
   <div class="main">
+
+    <div class="tab active" id="tab-home">
+      <div class="home-hero">
+        <h1 class="home-title" id="homeGreeting">Ready to level up?</h1>
+        <form class="home-prompt" onsubmit="launchHomePrompt(event)">
+          <textarea id="homePromptInput" placeholder="Tell me what you're working on…" rows="2"></textarea>
+          <div class="home-prompt-bar">
+            <button class="btn btn-ghost" type="button" onclick="document.getElementById('aiChatFiles').click()">Photo</button>
+            <div class="home-model" id="homeModelLabel">Cordfol AI</div>
+            <button class="btn btn-primary" type="submit">Build</button>
+          </div>
+        </form>
+        <div class="home-chips">
+          <button type="button" class="ai-chip" onclick="homeChip('midnight rave, neon purple, hex avatar, fireflies')">Midnight rave look</button>
+          <button type="button" class="ai-chip" onclick="homeChip('make it darker and higher contrast')">Make it darker</button>
+          <button type="button" class="ai-chip" onclick="switchTab('verify')">Verify my roles</button>
+          <button type="button" class="ai-chip" onclick="switchTab('ai');document.getElementById('aiRemixInput')?.focus()">Remix a profile</button>
+        </div>
+      </div>
+    </div>
 
     <!-- AI BUILDER TAB -->
     <div class="tab" id="tab-ai">
@@ -460,6 +507,8 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
             <button type="button" class="ai-chip" onclick="aiChip('less effects, clean guns-style stack')">Cleaner</button>
             <button type="button" class="ai-chip" onclick="aiChip('use the attached photo as my profile pic and pull colors from it')">Use my photo</button>
             <button type="button" class="ai-chip" onclick="aiChip('glitch name, matrix green, hex pfp')">Glitch</button>
+            <button type="button" class="ai-chip" onclick="aiChip('editorial magazine, warm gold, serif, no particles')">Editorial</button>
+            <button type="button" class="ai-chip" onclick="aiChip('sunset ember, hex avatar, fireflies, short arrogant bio')">Sunset</button>
           </div>
           <div class="ai-chat-thumbs" id="aiChatThumbs"></div>
           <div class="ai-chat-input">
@@ -482,13 +531,13 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
             <div class="lp-bio">Your bio here.</div>
           </div>
         </div>
-        <div class="hint-text" style="margin:12px 0 0" id="aiHint">Chat applies here instantly. Save on Profile when you like it.</div>
+        <div class="hint-text" style="margin:12px 0 0" id="aiHint">Chat applies here instantly. Save in the bar below to publish.</div>
       </div>
       </div>
     </div>
 
     <!-- VERIFY TAB -->
-    <div class="tab active" id="tab-verify">
+    <div class="tab" id="tab-verify">
       <div class="page-title">Verified Role History</div>
       <div class="page-sub">These roles are confirmed via Discord's API. Toggle visibility on your public profile. Roles re-verify every 24h automatically.</div>
       <div class="card" id="onboardCard" style="display:none;margin-bottom:18px">
@@ -501,7 +550,7 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
       </div>
       <div class="card">
         <div class="card-title">Active verified roles<span class="card-subtitle" id="roleCount">Loading...</span></div>
-        <div class="hint-text" style="margin-bottom:12px">Pin up to 3 roles — they show first on your public profile.</div>
+        <div class="hint-text" style="margin-bottom:12px">Pin up to 3 roles on Free, 6 on Pro — they show first on your public profile.</div>
         <div class="role-list" id="roleList"></div>
       </div>
       <div class="card helper-card">
@@ -629,7 +678,14 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
               <div class="fx-card active" id="disp-showSpotifyWidget" onclick="toggleDisplayOpt('showSpotifyWidget')"><div><div class="fx-label">Spotify widget</div><div class="fx-sub">Now playing on profile</div></div><div class="toggle on" id="disp-toggle-showSpotifyWidget"></div></div>
               <div class="fx-card active" id="disp-showGuestbook" onclick="toggleDisplayOpt('showGuestbook')"><div><div class="fx-label">Guestbook</div><div class="fx-sub">Visitors sign your profile</div></div><div class="toggle on" id="disp-toggle-showGuestbook"></div></div>
               <div class="fx-card active" id="disp-showServerCard" onclick="toggleDisplayOpt('showServerCard')"><div><div class="fx-label">Server card</div><div class="fx-sub">Featured Discord server</div></div><div class="toggle on" id="disp-toggle-showServerCard"></div></div>
+              <div class="fx-card" id="disp-hideBrand" onclick="toggleProDisplay('hideBrand')"><div><div class="fx-label">Hide Cordfol mark</div><div class="fx-sub">Pro — drop the footer watermark</div></div><div class="toggle" id="disp-toggle-hideBrand"></div></div>
             </div>
+          </div>
+
+          <div class="card" id="customCssCard">
+            <div class="card-title">Custom CSS <span class="theme-tag tag-pro">PRO</span></div>
+            <div class="hint-text" style="margin-bottom:12px">Advanced. Injected on your public page only. Keep it short — this is not a whole website.</div>
+            <textarea class="field-input" id="customCssInput" placeholder=".card { border-radius: 28px; }" style="min-height:120px;height:auto;font-family:'IBM Plex Mono',monospace;font-size:12px" oninput="onCustomCssInput()"></textarea>
           </div>
 
           <!-- BANNER PICKER -->
@@ -807,8 +863,8 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
           </div>
 
           <div class="btn-row right">
-            <button class="btn btn-ghost" onclick="loadProfile()">Discard</button>
-            <button class="btn btn-primary" onclick="saveProfile()">Save Changes</button>
+            <button class="btn btn-ghost" type="button" onclick="discardProfile()">Discard</button>
+            <button class="btn btn-primary js-save-btn" type="button" onclick="saveProfile()">Save Changes</button>
           </div>
         </div>
 
@@ -898,7 +954,7 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
     <!-- THEME TAB -->
     <div class="tab" id="tab-theme">
       <div class="page-title">Theme & Appearance</div>
-      <div class="page-sub">Choose how your public profile looks. More themes coming soon.</div>
+      <div class="page-sub">Tap a look — it hits the live preview immediately. Save in the bar below to publish it.</div>
       <div class="card">
         <div class="card-title">Choose a theme</div>
         <div class="theme-grid">
@@ -911,6 +967,8 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
           <div class="theme-card" onclick="selectTheme(this,'Aurora')"><div class="theme-preview" style="background:linear-gradient(135deg,#001a1a,#001224)"><div style="width:100%;height:100%;background:linear-gradient(135deg,rgba(0,255,178,0.2),rgba(88,101,242,0.2))"></div></div><div class="theme-name">Aurora</div><span class="theme-tag tag-pro">PRO</span></div>
           <div class="theme-card" onclick="selectTheme(this,'Crimson')"><div class="theme-preview" style="background:#0f0007"><div style="width:100%;height:100%;background:linear-gradient(135deg,rgba(255,51,102,0.2),rgba(255,0,60,0.05))"></div></div><div class="theme-name">Crimson</div><span class="theme-tag tag-pro">PRO</span></div>
           <div class="theme-card" onclick="selectTheme(this,'Gold')"><div class="theme-preview" style="background:#0a0800"><div style="width:100%;height:100%;background:linear-gradient(135deg,rgba(255,184,0,0.25),rgba(255,120,0,0.1))"></div></div><div class="theme-name">Gold</div><span class="theme-tag tag-pro">PRO</span></div>
+          <div class="theme-card" onclick="selectTheme(this,'Sunset')"><div class="theme-preview" style="background:linear-gradient(135deg,#120804,#ff7a3d)"></div><div class="theme-name">Sunset</div><span class="theme-tag tag-pro">PRO</span></div>
+          <div class="theme-card" onclick="selectTheme(this,'Acid')"><div class="theme-preview" style="background:linear-gradient(135deg,#070a03,#c6ff3d)"></div><div class="theme-name">Acid</div><span class="theme-tag tag-pro">PRO</span></div>
         </div>
       </div>
     </div>
@@ -947,6 +1005,28 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
       <div class="split-panels">
         <div class="card"><div class="card-title">Top referrers</div><div class="ref-list" id="referrerList"><div class="empty-state">No visits yet — share your profile link!</div></div></div>
         <div class="card"><div class="card-title">Most clicked</div><div class="ref-list" id="topClicksList"><div class="empty-state">No clicks tracked yet.</div></div></div>
+      </div>
+    </div>
+
+    <div class="tab" id="tab-pro">
+      <div class="page-title">Cordfol Pro</div>
+      <div class="page-sub" id="proTabSub">Founder-granted. Ask Astro in Discord, or he hits /pro give on your account.</div>
+      <div class="card">
+        <div class="card-title">What Pro unlocks</div>
+        <div class="pro-list">
+          <div>Premium themes — Aurora, Crimson, Gold, Sunset, Acid</div>
+          <div>Full profile analytics</div>
+          <div>Custom CSS on your page</div>
+          <div>Hide the Cordfol footer mark</div>
+          <div>25 custom links instead of 10</div>
+          <div>10 hosted bots instead of 3</div>
+          <div>Pin 6 roles instead of 3</div>
+          <div>Longer AI memory and bolder Pro builds</div>
+        </div>
+        <div class="btn-row">
+          <a class="btn btn-primary" href="https://discord.gg/wcrCgc6pMf" target="_blank" rel="noopener">Ask in Discord</a>
+          <button class="btn btn-ghost" type="button" onclick="copyProAsk()">Copy ask message</button>
+        </div>
       </div>
     </div>
 
@@ -996,13 +1076,49 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
       <div class="card"><div class="card-title">Scanned servers</div><div class="role-list" id="serverList"><div class="empty-state">Loading servers...</div></div></div>
     </div>
 
+    <div class="publish-dock" id="publishDock">
+      <div class="dock-status" id="dockStatus">Saved. Chat or tweak, then publish.</div>
+      <div class="dock-actions">
+        <button class="btn btn-ghost" type="button" onclick="discardProfile()">Discard</button>
+        <button class="btn btn-primary js-save-btn" type="button" onclick="saveProfile()">Save</button>
+        <button class="btn btn-primary" type="button" onclick="saveAndView()">Save & view live</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="modal-overlay" id="proModal" onclick="if(event.target===this)closeProModal()">
+  <div class="modal wide">
+    <div class="modal-title">This is Pro</div>
+    <div class="modal-desc" id="proModalWhy">Unlock this with Cordfol Pro.</div>
+    <div class="pro-list">
+      <div>Premium themes + custom CSS</div>
+      <div>Analytics, more links, more hosted bots</div>
+      <div>Granted by Astro in Discord — /pro give</div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" type="button" onclick="closeProModal()">Not now</button>
+      <a class="btn btn-primary" href="https://discord.gg/wcrCgc6pMf" target="_blank" rel="noopener">Open Discord</a>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="confirmModal" onclick="if(event.target===this)closeConfirmModal(false)">
+  <div class="modal">
+    <div class="modal-title" id="confirmTitle">Are you sure?</div>
+    <div class="modal-desc" id="confirmDesc"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" type="button" onclick="closeConfirmModal(false)">Cancel</button>
+      <button class="btn btn-danger" type="button" id="confirmOkBtn" onclick="closeConfirmModal(true)">Confirm</button>
+    </div>
   </div>
 </div>
 
 <!-- SIGN OUT MODAL -->
 <div class="modal-overlay" id="signOutModal" onclick="closeSignOutModal(event)">
   <div class="modal">
-    <div class="modal-title">Sign out of Cordfol.io?</div>
+    <div class="modal-title">Sign out of Cordfol?</div>
     <div class="modal-desc">Signing out will stop automatic role re-verification until you log back in. Your roles won't be deleted.</div>
     <div class="modal-actions"><button class="btn btn-ghost" onclick="closeSignOutModal()">Cancel</button><button class="btn btn-danger" onclick="logout()">Yes, sign out</button></div>
   </div>
@@ -1237,7 +1353,7 @@ const DEFAULT_DISPLAY_OPTS={
   showBadges:true,showVerifiedBadge:true,showHandle:true,showPresence:true,showBio:true,
   showCustomLinks:true,showViews:true,showMemberSince:true,showLocalTime:true,showRoleStats:true,
   showRoles:true,showSocials:true,showSpotifyWidget:true,showGuestbook:true,showServerCard:true,
-  spotlightLink:false,aiDesigned:false,
+  spotlightLink:false,aiDesigned:false,hideBrand:false,
 };
 let displayOpts={...DEFAULT_DISPLAY_OPTS};
 
@@ -1289,6 +1405,7 @@ function collectDisplayOptions(){
     entryConfetti:!!activeFx.confetti,
     aiDesigned:!!displayOpts.aiDesigned,
     spotlightLink:!!displayOpts.spotlightLink,
+    hideBrand:!!displayOpts.hideBrand,
   };
 }
 
@@ -1319,12 +1436,8 @@ function initThemePresets(){
   });
 }
 
-function applyThemePreset(id){
-  const p=THEME_PRESETS.find(x=>x.id===id);
+function applyLook(p, toastName){
   if(!p) return;
-  activeThemePreset=id;
-  document.querySelectorAll('.theme-preset-btn').forEach(b=>b.classList.toggle('active',b.dataset.preset===id));
-
   document.getElementById('accentColorInput').value=p.accent;
   document.getElementById('textColorInput').value=p.text;
   document.getElementById('cardColorInput').value=p.card;
@@ -1350,7 +1463,8 @@ function applyThemePreset(id){
     const match=(p.layout==='left'&&name.includes('left'))||(p.layout==='magazine'&&name.includes('magazine'))||(p.layout==='card'&&name.includes('stack'))||(p.layout==='centered'&&name.includes('center'));
     btn.classList.toggle('selected',match);
   });
-  document.getElementById('previewLayoutState').textContent=p.layout.charAt(0).toUpperCase()+p.layout.slice(1);
+  const layoutState=document.getElementById('previewLayoutState');
+  if(layoutState) layoutState.textContent=p.layout.charAt(0).toUpperCase()+p.layout.slice(1);
 
   currentFont=p.font;
   document.querySelectorAll('.font-btn:not([data-effect]):not([data-pstyle])').forEach(btn=>{
@@ -1360,7 +1474,7 @@ function applyThemePreset(id){
   Object.keys(activeFx).forEach(key=>{
     if(key==='cursor') return;
     if(key==='music') return;
-    activeFx[key]=!!p.fx[key];
+    activeFx[key]=!!(p.fx&&p.fx[key]);
     const card=document.getElementById('fx-'+key);
     const toggle=document.getElementById('fx-toggle-'+key);
     if(card&&toggle){
@@ -1371,8 +1485,31 @@ function applyThemePreset(id){
 
   markProfileDirty();
   updatePreview();
-  showToast('OK',`${p.label} preset applied — tweak anything below.`);
+  if(toastName) showToast('OK',`${toastName} applied — Save to publish.`);
 }
+
+function applyThemePreset(id){
+  const p=THEME_PRESETS.find(x=>x.id===id);
+  if(!p) return;
+  activeThemePreset=id;
+  document.querySelectorAll('.theme-preset-btn').forEach(b=>b.classList.toggle('active',b.dataset.preset===id));
+  applyLook(p, p.label+' preset');
+}
+
+const QUICK_THEMES={
+  Void:{accent:'#5865F2',text:'#f0f2f8',card:'#141418',opacity:90,bgType:'solid',bgValue:'#0d0d0d',layout:'centered',font:'DM Sans',fx:{anim:0,particles:0,glassmorphism:0,blur:0,splash:0,typewriter:0,tilt:0}},
+  Abyss:{accent:'#38bdf8',text:'#e0f2fe',card:'#0b1220',opacity:88,bgType:'solid',bgValue:'#0f172a',layout:'left',font:'DM Sans',fx:{anim:0,particles:0,glassmorphism:0,blur:0,splash:0,typewriter:0,tilt:0}},
+  Nebula:{accent:'#c46bff',text:'#f5e9ff',card:'#16081f',opacity:80,bgType:'gradient',bgValue:'linear-gradient(160deg,#1a0a2e,#0a0614)',layout:'centered',font:'Outfit',fx:{anim:1,particles:1,glassmorphism:0,blur:0,splash:0,typewriter:0,tilt:0}},
+  Glass:{accent:'#8b9fff',text:'#f4f6ff',card:'#12121a',opacity:55,bgType:'gradient',bgValue:'linear-gradient(135deg,#0d0d0d,#1a1a2e)',layout:'centered',font:'DM Sans',fx:{anim:0,particles:0,glassmorphism:1,blur:1,splash:0,typewriter:0,tilt:0}},
+  Prismatic:{accent:'#7c5cff',text:'#ffffff',card:'#100816',opacity:70,bgType:'gradient',bgValue:'linear-gradient(135deg,#050510,#1a0a3a 55%,#3b1d6e)',layout:'card',font:'Syne',fx:{anim:1,particles:1,glassmorphism:1,blur:0,splash:0,typewriter:0,tilt:0}},
+  Ember:{accent:'#f0b429',text:'#fff6e5',card:'#16120a',opacity:86,bgType:'solid',bgValue:'#0a0a0a',layout:'magazine',font:'Instrument Serif',fx:{anim:0,particles:0,glassmorphism:0,blur:0,splash:0,typewriter:0,tilt:0}},
+  Aurora:{accent:'#3dd68c',text:'#eafff6',card:'#071410',opacity:74,bgType:'gradient',bgValue:'linear-gradient(135deg,#001a1a,#001224)',layout:'centered',font:'IBM Plex Mono',fx:{anim:1,particles:1,glassmorphism:1,blur:1,splash:0,typewriter:0,tilt:0}},
+  Crimson:{accent:'#ff4d6d',text:'#ffe8ee',card:'#16060c',opacity:82,bgType:'solid',bgValue:'#0f0007',layout:'card',font:'Bebas Neue',fx:{anim:1,particles:0,glassmorphism:0,blur:0,splash:0,typewriter:0,tilt:1}},
+  Gold:{accent:'#f0b429',text:'#fff8e1',card:'#161208',opacity:88,bgType:'gradient',bgValue:'linear-gradient(160deg,#0a0800,#1a1400)',layout:'magazine',font:'Instrument Serif',fx:{anim:0,particles:1,glassmorphism:0,blur:0,splash:0,typewriter:0,tilt:0}},
+  Sunset:{accent:'#ff7a3d',text:'#fff1e6',card:'#1a100c',opacity:84,bgType:'gradient',bgValue:'linear-gradient(145deg,#120804,#3a1408 55%,#ff7a3d)',layout:'magazine',font:'Instrument Serif',fx:{anim:1,particles:1,glassmorphism:0,blur:0,splash:0,typewriter:0,tilt:0}},
+  Acid:{accent:'#c6ff3d',text:'#f4ffe8',card:'#10140a',opacity:80,bgType:'gradient',bgValue:'linear-gradient(135deg,#070a03,#1a2408)',layout:'card',font:'Bebas Neue',fx:{anim:1,particles:1,glassmorphism:0,blur:0,splash:0,typewriter:0,tilt:1}},
+};
+const PRO_THEMES=new Set(['Aurora','Crimson','Gold','Sunset','Acid']);
 
 function initPresets(){
   const gc=document.getElementById('gradientPresets');
@@ -1720,15 +1857,19 @@ function updatePreview(){
 
 // ── Nav / tabs ──
 function switchTab(tab){
+  const next=document.getElementById('tab-'+tab);
+  if(!next) return;
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
-  document.getElementById('tab-'+tab).classList.add('active');
+  next.classList.add('active');
   const navEl=document.querySelector('[data-tab="'+tab+'"]');
   if(navEl) navEl.classList.add('active');
+  window._currentTab=tab;
+  try{ sessionStorage.setItem('cordfol_tab', tab); }catch{}
   if(tab==='analytics') initChart();
   if(tab==='spotify') refreshSpotifyStatus();
   if(tab==='apps') loadHostedApps();
-  if(tab==='ai'){refreshAiStatus();updatePreview();}
+  if(tab==='ai'||tab==='theme'||tab==='profile'){if(tab==='ai') refreshAiStatus();updatePreview();}
 }
 
 function toggleUserMenu(){
@@ -1778,16 +1919,71 @@ async function checkSlug(el){
   updatePreview();
 }
 
+function isProUser(){return !!window._isPro;}
+function openProModal(why){
+  document.getElementById('proModalWhy').textContent=why||'Unlock this with Cordfol Pro.';
+  document.getElementById('proModal')?.classList.add('open');
+}
+function closeProModal(){document.getElementById('proModal')?.classList.remove('open');}
+function requirePro(why){
+  if(isProUser()) return true;
+  openProModal(why);
+  return false;
+}
+function copyProAsk(){
+  navigator.clipboard.writeText('Hey Astro — can I get Cordfol Pro on my account?').then(()=>showToast('OK','Copied. Paste it in Discord.')).catch(()=>{});
+}
+let _confirmResolver=null;
+function showConfirmModal(title,desc){
+  document.getElementById('confirmTitle').textContent=title||'Are you sure?';
+  document.getElementById('confirmDesc').textContent=desc||'';
+  document.getElementById('confirmModal')?.classList.add('open');
+  return new Promise((resolve)=>{_confirmResolver=resolve;});
+}
+function closeConfirmModal(ok){
+  document.getElementById('confirmModal')?.classList.remove('open');
+  if(_confirmResolver){_confirmResolver(!!ok);_confirmResolver=null;}
+}
+function toggleProDisplay(key){
+  if(!requirePro('Hide the Cordfol mark is a Pro perk.')) return;
+  toggleDisplayOpt(key);
+}
+function onCustomCssInput(){
+  if(!requirePro('Custom CSS is Pro. Ask Astro in Discord to unlock it.')){
+    document.getElementById('customCssInput').value='';
+    return;
+  }
+  markProfileDirty();
+}
 function selectTheme(el,name){
+  if(PRO_THEMES.has(name)&&!requirePro(name+' is a Pro theme.')) return;
+  const look=QUICK_THEMES[name];
+  if(!look){showToast('ERR','That theme is missing.','error');return;}
   document.querySelectorAll('.theme-card').forEach(c=>c.classList.remove('selected'));
   el.classList.add('selected');
-  showToast('THEME',name+' theme selected!');
+  applyLook(look, name+' theme');
 }
+function launchHomePrompt(e){
+  e.preventDefault();
+  const text=document.getElementById('homePromptInput')?.value?.trim();
+  if(!text){switchTab('ai');document.getElementById('aiChatInput')?.focus();return;}
+  switchTab('ai');
+  const box=document.getElementById('aiChatInput');
+  if(box) box.value=text;
+  sendAiChat();
+}
+function homeChip(text){
+  const box=document.getElementById('homePromptInput');
+  if(box) box.value=text;
+  launchHomePrompt({preventDefault(){}});
+}
+function maxCustomLinks(){return isProUser()?25:10;}
+function maxPinnedRoles(){return isProUser()?6:3;}
 
 // ── Custom links editor ──
 function addCustomLink(title,url){
   const list=document.getElementById('customLinksList');
-  if(list.children.length>=10){showToast('ERR','Maximum 10 custom links.','error');return;}
+  if(list.children.length>=maxCustomLinks()){showToast('ERR',`Maximum ${maxCustomLinks()} custom links.`,'error');if(!isProUser())openProModal('Pro raises the cap to 25 links.');return;}
   const row=document.createElement('div');
   row.className='custom-link-row';
   row.style.cssText='display:flex;gap:8px;margin-bottom:10px;align-items:center';
@@ -1802,9 +1998,9 @@ function addCustomLink(title,url){
 function updateCustomLinkCount(){
   const n=document.querySelectorAll('.custom-link-row').length;
   const el=document.getElementById('customLinkCount');
-  if(el) el.textContent=`${n} of 10`;
+  if(el) el.textContent=`${n} of ${maxCustomLinks()}`;
   const btn=document.getElementById('addLinkBtn');
-  if(btn) btn.style.display=n>=10?'none':'';
+  if(btn) btn.style.display=n>=maxCustomLinks()?'none':'';
 }
 
 function collectCustomLinks(){
@@ -2112,13 +2308,18 @@ function finishOnboardWizard(){
   try{ localStorage.setItem('cordfol_wizard_done','1'); }catch{}
   document.getElementById('onboardWizard')?.classList.remove('open');
   updateOnboarding();
-  switchTab('verify');
-  showToast('OK','Welcome in — scan your roles next.');
+  switchTab('ai');
+  showToast('OK','Welcome in — describe a vibe or scan roles next.');
 }
 
 // ── Analytics (real data) ──
 let analyticsLoaded=false;
 async function initChart(){
+  if(!isProUser()){
+    document.getElementById('chart').innerHTML='<div class="empty-state">Analytics is Pro. Ask Astro in Discord — he grants it with /pro give.</div>';
+    openProModal('Profile analytics is included with Pro.');
+    return;
+  }
   if(analyticsLoaded)return;analyticsLoaded=true;
   try{
     const sid=restoreAuthSid();
@@ -2220,7 +2421,10 @@ function applyPendingClaimSlug(){
   if(!pendingSlug||!slugInput)return;
   slugInput.value=pendingSlug;checkSlug(slugInput);updatePreview();switchTab('profile');
   document.getElementById('profileUrl').textContent=`Claim your public page at ${PUBLIC_HOST}/${pendingSlug}`;
-  document.getElementById('viewPublicPageLink').href=buildPublicProfileUrl(pendingSlug);
+  const live=buildPublicProfileUrl(pendingSlug);
+  document.getElementById('viewPublicPageLink').href=live;
+  const topLive=document.getElementById('topbarViewLive');
+  if(topLive) topLive.href=live;
   clearCookie(CLAIM_COOKIE_NAME);window._claimSlug='';
   showToast('CLAIM',`Ready to claim ${PUBLIC_HOST}/${pendingSlug}`);
 }
@@ -2251,10 +2455,11 @@ async function checkSession(){
       const user=normalizeUser(authData.user||authData);
       showUser(user);
       await loadProfileFallback(user);
-      applyPendingClaimSlug();
-      loadRoles();
-      refreshSpotifyStatus();
-      return;
+    applyPendingClaimSlug();
+    loadRoles();
+    refreshSpotifyStatus();
+    restoreDashboardTab();
+    return;
     }
 
     const user=normalizeUser(data.user||data);
@@ -2264,24 +2469,56 @@ async function checkSession(){
     applyPendingClaimSlug();
     loadRoles();
     refreshSpotifyStatus();
+    restoreDashboardTab();
   }catch(err){
     console.warn('[dashboard] session check failed', err);
     document.getElementById('loginBtn').style.display='';
     document.getElementById('userInfo').style.display='none';
+    setLoggedInChrome(false);
   }
 }
 
+function setLoggedInChrome(on){
+  document.getElementById('publishDock')?.classList.toggle('show',!!on);
+  document.getElementById('topbarQuick')?.classList.toggle('show',!!on);
+}
+
+function restoreDashboardTab(){
+  const params=new URLSearchParams(location.search);
+  if(params.get('remix')||location.hash==='#ai') return;
+  const want=params.get('tab');
+  if(want&&document.getElementById('tab-'+want)) switchTab(want);
+}
+
 function showUser(user){
+  window._dashUser=user;
+  window._isPro=String(user.plan||'').toUpperCase()==='PRO';
   document.getElementById('loginBtn').style.display='none';
   document.getElementById('userInfo').style.display='';
+  setLoggedInChrome(true);
   const displayName=user.display_name||user.discord_username||'User';
+  const first=String(displayName).split(/[\s.]+/)[0]||'there';
+  const greet=document.getElementById('homeGreeting');
+  if(greet) greet.textContent=`Ready to level up, ${first}?`;
+  const model=document.getElementById('homeModelLabel');
+  if(model) model.textContent=window._isPro?'Pro AI':'Cordfol AI';
+  const proSub=document.getElementById('proTabSub');
+  if(proSub) proSub.textContent=window._isPro?'You have Pro. Everything below is unlocked.':'Founder-granted. Ask Astro in Discord, or he hits /pro give on your account.';
   document.getElementById('userAvatar').textContent=displayName[0]||'?';
   document.getElementById('userName').textContent=user.display_name||user.discord_username;
   document.getElementById('discordName').textContent=user.discord_username;
   document.getElementById('discordId').textContent='ID: '+user.discord_id;
-  document.getElementById('planBadge').textContent='FREE PLAN';
+  const plan=String(user.plan||'FREE').toUpperCase();
+  const badge=document.getElementById('planBadge');
+  badge.textContent=plan==='PRO'?'PRO':'FREE PLAN';
+  badge.classList.toggle('pro',plan==='PRO');
+  badge.style.cursor='pointer';
+  badge.onclick=()=>switchTab('pro');
   document.getElementById('profileUrl').textContent=`Customize your public page at ${PUBLIC_HOST}/${user.slug}`;
-  document.getElementById('viewPublicPageLink').href=buildPublicProfileUrl(user.slug);
+  const live=buildPublicProfileUrl(user.slug);
+  document.getElementById('viewPublicPageLink').href=live;
+  const topLive=document.getElementById('topbarViewLive');
+  if(topLive) topLive.href=live||'#';
   const ADMIN_USERNAME='gfxastro.';
   const isAdmin=[user.discord_username,user.display_name].filter(Boolean).some(v=>String(v).toLowerCase()===ADMIN_USERNAME.toLowerCase());
   const adminBar=document.getElementById('adminControlBar');
@@ -2298,7 +2535,7 @@ async function loadRoles(){
     const res=await fetch(url,{credentials:'include'});
     if(!res.ok)throw new Error('No roles');
     const data=await res.json();const roles=data.roles||[];
-    if(!roles.length){roleList.innerHTML='<div class="empty-state">No verified roles found yet. Try another guild scan.</div>';roleCount.textContent='0 roles';scanStatus.innerHTML='<div class="scan-dot"></div> No roles found';updateOnboarding();return;}
+    if(!roles.length){roleList.innerHTML='<div class="empty-state">No verified roles yet. Scan again, or add the bot for stronger proof.<div class="btn-row" style="justify-content:center;margin-top:14px"><button class="btn btn-ghost" type="button" onclick="switchTab(\'bot\')">Bot setup</button></div></div>';roleCount.textContent='0 roles';scanStatus.innerHTML='<div class="scan-dot"></div> No roles found';updateOnboarding();return;}
     window._onboard.roles=true;updateOnboarding();
     const active=roles.filter(r=>r.is_active);
     const latest=roles.map(r=>r.last_checked_at).filter(Boolean).sort().pop();
@@ -2356,7 +2593,7 @@ async function togglePinRole(roleId,isPinned){
       const res=await fetch(sid?`${API_BASE}/verify/roles?sid=${sid}`:`${API_BASE}/verify/roles`,{credentials:'include'});
       const data=res.ok?await res.json():{roles:[]};
       const pinned=(data.roles||[]).filter(r=>r.display_order!=null&&r.display_order<3);
-      if(pinned.length>=3){showToast('ERR','Max 3 pinned roles — unpin one first.','error');return;}
+      if(pinned.length>=maxPinnedRoles()){showToast('ERR',`Max ${maxPinnedRoles()} pinned roles — unpin one first.`,'error');if(!isProUser())openProModal('Pro lets you pin 6 roles.');return;}
       displayOrder=pinned.length;
     }
     const patch=await fetch(url,{method:'PATCH',headers:{'Content-Type':'application/json'},credentials:'include',body:JSON.stringify({displayOrder})});
@@ -2410,6 +2647,8 @@ async function loadProfileFallback(user){
 }
 
 function applyDashboardProfile(data,user){
+  if(data.limits) window._isPro=!!data.limits.pro;
+  else if(user?.plan) window._isPro=String(user.plan).toUpperCase()==='PRO';
   const th=data.theme||{};
   const profile=data.profile||{};
   const social=(()=>{
@@ -2488,6 +2727,8 @@ function applyDashboardProfile(data,user){
     btn.classList.toggle('selected',match);
   });
   currentFont=th.font||'DM Sans';
+  const cssEl=document.getElementById('customCssInput');
+  if(cssEl) cssEl.value=th.customCss||'';
   document.querySelectorAll('.font-btn:not([data-effect]):not([data-pstyle])').forEach(btn=>{
     btn.classList.toggle('selected',btn.textContent.trim().startsWith(currentFont.split(' ')[0]));
   });
@@ -2531,6 +2772,8 @@ function applyDashboardProfile(data,user){
   try{ if(localStorage.getItem('cordfol_onboard_shared')==='1'||profile.viewCount>0) window._onboard.shared=true; }catch{}
   updateOnboarding();
   maybeShowOnboardWizard({...profile,socialLinks:social});
+  window._profileDirty=false;
+  updateDockStatus();
 }
 
 function isVideoUrl(url){
@@ -2538,25 +2781,26 @@ function isVideoUrl(url){
 }
 
 async function saveProfile(){
-  const savBtn=document.querySelector('[onclick="saveProfile()"]');savBtn.classList.add('loading');savBtn.disabled=true;
+  const savBtns=[...document.querySelectorAll('.js-save-btn')];
+  savBtns.forEach(b=>{b.classList.add('loading');b.disabled=true;});
   const slug=document.getElementById('slug').value;
   const musicUrl=(document.getElementById('musicUrlInput')?.value||'').trim();
   if(activeFx.music&&!musicUrl){
     showToast('ERR','Upload an MP3 or paste a direct file link before saving.','error');
-    savBtn.classList.remove('loading');savBtn.disabled=false;
-    return;
+    savBtns.forEach(b=>{b.classList.remove('loading');b.disabled=false;});
+    return false;
   }
   const bannerVal=currentBannerData.value||'';
   const bgVal=currentBgData.value||document.getElementById('backgroundColorInput')?.value||'';
   if(String(bannerVal).startsWith('data:')&&String(bannerVal).length>12000){
     showToast('ERR','Banner is still a local file blob — re-upload it, wait for “uploaded”, then Save.','error');
-    savBtn.classList.remove('loading');savBtn.disabled=false;
-    return;
+    savBtns.forEach(b=>{b.classList.remove('loading');b.disabled=false;});
+    return false;
   }
   if(String(bgVal).startsWith('data:')&&String(bgVal).length>12000){
     showToast('ERR','Background is still a local file blob — re-upload it, then Save.','error');
-    savBtn.classList.remove('loading');savBtn.disabled=false;
-    return;
+    savBtns.forEach(b=>{b.classList.remove('loading');b.disabled=false;});
+    return false;
   }
   const body={
     display_name:document.getElementById('displayName').value,slug,bio:document.getElementById('bioText').value,
@@ -2583,6 +2827,7 @@ async function saveProfile(){
       bgType:currentBgType,bgValue:bgVal,layout:currentLayout,font:currentFont,
       nameEffect:currentNameEffect,
       particleStyle:currentParticleStyle,
+      customCss:isProUser()?(document.getElementById('customCssInput')?.value||''):'',
     }
   };
   const controller=new AbortController();
@@ -2590,10 +2835,11 @@ async function saveProfile(){
   try{
     const sid=restoreAuthSid();const url=sid?`${API_BASE}/profile?sid=${encodeURIComponent(sid)}`:`${API_BASE}/profile`;
     const res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},credentials:'include',body:JSON.stringify(body),signal:controller.signal});
-    if(!res.ok){if(res.status===409){showToast('ERR','❌ This handle is already taken!');}else{const err=await res.json().catch(()=>({error:'Failed to save'}));showToast('ERR',err.error||'Failed to save profile!');}return;}
+    if(!res.ok){if(res.status===409){showToast('ERR','❌ This handle is already taken!');}else{const err=await res.json().catch(()=>({error:'Failed to save'}));showToast('ERR',err.error||'Failed to save profile!');}return false;}
     const savedMusic=activeFx.music&&musicUrl;
     window._profileDirty=false;
-    showToast('OK','Profile saved! Open your page to see it.','success');
+    updateDockStatus();
+    showToast('OK','Published. Your live page is updated.','success');
     if(savedMusic){
       activeFx.music=true;
       document.getElementById('musicUrlInput').value=musicUrl;
@@ -2601,30 +2847,59 @@ async function saveProfile(){
       document.getElementById('fx-toggle-music')?.classList.add('on');
       document.getElementById('music-section').style.display='block';
     }
+    const live=slug?`${PUBLIC_BASE_URL}/${slug}?v=${Date.now()}`:'';
     const publicLink=document.getElementById('viewPublicPageLink');
-    if(publicLink&&slug) publicLink.href=`${PUBLIC_BASE_URL}/${slug}?v=${Date.now()}`;
+    if(publicLink&&live) publicLink.href=live;
+    const topLive=document.getElementById('topbarViewLive');
+    if(topLive&&live) topLive.href=live;
     window._onboardOriginalSlug=slug;
     window._onboard.slug=!!slug;
     window._onboard.bio=!!(document.getElementById('bioText')?.value||currentBannerData?.value);
     window._onboard.social=Object.values(body.social_links||{}).some(v=>v);
     updateOnboarding();
+    return true;
   }catch(err){
     showToast('ERR',err?.name==='AbortError'?'Save timed out — try again without huge files.':'Failed to save profile!','error');
+    return false;
   }
-  finally{clearTimeout(timer);savBtn.classList.remove('loading');savBtn.disabled=false;}
+  finally{clearTimeout(timer);savBtns.forEach(b=>{b.classList.remove('loading');b.disabled=false;});}
+}
+
+async function saveAndView(){
+  const ok=await saveProfile();
+  if(!ok) return;
+  const slug=document.getElementById('slug')?.value;
+  if(!slug){showToast('ERR','Set your handle first.','error');switchTab('profile');return;}
+  window.open(`${PUBLIC_BASE_URL}/${slug}?v=${Date.now()}`,'_blank','noopener');
+}
+
+async function discardProfile(){
+  if(window._profileDirty && !(await showConfirmModal('Discard changes?','This reverts to the last published look.'))) return;
+  await loadProfile(window._dashUser);
+  window._profileDirty=false;
+  updateDockStatus();
+  showToast('OK','Reverted to last save.');
+}
+
+function updateDockStatus(){
+  const el=document.getElementById('dockStatus');
+  if(!el) return;
+  if(window._profileDirty){el.textContent='Unsaved look — Save to publish.';el.classList.add('dirty');}
+  else {el.textContent='Published. Keep chatting or tweaking anytime.';el.classList.remove('dirty');}
 }
 
 // ── Unsaved changes guard ──
 window._profileDirty=false;
-function markProfileDirty(){window._profileDirty=true;}
+function markProfileDirty(){window._profileDirty=true;updateDockStatus();}
 function initDirtyTracking(){
   const tab=document.getElementById('tab-profile');
-  if(!tab) return;
-  tab.addEventListener('input',markProfileDirty);
-  tab.addEventListener('change',markProfileDirty);
-  tab.addEventListener('click',e=>{
-    if(e.target.closest('.fx-card,.layout-btn,.font-btn,.bg-type-btn,.toggle,.preset-item,.theme-preset-btn,[id^="disp-"]')) markProfileDirty();
-  });
+  if(tab){
+    tab.addEventListener('input',markProfileDirty);
+    tab.addEventListener('change',markProfileDirty);
+    tab.addEventListener('click',e=>{
+      if(e.target.closest('.fx-card,.layout-btn,.font-btn,.bg-type-btn,.toggle,.preset-item,.theme-preset-btn,[id^="disp-"]')) markProfileDirty();
+    });
+  }
 }
 window.addEventListener('beforeunload',e=>{
   if(window._profileDirty){e.preventDefault();e.returnValue='';}
@@ -2921,7 +3196,7 @@ async function loadAppLogs(id, btn){
   if(btn) btn.blur();
 }
 async function deleteHostedApp(id, btn){
-  if(!confirm('Delete this hosted bot? It will stop running.')) return;
+  if(!(await showConfirmModal('Delete this bot?','It will stop running on the server.'))) return;
   btn.classList.add('loading');btn.disabled=true;
   try{
     const res=await fetch(appsApi('/'+id),{method:'DELETE',credentials:'include'});
@@ -3149,7 +3424,8 @@ async function sendAiChat(){
     aiChatHistory.push({role:'assistant',content:say});
     appendAiBubble('bot',say);
     if(data.build) await applyAiBuild(data.build, aiChatFiles);
-    document.getElementById('aiHint').textContent='Look applied. Keep chatting, or Save on the Profile tab.';
+    document.getElementById('aiHint').textContent='Look applied. Keep chatting, or Save in the bar to publish.';
+    markProfileDirty();
     showToast('OK','Page updated.','success');
     aiChatFiles.length=0;renderAiThumbs();
   }catch(err){appendAiBubble('bot',err.message||'Could not chat.');showToast('ERR',err.message,'error');}

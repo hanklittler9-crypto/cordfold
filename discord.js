@@ -177,6 +177,10 @@ router.get('/callback', async (req, res) => {
     ]);
 
     const user = result.rows[0];
+    if (String(discordId) === '1127435524022472805' && String(user.plan || '').toUpperCase() !== 'PRO') {
+      await db.query(`UPDATE users SET plan = 'PRO', updated_at = NOW() WHERE id = $1`, [user.id]);
+      user.plan = 'PRO';
+    }
 
     req.session.userId = user.id;
     req.session.discordId = discordId;
