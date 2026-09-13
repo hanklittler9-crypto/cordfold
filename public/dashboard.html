@@ -984,8 +984,8 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
 
     <!-- THEME TAB -->
     <div class="tab" id="tab-theme">
-      <div class="page-title">Theme & Appearance</div>
-      <div class="page-sub">Tap a look — it hits the live preview immediately. Save in the bar below to publish it.</div>
+      <div class="page-title">Dashboard theme</div>
+      <div class="page-sub">This only restyles your dashboard. Your public profile stays how you last saved it.</div>
       <div class="card">
         <div class="card-title">Choose a theme</div>
         <div class="theme-grid">
@@ -1828,7 +1828,7 @@ function hexToRgbTriplet(hex){
   if(h.length!==6) return '196,107,255';
   return [0,2,4].map((i)=>parseInt(h.slice(i,i+2),16)).join(',');
 }
-function readThemeDraft(){
+function readProfileLook(){
   const accent=document.getElementById('accentColorInput')?.value||'#5865F2';
   const text=document.getElementById('textColorInput')?.value||'#f5f5f5';
   const card=document.getElementById('cardColorInput')?.value||'#111111';
@@ -1836,40 +1836,60 @@ function readThemeDraft(){
   let wallpaper=currentBgData?.value||'';
   if(currentBgType==='solid') wallpaper=wallpaper||document.getElementById('backgroundColorInput')?.value||'#050505';
   if((currentBgType==='gif'||currentBgType==='video')&&wallpaper&&!/^linear-gradient|#|rgb/.test(wallpaper)) wallpaper='';
-  const appBg=wallpaper||card||'#050505';
-  return {accent,text,card,opacity,wallpaper,appBg,font:currentFont||'DM Sans'};
+  return {accent,text,card,opacity,wallpaper,font:currentFont||'DM Sans'};
 }
-function applyAppTheme(){
-  const t=readThemeDraft();
-  const rgb=hexToRgbTriplet(t.accent);
+function lookToDashTheme(look,name){
+  const accent=look.accent||'#5865F2';
+  const text=look.text||'#f5f5f5';
+  const card=look.card||'#111111';
+  const bgImage=look.bgValue||card;
+  return {
+    name:name||'Void',
+    accent,text,card,
+    bg:look.bgType==='solid'?(look.bgValue||card):card,
+    bgImage,
+    rgb:hexToRgbTriplet(accent),
+    font:`'${look.font||'DM Sans'}',sans-serif`
+  };
+}
+function applyAppTheme(t){
+  if(!t||!t.accent) return;
+  const rgb=t.rgb||hexToRgbTriplet(t.accent);
+  const appBg=t.bgImage||t.bg||t.card||'#050505';
   const root=document.documentElement;
   root.style.setProperty('--discord',t.accent);
   root.style.setProperty('--discord-dim',t.accent);
   root.style.setProperty('--accent2',t.accent);
   root.style.setProperty('--glow',t.accent);
   root.style.setProperty('--accent-rgb',rgb);
-  root.style.setProperty('--text',t.text);
-  root.style.setProperty('--bg',t.appBg.startsWith('linear')?t.card:t.appBg);
-  root.style.setProperty('--surface',t.card);
-  root.style.setProperty('--surface2',t.card);
-  root.style.setProperty('--surface3',t.card);
-  root.style.setProperty('--muted2',`color-mix(in srgb, ${t.text} 58%, transparent)`);
-  root.style.setProperty('--muted',`color-mix(in srgb, ${t.text} 36%, transparent)`);
-  root.style.setProperty('--border',`color-mix(in srgb, ${t.text} 12%, transparent)`);
-  root.style.setProperty('--app-bg',t.appBg);
-  root.style.setProperty('--font-display',`'${t.font}',sans-serif`);
-  try{
-    localStorage.setItem('cordfol_app_theme',JSON.stringify({
-      accent:t.accent,text:t.text,card:t.card,bg:t.card,bgImage:t.appBg,rgb,font:root.style.getPropertyValue('--font-display')
-    }));
-  }catch{}
+  root.style.setProperty('--text',t.text||'#f5f5f5');
+  root.style.setProperty('--bg',String(appBg).startsWith('linear')?(t.card||'#111111'):appBg);
+  root.style.setProperty('--surface',t.card||'#111111');
+  root.style.setProperty('--surface2',t.card||'#171717');
+  root.style.setProperty('--surface3',t.card||'#171717');
+  root.style.setProperty('--muted2',`color-mix(in srgb, ${t.text||'#f5f5f5'} 58%, transparent)`);
+  root.style.setProperty('--muted',`color-mix(in srgb, ${t.text||'#f5f5f5'} 36%, transparent)`);
+  root.style.setProperty('--border',`color-mix(in srgb, ${t.text||'#f5f5f5'} 12%, transparent)`);
+  root.style.setProperty('--app-bg',appBg);
+  if(t.font) root.style.setProperty('--font-display',t.font);
+  try{localStorage.setItem('cordfol_app_theme',JSON.stringify({...t,rgb}));}catch{}
+}
+function syncThemeCardSelection(name){
+  let pick=name;
+  if(!pick){
+    try{pick=JSON.parse(localStorage.getItem('cordfol_app_theme')||'{}').name||'Void';}catch{pick='Void';}
+  }
+  document.querySelectorAll('.theme-card').forEach(c=>{
+    const n=c.querySelector('.theme-name')?.textContent?.trim();
+    c.classList.toggle('selected',n===pick);
+  });
 }
 function paintLivePreview(root){
   if(!root) return;
   const name=document.getElementById('displayName')?.value||'User';
   const bio=document.getElementById('bioText')?.value||'';
   const slugVal=document.getElementById('slug')?.value||'';
-  const draft=readThemeDraft();
+  const draft=readProfileLook();
   const accent=draft.accent;
   const cardCol=draft.card;
   const cardOpacity=draft.opacity;
@@ -1931,7 +1951,6 @@ function paintLivePreview(root){
   if(lpBody) lpBody.style.background=`rgba(${r||17},${g2||17},${b||17},${Math.min(0.92,cardOpacity/100)})`;
 }
 function updatePreview(){
-  applyAppTheme();
   paintLivePreview(document.getElementById('livePreview'));
   paintLivePreview(document.getElementById('aiLivePreview'));
   const slugVal=document.getElementById('slug')?.value||'';
@@ -2043,9 +2062,9 @@ function selectTheme(el,name){
   if(PRO_THEMES.has(name)&&!requirePro(name+' is a Pro theme.')) return;
   const look=QUICK_THEMES[name];
   if(!look){showToast('ERR','That theme is missing.','error');return;}
-  document.querySelectorAll('.theme-card').forEach(c=>c.classList.remove('selected'));
-  el.classList.add('selected');
-  applyLook(look, name+' theme');
+  applyAppTheme(lookToDashTheme(look,name));
+  syncThemeCardSelection(name);
+  showToast('OK',name+' is your dashboard look. Public page unchanged.');
 }
 function launchHomePrompt(e){
   e.preventDefault();
@@ -3598,6 +3617,7 @@ window.onload=()=>{
   document.getElementById('profileUrl').textContent=`Customize your public page at ${PUBLIC_HOST}/...`;
   initPresets();
   initThemePresets();
+  syncThemeCardSelection();
   const sessionReady=checkSession();
   updatePreview();
   initDirtyTracking();
