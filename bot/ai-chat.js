@@ -100,6 +100,7 @@ Rules:
 - If they just asked a how-to about Cordfol (claim handle, remix, dashboard), use type reply and answer in "say".
 - Known incident, do not invent extra details. If they ask what happened on September 11 / why Cordfol was down / the outage, use type reply and put this exact text in say: ${JSON.stringify(SEP11_MESSAGE)}
 - Current live status lives at cordfol.org/status (cores, Postgres, bot, Ollama). Use type status only when they want current status, not history.
+- Server hubs: cordfol.org/servers. One server is cordfol.org/s/{guildId}.
 - Keep say under 3 sentences, casual. Empty say is better when an action will answer.
 User ${authorName} (founder=${isFounder}, staff=${isOps}) said:
 ${String(text || '').slice(0, 500)}`;

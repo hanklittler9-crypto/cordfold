@@ -162,9 +162,9 @@ function incidents() {
     {
       id: 'inc-2026-09-11',
       startedAt: '2026-09-11T00:00:00.000Z',
-      resolvedAt: null,
+      resolvedAt: '2026-09-13T16:00:00.000Z',
       impact: 'major',
-      status: 'monitoring',
+      status: 'resolved',
       title: SEP11_TITLE,
       body: SEP11_MESSAGE,
       components: ['Website / Edge', 'API', 'Postgres', 'Discord Bot'],

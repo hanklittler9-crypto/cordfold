@@ -31,6 +31,7 @@ const { buildProfile: aiBuildProfile, chatTurn: aiChatTurn, siteTalk: aiSiteTalk
 const { isProPlan, ensureFounderPro, proLimits } = require('./pro');
 const { collectPlatformStatus } = require('./platform-status');
 const { publicCatalog, ROLE_GROUPS, ROLES_PAGE_URL } = require('./bot/onboarding');
+const { createServersRouter } = require('./servers');
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
@@ -630,6 +631,9 @@ app.post('/api/profile', async (req, res) => {
     );
 
     if (conflict.rowCount > 0) {
+      return res.status(409).json({ error: 'Slug already taken' });
+    }
+    if (['api','dashboard','login','logout','static','status','admin','og','privacy','terms','discover','compare','random','roles','chat','servers','s'].includes(String(slug).toLowerCase())) {
       return res.status(409).json({ error: 'Slug already taken' });
     }
 
@@ -2048,6 +2052,14 @@ app.get('/chat', (req, res) => {
   res.set('Cache-Control', 'no-cache');
   res.sendFile(path.join(__dirname, 'public', 'chat.html'));
 });
+app.get('/servers', (req, res) => {
+  res.set('Cache-Control', 'no-cache');
+  res.sendFile(path.join(__dirname, 'public', 'servers.html'));
+});
+app.get('/s/:guildId', (req, res) => {
+  res.set('Cache-Control', 'no-cache');
+  res.sendFile(path.join(__dirname, 'public', 'server.html'));
+});
 app.get('/api/random', async (req, res) => {
   try {
     const n = Math.min(4, Math.max(1, parseInt(req.query.n, 10) || 1));
@@ -2082,6 +2094,11 @@ app.get('/random', async (req, res) => {
 
 app.use('/api/admin', adminRouter);
 app.use('/api/apps', hostedAppsRouter);
+app.use('/api/servers', createServersRouter({
+  db,
+  botClientRef: () => botClient,
+  discordAvatarFromUser,
+}));
 
 // ── QR code for profile links ─────────────────────────────────────────────────
 const QRCode = require('qrcode');
@@ -2153,7 +2170,7 @@ function escapeAttr(s) {
 }
 
 app.get('/:slug', async (req, res) => {
-  const reserved = ['api', 'dashboard', 'login', 'logout', 'static', 'status', 'admin', 'og', 'privacy', 'terms', 'discover', 'compare', 'random', 'roles', 'chat'];
+  const reserved = ['api', 'dashboard', 'login', 'logout', 'static', 'status', 'admin', 'og', 'privacy', 'terms', 'discover', 'compare', 'random', 'roles', 'chat', 'servers', 's'];
   if (String(req.params.slug || '').toLowerCase() === 'discover') {
     return res.sendFile(path.join(__dirname, 'public', 'discover.html'));
   }

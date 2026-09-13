@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="twitter:card" content="summary_large_image">
+<meta property="og:site_name" content="Cordfol">
+<meta property="og:title" content="Servers — Cordfol">
+<meta property="og:description" content="Discord servers with verified Cordfol identities. See who is actually in the room.">
+<meta property="og:url" content="https://cordfol.org/servers">
+<meta name="theme-color" content="#c46bff">
+<title>Servers — Cordfol</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="/brand.css"/>
+<style>
+.wrap{position:relative;z-index:1;max-width:1180px;margin:0 auto;padding:100px 5vw 80px;}
+.eyebrow{font-size:12px;font-weight:600;letter-spacing:0.14em;color:var(--ink-faint);margin-bottom:14px;text-transform:uppercase;}
+.title{font-family:var(--font-display);font-weight:800;font-size:clamp(36px,5.5vw,64px);line-height:0.98;letter-spacing:-0.03em;margin-bottom:14px;text-transform:uppercase;}
+.sub{font-size:15px;color:var(--ink-soft);max-width:520px;line-height:1.65;margin-bottom:28px;}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:36px;}
+.stat{background:rgba(255,255,255,0.03);border:1px solid var(--line);border-radius:16px;padding:18px 20px;}
+.stat b{display:block;font-family:var(--font-display);font-size:28px;font-weight:800;letter-spacing:-0.03em;}
+.stat span{font-size:12px;color:var(--ink-faint);letter-spacing:0.08em;text-transform:uppercase;}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:18px;}
+.s-card{
+  background:rgba(255,255,255,0.03);border:1px solid var(--line);border-radius:16px;padding:22px;
+  text-decoration:none;color:var(--ink);display:flex;flex-direction:column;gap:16px;
+  transition:transform 0.18s,border-color 0.18s;
+}
+.s-card:hover{transform:translateY(-4px);border-color:var(--line-strong);}
+.s-head{display:flex;align-items:center;gap:14px;}
+.s-icon{width:64px;height:64px;border-radius:18px;object-fit:cover;background:#151515;flex-shrink:0;border:1px solid var(--line);}
+.s-icon.fallback{display:grid;place-items:center;font-family:var(--font-display);font-weight:800;font-size:22px;color:var(--ink-soft);}
+.s-name{font-family:var(--font-display);font-weight:700;font-size:16px;text-transform:uppercase;line-height:1.15;}
+.s-meta{font-size:12px;color:var(--ink-faint);margin-top:4px;}
+.s-stats{display:flex;flex-wrap:wrap;gap:10px 14px;padding-top:14px;border-top:1px solid var(--line);font-size:12px;color:var(--ink-faint);}
+.s-stats b{color:var(--ink);font-weight:600;}
+.s-join{align-self:flex-start;padding:8px 12px;border-radius:9px;background:#5865F2;color:#fff;font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;text-decoration:none;}
+.s-join:hover{opacity:0.9;}
+.empty,.loading{text-align:center;color:var(--ink-faint);font-size:14px;padding:60px 0;}
+.cta-strip{margin-top:56px;border:1px solid var(--line);border-radius:20px;padding:38px;display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;background:radial-gradient(ellipse 50% 80% at 90% 50%,rgba(88,101,242,0.18),transparent 60%),rgba(255,255,255,0.02);}
+.cta-strip h3{font-family:var(--font-display);color:var(--ink);font-size:22px;font-weight:800;text-transform:uppercase;}
+.cta-strip p{color:var(--ink-soft);font-size:13.5px;margin-top:6px;}
+.cta-strip a{flex-shrink:0;padding:13px 22px;background:var(--ink);color:#000;border-radius:10px;text-decoration:none;font-weight:700;font-size:12px;letter-spacing:0.06em;text-transform:uppercase;}
+footer{position:relative;z-index:1;text-align:center;padding:30px;color:var(--ink-faint);font-size:12px;}
+footer a{color:var(--ink-soft);}
+@media (max-width:640px){.stats{grid-template-columns:1fr;}}
+</style>
+</head>
+<body class="brand-body">
+<nav class="brand-nav">
+  <a class="brand-logo" href="/">
+    <img class="brand-mark" src="/logo.svg" alt="" width="22" height="22"/>
+    Cordfol
+  </a>
+  <div class="brand-links">
+    <a href="/discover">Discover</a>
+    <a href="/servers">Servers</a>
+    <a href="/roles">Roles</a>
+    <a href="/chat">Chat</a>
+  </div>
+  <a class="brand-signin" data-oauth-link href="#">Sign in</a>
+</nav>
+
+<div class="wrap">
+  <div class="eyebrow">The room</div>
+  <h1 class="title">Servers with verified people.</h1>
+  <p class="sub">Same Discord servers you already live in — shown as a hub. See who verified, what roles they hold, and jump in if the invite is public.</p>
+  <div class="stats" id="stats" hidden>
+    <div class="stat"><b id="statServers">0</b><span>Servers</span></div>
+    <div class="stat"><b id="statPeople">0</b><span>Identities</span></div>
+    <div class="stat"><b id="statBot">0</b><span>Bot-backed</span></div>
+  </div>
+  <div class="grid" id="grid"><div class="loading">Loading servers…</div></div>
+
+  <div class="cta-strip">
+    <div>
+      <h3>Put your server on this page.</h3>
+      <p>Sign in, verify your roles, and invite the Cordfol bot. Identities show up automatically.</p>
+    </div>
+    <a data-oauth-link href="#">Verify my roles</a>
+  </div>
+</div>
+
+<footer>© <span id="year"></span> Cordfol · <a href="/">Home</a> · <a href="/discover">Discover</a></footer>
+
+<script>
+const API_BASE = 'https://api.cordfol.org/api';
+const OAUTH_LOGIN_URL = 'https://api.cordfol.org/api/auth/discord';
+document.querySelectorAll('[data-oauth-link]').forEach(a => { a.href = OAUTH_LOGIN_URL; });
+document.getElementById('year').textContent = new Date().getFullYear();
+
+function esc(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+function fmt(n) {
+  if (n == null) return '—';
+  if (n >= 1000000) return (n / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
+  if (n >= 1000) return (n / 1000).toFixed(1).replace(/\.0$/, '') + 'K';
+  return String(n);
+}
+function iconFallback(name) {
+  return esc((name || '?').trim().charAt(0).toUpperCase() || '?');
+}
+
+async function load() {
+  const grid = document.getElementById('grid');
+  try {
+    const res = await fetch(`${API_BASE}/servers`);
+    if (!res.ok) throw new Error('bad status');
+    const data = await res.json();
+    const servers = data.servers || [];
+    if (data.totals) {
+      document.getElementById('stats').hidden = false;
+      document.getElementById('statServers').textContent = fmt(data.totals.servers);
+      document.getElementById('statPeople').textContent = fmt(data.totals.people);
+      document.getElementById('statBot').textContent = fmt(data.totals.withBot);
+    }
+    if (!servers.length) {
+      grid.innerHTML = '<div class="empty">No public server identities yet — verify a role and this fills in.</div>';
+      return;
+    }
+    grid.innerHTML = servers.map((s) => `
+      <a class="s-card" href="/s/${esc(s.id)}">
+        <div class="s-head">
+          ${s.iconUrl
+            ? `<img class="s-icon" src="${esc(s.iconUrl)}" alt="" loading="lazy" onerror="this.outerHTML='<div class=\\'s-icon fallback\\'>${iconFallback(s.name)}</div>'"/>`
+            : `<div class="s-icon fallback">${iconFallback(s.name)}</div>`}
+          <div style="min-width:0">
+            <div class="s-name">${esc(s.name)}</div>
+            <div class="s-meta">${s.botIn ? 'Bot in the room' : 'OAuth identities'}</div>
+          </div>
+        </div>
+        <div class="s-stats">
+          <span><b>${fmt(s.people)}</b> on Cordfol</span>
+          <span><b>${fmt(s.roles)}</b> roles</span>
+          ${s.members != null ? `<span><b>${fmt(s.members)}</b> members</span>` : ''}
+        </div>
+        ${s.inviteUrl ? `<span class="s-join">Join</span>` : ''}
+      </a>
+    `).join('');
+  } catch {
+    grid.innerHTML = '<div class="empty">Could not load servers. Try again in a minute.</div>';
+  }
+}
+load();
+</script>
+</body>
+</html>

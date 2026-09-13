@@ -1909,7 +1909,7 @@ async function triggerScan(btn){
   finally{setTimeout(()=>{btn.disabled=false;btn.classList.remove('loading');},2500);}
 }
 
-const taken=['admin','discord','cordfol','pro','verify','api','discover','compare','random','dashboard','login','logout','privacy','terms','status','og','roles','chat'];
+const taken=['admin','discord','cordfol','pro','verify','api','discover','compare','random','dashboard','login','logout','privacy','terms','status','og','roles','chat','servers','s'];
 async function checkSlug(el){
   const hint=document.getElementById('slug-hint');
   const v=el.value.toLowerCase().replace(/[^a-z0-9\-]/g,'');
@@ -2586,7 +2586,7 @@ function renderServerList(roles){
   el.innerHTML=[...guilds.values()].sort((a,b)=>b.active-a.active).map(g=>`
     <div class="role-row">
       <div class="server-icon" ${g.icon?`style="background-image:url('https://cdn.discordapp.com/icons/${g.id}/${g.icon}.png');background-size:cover;background-position:center"`:'style="background:rgba(88,101,242,0.15);color:#8b9fff"'}>${g.icon?'':g.name[0].toUpperCase()}</div>
-      <div class="role-info"><div class="role-name">${escapeHtmlDash(g.name)}</div><div class="role-meta">${g.active} active role${g.active===1?'':'s'} · ${g.total} total</div></div>
+      <div class="role-info"><div class="role-name">${escapeHtmlDash(g.name)}</div><div class="role-meta">${g.active} active role${g.active===1?'':'s'} · ${g.total} total${g.id?` · <a href="/s/${g.id}" style="color:inherit">page</a>`:''}</div></div>
       ${g.bot?'<div class="proof-chip"><div class="proof-dot" style="background:var(--neon)"></div>Bot installed</div>':'<div class="proof-chip" style="opacity:0.5">OAuth only</div>'}
     </div>`).join('');
 }

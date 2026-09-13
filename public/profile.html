@@ -1386,6 +1386,14 @@
       overflow: hidden;
       text-overflow: ellipsis;
     }
+    .role-server a {
+      color: inherit;
+      text-decoration: none;
+    }
+    .role-server a:hover {
+      color: var(--text);
+      text-decoration: underline;
+    }
 
     .role-proof {
       font-family: 'Space Mono', monospace;
@@ -3127,7 +3135,7 @@ async function renderProfile() {
               <span>${escapeHtml(r.roleName || r.roleId)}</span>
               ${r.isPinned ? '<span class="role-pin-tag">Pinned</span>' : ''}
             </div>
-            <div class="role-server">${escapeHtml(r.guildName || 'Unknown Server')}</div>
+            <div class="role-server">${r.guildId ? `<a href="/s/${escapeHtml(r.guildId)}">${escapeHtml(r.guildName || 'Unknown Server')}</a>` : escapeHtml(r.guildName || 'Unknown Server')}</div>
             ${r.verifiedAt ? `<div class="role-when">since ${escapeHtml(formatRoleWhen(r.verifiedAt))}</div>` : ''}
           </div>
           <div class="role-proof ${r.proofType === 'BOT' ? 'bot' : ''}">${r.proofType === 'BOT' ? 'Bot Verified' : r.proofType === 'OAUTH' ? 'OAuth Verified' : escapeHtml(r.proofType)}</div>

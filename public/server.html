@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="twitter:card" content="summary_large_image">
+<meta property="og:site_name" content="Cordfol">
+<meta property="og:title" content="Server — Cordfol">
+<meta property="og:description" content="Verified Discord identities on this server.">
+<meta name="theme-color" content="#c46bff">
+<title>Server — Cordfol</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="/brand.css"/>
+<style>
+.wrap{position:relative;z-index:1;max-width:1180px;margin:0 auto;padding:100px 5vw 80px;}
+.crumb{font-size:12px;color:var(--ink-faint);margin-bottom:28px;}
+.crumb a{color:var(--ink-soft);text-decoration:none;}
+.crumb a:hover{color:var(--ink);}
+.hub{display:flex;align-items:flex-start;justify-content:space-between;gap:28px;flex-wrap:wrap;margin-bottom:28px;}
+.hub-left{display:flex;align-items:center;gap:22px;min-width:0;}
+.hub-icon{width:112px;height:112px;border-radius:28px;object-fit:cover;background:#151515;border:1px solid var(--line);flex-shrink:0;box-shadow:0 18px 50px rgba(0,0,0,0.35);}
+.hub-icon.fallback{display:grid;place-items:center;font-family:var(--font-display);font-weight:800;font-size:42px;color:var(--ink-soft);}
+.hub-name{font-family:var(--font-display);font-weight:800;font-size:clamp(28px,4.2vw,52px);line-height:0.95;letter-spacing:-0.03em;text-transform:uppercase;margin:0 0 10px;}
+.hub-desc{font-size:14.5px;color:var(--ink-soft);max-width:520px;line-height:1.6;}
+.hub-actions{display:flex;flex-wrap:wrap;gap:10px;align-items:center;}
+.btn{padding:13px 20px;border-radius:10px;text-decoration:none;font-weight:700;font-size:12px;letter-spacing:0.06em;text-transform:uppercase;}
+.btn-join{background:#5865F2;color:#fff;}
+.btn-join:hover{opacity:0.9;}
+.btn-ghost{border:1px solid var(--line);color:var(--ink);background:rgba(255,255,255,0.03);}
+.btn-ghost:hover{border-color:var(--line-strong);}
+.tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:8px 0 48px;}
+.tile{background:rgba(255,255,255,0.03);border:1px solid var(--line);border-radius:16px;padding:18px 20px;}
+.tile b{display:block;font-family:var(--font-display);font-size:26px;font-weight:800;}
+.tile span{font-size:11px;color:var(--ink-faint);letter-spacing:0.08em;text-transform:uppercase;}
+.h2{font-family:var(--font-display);font-size:22px;font-weight:800;text-transform:uppercase;margin:0 0 16px;}
+.stack{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:42px;}
+.chip{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);background:rgba(255,255,255,0.03);border-radius:999px;padding:7px 12px;font-size:12.5px;color:var(--ink-soft);}
+.chip i{width:8px;height:8px;border-radius:50%;background:var(--c,#5865F2);display:inline-block;}
+.chip b{color:var(--ink);font-weight:600;}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:18px;}
+.p-card{
+  background:rgba(255,255,255,0.03);border:1px solid var(--line);border-radius:16px;padding:22px;
+  text-decoration:none;color:var(--ink);transition:transform 0.18s,border-color 0.18s;
+}
+.p-card:hover{transform:translateY(-4px);border-color:var(--line-strong);}
+.p-head{display:flex;align-items:center;gap:13px;margin-bottom:13px;}
+.p-avatar{width:52px;height:52px;border-radius:14px;object-fit:cover;background:#111;flex-shrink:0;}
+.p-name{font-family:var(--font-display);font-weight:700;font-size:15px;display:flex;align-items:center;gap:6px;text-transform:uppercase;}
+.p-pro{font-size:9px;font-weight:700;letter-spacing:0.5px;background:var(--ink);color:#000;border-radius:5px;padding:2px 5px;}
+.p-handle{font-size:11.5px;color:var(--ink-faint);margin-top:2px;}
+.p-bio{font-size:12.5px;color:var(--ink-soft);line-height:1.55;min-height:38px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.p-stats{margin-top:14px;padding-top:13px;border-top:1px solid var(--line);font-size:11.5px;color:var(--ink-faint);}
+.p-stats b{color:var(--ink);}
+.empty,.loading{text-align:center;color:var(--ink-faint);font-size:14px;padding:60px 0;}
+footer{position:relative;z-index:1;text-align:center;padding:30px;color:var(--ink-faint);font-size:12px;}
+footer a{color:var(--ink-soft);}
+@media (max-width:800px){.tiles{grid-template-columns:1fr 1fr;}.hub-icon{width:84px;height:84px;border-radius:22px;}}
+</style>
+</head>
+<body class="brand-body">
+<nav class="brand-nav">
+  <a class="brand-logo" href="/">
+    <img class="brand-mark" src="/logo.svg" alt="" width="22" height="22"/>
+    Cordfol
+  </a>
+  <div class="brand-links">
+    <a href="/discover">Discover</a>
+    <a href="/servers">Servers</a>
+    <a href="/roles">Roles</a>
+  </div>
+  <a class="brand-signin" data-oauth-link href="#">Sign in</a>
+</nav>
+
+<div class="wrap" id="page">
+  <div class="loading">Loading server…</div>
+</div>
+
+<footer>© <span id="year"></span> Cordfol · <a href="/servers">All servers</a></footer>
+
+<script>
+const API_BASE = 'https://api.cordfol.org/api';
+const OAUTH_LOGIN_URL = 'https://api.cordfol.org/api/auth/discord';
+document.querySelectorAll('[data-oauth-link]').forEach(a => { a.href = OAUTH_LOGIN_URL; });
+document.getElementById('year').textContent = new Date().getFullYear();
+
+function esc(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+function fmt(n) {
+  if (n == null) return '—';
+  if (n >= 1000000) return (n / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
+  if (n >= 1000) return (n / 1000).toFixed(1).replace(/\.0$/, '') + 'K';
+  return String(n);
+}
+function iconFallback(name) {
+  return esc((name || '?').trim().charAt(0).toUpperCase() || '?');
+}
+
+const guildId = (location.pathname.match(/^\/s\/(\d{17,20})/) || [])[1];
+
+async function load() {
+  const page = document.getElementById('page');
+  if (!guildId) {
+    page.innerHTML = '<div class="empty">That is not a Discord server id. <a href="/servers">Browse servers</a>.</div>';
+    return;
+  }
+  try {
+    const res = await fetch(`${API_BASE}/servers/${guildId}`);
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      page.innerHTML = `<div class="empty">${esc(data.error || 'Server not found.')} <a href="/servers">Browse servers</a>.</div>`;
+      return;
+    }
+    document.title = `${data.name} — Cordfol`;
+    document.querySelector('meta[property="og:title"]').setAttribute('content', `${data.name} — Cordfol`);
+
+    const icon = data.iconUrl
+      ? `<img class="hub-icon" src="${esc(data.iconUrl)}" alt="" onerror="this.outerHTML='<div class=\\'hub-icon fallback\\'>${iconFallback(data.name)}</div>'"/>`
+      : `<div class="hub-icon fallback">${iconFallback(data.name)}</div>`;
+
+    page.innerHTML = `
+      <div class="crumb"><a href="/servers">Servers</a> / ${esc(data.name)}</div>
+      <div class="hub">
+        <div class="hub-left">
+          ${icon}
+          <div>
+            <h1 class="hub-name">${esc(data.name)}</h1>
+            <p class="hub-desc">${esc(data.description || 'Verified Cordfol identities from this Discord server.')}</p>
+          </div>
+        </div>
+        <div class="hub-actions">
+          ${data.inviteUrl ? `<a class="btn btn-join" href="${esc(data.inviteUrl)}" target="_blank" rel="noopener">Join Discord</a>` : ''}
+          <a class="btn btn-ghost" data-oauth-link href="${OAUTH_LOGIN_URL}">Verify my roles</a>
+        </div>
+      </div>
+      <div class="tiles">
+        <div class="tile"><b>${fmt(data.people)}</b><span>On Cordfol</span></div>
+        <div class="tile"><b>${fmt(data.roles)}</b><span>Verified roles</span></div>
+        <div class="tile"><b>${fmt(data.members)}</b><span>Members</span></div>
+        <div class="tile"><b>${fmt(data.online)}</b><span>Online</span></div>
+      </div>
+      ${data.stack?.length ? `
+        <h2 class="h2">Identity stack</h2>
+        <div class="stack">
+          ${data.stack.map((r) => `
+            <span class="chip"${r.color ? ` style="--c:${esc(r.color)}"` : ''}>
+              <i></i>${esc(r.name)} <b>${fmt(r.holders)}</b>
+            </span>
+          `).join('')}
+        </div>
+      ` : ''}
+      <h2 class="h2">People on Cordfol</h2>
+      <div class="grid">
+        ${(data.identities || []).length ? data.identities.map((u) => `
+          <a class="p-card" href="/${esc(u.slug)}">
+            <div class="p-head">
+              <img class="p-avatar" src="${esc(u.avatarUrl || 'https://cdn.discordapp.com/embed/avatars/0.png')}" alt="" loading="lazy" onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'"/>
+              <div style="min-width:0">
+                <div class="p-name"><span>${esc(u.name)}</span>${u.pro ? '<span class="p-pro">PRO</span>' : ''}</div>
+                <div class="p-handle">cordfol.org/${esc(u.slug)}</div>
+              </div>
+            </div>
+            <div class="p-bio">${esc(u.bio) || 'No bio yet.'}</div>
+            <div class="p-stats"><b>${fmt(u.roleCount)}</b> roles on this server</div>
+          </a>
+        `).join('') : '<div class="empty">Nobody public here yet.</div>'}
+      </div>
+    `;
+    document.querySelectorAll('[data-oauth-link]').forEach(a => { a.href = OAUTH_LOGIN_URL; });
+  } catch {
+    page.innerHTML = '<div class="empty">Could not load this server. <a href="/servers">Browse servers</a>.</div>';
+  }
+}
+load();
+</script>
+</body>
+</html>

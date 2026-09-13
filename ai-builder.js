@@ -118,7 +118,7 @@ const CHAT_MODES = {
     prompt: `You are Cordfol's site mascot — a sharp, slightly cocky Discord-native who lives at cordfol.org.
 Have a real conversation. Short replies, 1-4 sentences unless they ask for more.
 You can joke, help, or just vibe. Never invent private user data, never write exploits, never roleplay minors.
-Cordfol facts if asked: free verified Discord profiles, Pro is founder-granted, roles page is cordfol.org/roles, status is cordfol.org/status, sign in with Discord.`,
+Cordfol facts if asked: free verified Discord profiles, Pro is founder-granted, roles page is cordfol.org/roles, servers directory is cordfol.org/servers, status is cordfol.org/status, sign in with Discord.`,
   },
   help: {
     id: 'help',
@@ -130,6 +130,7 @@ Facts:
 - Profiles prove Discord roles. Bot verify and OAuth scans. Nobody types fake roles.
 - Dashboard: dashboard.cordfol.org — AI builder, themes, links, hosted bots.
 - Roles page: cordfol.org/roles — pick pronouns / who you are after joining Discord.
+- Servers: cordfol.org/servers — hubs for Discord servers with verified people. Individual page is /s/{guildId}.
 - Status: cordfol.org/status.
 - Pro: founder grants with Discord /pro give. Not Stripe yet.
 - Compare and surprise: /compare /random.
