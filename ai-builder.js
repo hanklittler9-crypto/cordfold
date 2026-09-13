@@ -157,7 +157,7 @@ function pickModel(requested, status) {
   return status?.model || OLLAMA_MODEL;
 }
 
-async function ollamaChat({ model, prompt, messages, images, json = true }) {
+async function ollamaChat({ model, prompt, messages, images, json = true, temperature } = {}) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), OLLAMA_TIMEOUT_MS);
   try {
@@ -166,6 +166,9 @@ async function ollamaChat({ model, prompt, messages, images, json = true }) {
       : [{ role: 'user', content: prompt, ...(images && images.length ? { images } : {}) }];
     const body = { model, stream: false, messages: payload };
     if (json) body.format = 'json';
+    if (temperature != null && Number.isFinite(Number(temperature))) {
+      body.options = { temperature: Number(temperature) };
+    }
     const res = await fetch(`${OLLAMA_HOST}/api/chat`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

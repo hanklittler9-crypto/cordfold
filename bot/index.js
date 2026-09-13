@@ -1011,17 +1011,23 @@ async function runAiAction(action, message, adapter) {
     if (!action.message) return adapter.reply({ content: 'What should I announce?' });
     return handleAnnounce({ message: action.message, user, ...adapter });
   }
+  if (action.type === 'roles') {
+    return adapter.reply({ content: `Pick who you are here: ${onboarding.ROLES_PAGE_URL}` });
+  }
+  if (action.type === 'servers') {
+    return adapter.reply({ content: 'Server hubs: https://cordfol.org/servers' });
+  }
   return null;
 }
 
 async function handleNaturalRequest(message, rawText) {
   const text = stripBotAddress(rawText, client.user.id);
   if (text.length < 2) {
-    return message.reply({ content: 'Say what you need — verify me, drop my link, look this person up, or how Pro works.' });
+    return message.reply({ content: 'Say what you need — verify me, drop my link, look this person up, or just talk.' });
   }
   const now = Date.now();
   const last = aiTalkCooldown.get(message.author.id) || 0;
-  if (now - last < 4000) {
+  if (now - last < 2500) {
     return message.reply({ content: 'One sec — still finishing the last one.' });
   }
   aiTalkCooldown.set(message.author.id, now);
@@ -1032,12 +1038,43 @@ async function handleNaturalRequest(message, rawText) {
     .filter((u) => u.id !== client.user.id)
     .map((u) => u.id);
 
+  let slug = null;
+  let planName = null;
+  try {
+    const row = await db.query(
+      'SELECT slug, plan FROM users WHERE discord_id = $1',
+      [message.author.id]
+    );
+    slug = row.rows[0]?.slug || null;
+    planName = row.rows[0]?.plan || null;
+  } catch { /* ignore */ }
+
+  let history = [];
+  try {
+    const recent = await message.channel.messages.fetch({ limit: 8 });
+    history = [...recent.values()]
+      .reverse()
+      .filter((m) => m.content && !m.system)
+      .map((m) => ({
+        role: m.author.id === client.user.id ? 'assistant' : 'user',
+        content: (
+          (m.author.id === client.user.id ? '' : `${m.author.username}: `) +
+          stripBotAddress(m.content, client.user.id)
+        ).slice(0, 400),
+      }))
+      .filter((m) => m.content);
+  } catch { /* ignore */ }
+
   const plan = await interpretBotRequest({
     text,
     mentionIds,
     authorName: message.author.username,
     isFounder: message.author.id === EXCLUSIVE_USER_ID,
     isOps: memberIsOps(message.member, message.author.id),
+    slug,
+    plan: planName,
+    guildName: message.guild?.name || null,
+    history,
   });
 
   if (/\b(do i have pro|am i pro|have pro|got pro|my plan)\b/i.test(text)
