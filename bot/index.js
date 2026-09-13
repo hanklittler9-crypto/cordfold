@@ -26,6 +26,7 @@ const { createModeration } = require('./moderation');
 const { ensureGuildOps } = require('./guild-setup');
 const { setUserPlanByDiscordId, isProPlan } = require('../pro');
 const { interpretBotRequest } = require('./ai-chat');
+const { SEP11_MESSAGE, isIncidentQuestion, collectPlatformStatus } = require('../platform-status');
 
 const {
   BOT_TOKEN,
@@ -205,18 +206,24 @@ async function assertOps(interactionOrMessage) {
 
 // ── Embeds ────────────────────────────────────────────────────────────────────
 
-function statusEmbed(status, { title } = {}) {
+function statusEmbed(status, { title, snap } = {}) {
   const meta = STATE_META[status.state] || STATE_META.up;
   const embed = new EmbedBuilder()
     .setColor(meta.color)
     .setTitle(title || `${meta.emoji} Cordfol Status — ${meta.label}`)
     .setDescription(status.message || '_No details._')
     .addFields({ name: 'State', value: `\`${status.state}\``, inline: true })
-    .setFooter({ text: `${PUBLIC_HOST} · System status` })
+    .setFooter({ text: `${PUBLIC_HOST}/status · Live cores + probes` })
     .setTimestamp(status.updatedAt ? new Date(status.updatedAt) : new Date());
 
   if (status.updatedBy) {
     embed.addFields({ name: 'Updated by', value: status.updatedBy, inline: true });
+  }
+  if (snap?.host) {
+    embed.addFields(
+      { name: 'Host', value: `\`${snap.host.name}\` · ${snap.host.cores} cores · ${snap.host.cpuAvg}%`, inline: true },
+      { name: 'Memory', value: `${snap.host.memory.usedGb}/${snap.host.memory.totalGb} GB`, inline: true },
+    );
   }
   return embed;
 }
@@ -776,16 +783,26 @@ async function handleWhois({ target, reply, defer, ephemeral = false }) {
 
 async function handleStatusView({ reply }) {
   const status = statusStore.readStatus();
-  return reply({ embeds: [statusEmbed(status)], ephemeral: false });
+  let snap = null;
+  try {
+    snap = await collectPlatformStatus({ db, botClient: client });
+    if (snap.overall === 'recovering' && !/september 11/i.test(status.message || '')) {
+      status.message = SEP11_MESSAGE;
+      status.state = status.state === 'up' ? 'degraded' : status.state;
+    }
+  } catch (err) {
+    console.error('[bot] platform status failed:', err.message);
+  }
+  return reply({ embeds: [statusEmbed(status, { snap })], ephemeral: false });
 }
 
 async function handlePro({ actorId, action, target, reply, defer }) {
   if (defer) await defer({ ephemeral: true });
-  if (String(actorId) !== EXCLUSIVE_USER_ID) {
-    return reply({ content: '❌ Only Astro can grant or take Pro.', ephemeral: true });
-  }
   if (!target?.id) {
-    return reply({ content: '❌ Mention a Discord user.', ephemeral: true });
+    return reply({ content: '❌ Mention a Discord user, or ask “do I have pro”.', ephemeral: true });
+  }
+  if (action !== 'check' && String(actorId) !== EXCLUSIVE_USER_ID) {
+    return reply({ content: '❌ Only Astro can grant or take Pro.', ephemeral: true });
   }
 
   if (action === 'check') {
@@ -964,10 +981,11 @@ async function runAiAction(action, message, adapter) {
     return adapter.reply({ embeds: [helpEmbed()] });
   }
   if (action.type === 'pro') {
-    const id = action.userId || [...message.mentions.users.keys()].find((x) => x !== client.user.id);
-    const target = id
-      ? (message.mentions.users.get(id) || await client.users.fetch(id).catch(() => null))
-      : null;
+    const mentioned = [...message.mentions.users.keys()].find((x) => x !== client.user.id);
+    const id = action.userId || mentioned || user.id;
+    const target = id === user.id
+      ? user
+      : (message.mentions.users.get(id) || await client.users.fetch(id).catch(() => null));
     return handlePro({ actorId: user.id, action: action.op || 'check', target, reply: adapter.reply });
   }
   if (action.type === 'status') {
@@ -1010,6 +1028,17 @@ async function handleNaturalRequest(message, rawText) {
     isFounder: message.author.id === EXCLUSIVE_USER_ID,
     isOps: memberIsOps(message.member, message.author.id),
   });
+
+  if (/\b(do i have pro|am i pro|have pro|got pro|my plan)\b/i.test(text)
+    && !plan.actions.some((a) => a.type === 'pro')) {
+    plan.actions = [{ type: 'pro', op: 'check', userId: message.author.id }];
+    plan.say = '';
+  }
+
+  if (isIncidentQuestion(text)) {
+    plan.actions = [{ type: 'reply' }];
+    plan.say = SEP11_MESSAGE;
+  }
 
   const adapter = messageAdapter(message);
   const onlyTalk = plan.actions.length === 1 && plan.actions[0].type === 'reply';

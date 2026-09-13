@@ -29,6 +29,7 @@ const createSpotifyRouter = require('./spotify');
 const createHostedAppsRouter = require('./hosted-apps');
 const { buildProfile: aiBuildProfile, chatTurn: aiChatTurn, ollamaStatus } = require('./ai-builder');
 const { isProPlan, ensureFounderPro, proLimits } = require('./pro');
+const { collectPlatformStatus } = require('./platform-status');
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
@@ -1643,6 +1644,17 @@ app.get('/api/showcase', async (req, res) => {
 
 // ── Server Status ──────────────────────────────────────────────────────────────
 let botClient = null;
+
+app.get('/api/platform', async (req, res) => {
+  try {
+    res.set('Cache-Control', 'no-store');
+    const snap = await collectPlatformStatus({ db, botClient });
+    res.json(snap);
+  } catch (err) {
+    console.error('[status] /api/platform error:', err);
+    res.status(500).json({ error: 'Failed to collect platform status' });
+  }
+});
 
 app.get('/api/status/servers', async (req, res) => {
   try {
