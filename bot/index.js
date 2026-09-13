@@ -27,6 +27,8 @@ const { ensureGuildOps } = require('./guild-setup');
 const { setUserPlanByDiscordId, isProPlan } = require('../pro');
 const { interpretBotRequest } = require('./ai-chat');
 const { SEP11_MESSAGE, isIncidentQuestion, collectPlatformStatus } = require('../platform-status');
+const { syncVerifiedRoles } = require('./verify-sync');
+const { createOnboarding } = require('./onboarding');
 
 const {
   BOT_TOKEN,
@@ -58,8 +60,12 @@ const ops = {
   TICKET_PANEL_CHANNEL_ID: process.env.TICKET_PANEL_CHANNEL_ID || '',
   MODMAIL_CATEGORY_ID: process.env.MODMAIL_CATEGORY_ID || '',
   DISCORD_INVITE_URL,
+  WELCOME_CHANNEL_ID,
+  ANNOUNCE_CHANNEL_ID,
   ADMIN_ROLE_IDS,
   STAFF_ROLE_IDS,
+  PRO_ROLE_ID: process.env.PRO_ROLE_ID || '',
+  ROLES_CHANNEL_ID: process.env.ROLES_CHANNEL_ID || '',
 };
 
 const DASHBOARD_LOGIN_URL = (() => {
@@ -253,6 +259,7 @@ function helpEmbed() {
           `\`/cordfol\` · \`${BOT_PREFIX}cordfol\` — your profile link`,
           `\`/whois\` · \`${BOT_PREFIX}whois @user\` — look up a profile`,
           `\`/help\` · \`${BOT_PREFIX}help\` — this message`,
+          `\`/roles\` · \`${BOT_PREFIX}roles\` — pick roles about you`,
           `\`${BOT_PREFIX}ping\` — latency check`,
           `\`/pro\` · \`${BOT_PREFIX}pro give|take|check @user\` — founder only`,
           `@ the bot and just talk — it reads the request and finishes it`,
@@ -272,6 +279,7 @@ function helpEmbed() {
       `\`/broadcast\` · \`${BOT_PREFIX}broadcast <message>\` — status channel`,
       `\`/ticket-panel\` — post support ticket panel`,
       `\`/setup-ops\` — auto-create logs/tickets/modmail + write .env`,
+      `\`/roles-panel\` — rebuild the about-you roles page`,
       `\`/ticket close\` · \`${BOT_PREFIX}close\` — close ticket/modmail`,
       `\`/warn\` \`/timeout\` \`/kick\` \`/ban\` \`/purge\` — moderation`,
       `DM the bot — open modmail with staff`,
@@ -365,6 +373,26 @@ const moderation = createModeration({
   ops,
 });
 
+const onboarding = createOnboarding({
+  client,
+  ops,
+  db,
+  COLORS,
+  PUBLIC_HOST,
+  DASHBOARD_LOGIN_URL,
+  buildProfileUrl,
+  isStaff,
+  isCordfolGuild,
+});
+
+global.syncMemberProRole = async (discordId, plan) => {
+  try {
+    await onboarding.syncMemberPro(String(discordId), isProPlan(plan));
+  } catch (err) {
+    console.error('[bot] syncMemberProRole:', err.message);
+  }
+};
+
 // ── Slash command definitions ─────────────────────────────────────────────────
 
 const globalCommands = [
@@ -453,6 +481,14 @@ const guildCommands = [
     .setDescription('Auto-create logs/tickets/modmail channels and write IDs to .env (staff)')
     .toJSON(),
   new SlashCommandBuilder()
+    .setName('roles')
+    .setDescription('Pick roles about you')
+    .toJSON(),
+  new SlashCommandBuilder()
+    .setName('roles-panel')
+    .setDescription('Rebuild the about-you roles page (staff)')
+    .toJSON(),
+  new SlashCommandBuilder()
     .setName('pro')
     .setDescription('Give or take Cordfol Pro (founder only)')
     .addSubcommand((sub) =>
@@ -516,26 +552,6 @@ async function handleVerify({ user, guildId, guild, reply, defer }) {
   await defer({ ephemeral: true });
 
   try {
-    const userRow = await db.query(
-      'SELECT id, slug, display_name FROM users WHERE discord_id = $1',
-      [user.id]
-    );
-
-    if (userRow.rowCount === 0) {
-      return reply({
-        embeds: [
-          new EmbedBuilder()
-            .setColor(COLORS.discord)
-            .setTitle('You don\'t have a Cordfol.io account yet')
-            .setDescription(`Log in at **[${PUBLIC_HOST}](${DASHBOARD_LOGIN_URL})** to create your verified profile.`)
-            .setFooter({ text: `${PUBLIC_HOST} — Discord Identity, Verified.` }),
-        ],
-        ephemeral: true,
-      });
-    }
-
-    const cordfolUser = userRow.rows[0];
-
     let resolvedGuild = guild;
     try {
       resolvedGuild = guild || await client.guilds.fetch(guildId);
@@ -555,42 +571,29 @@ async function handleVerify({ user, guildId, guild, reply, defer }) {
       });
     }
 
-    const roles = member.roles.cache
-      .filter((r) => !r.managed && r.id !== resolvedGuild.id)
-      .map((r) => ({ id: r.id, name: r.name, color: r.color || 0 }));
-
-    if (roles.length === 0) {
+    const synced = await syncVerifiedRoles(db, member);
+    if (!synced.ok && synced.reason === 'no_account') {
       return reply({
-        content: '⚠️ You don\'t have any assignable roles in this server. Only manual roles (not bot roles) can be verified.',
+        embeds: [
+          new EmbedBuilder()
+            .setColor(COLORS.discord)
+            .setTitle('You don\'t have a Cordfol.io account yet')
+            .setDescription(`Log in at **[${PUBLIC_HOST}](${DASHBOARD_LOGIN_URL})** to create your verified profile.`)
+            .setFooter({ text: `${PUBLIC_HOST} — Discord Identity, Verified.` }),
+        ],
         ephemeral: true,
       });
     }
 
-    const values = roles.map((_role, idx) =>
-      `(gen_random_uuid(), $1, $2, $3, $4, $${5 + (idx * 3)}, $${6 + (idx * 3)}, $${7 + (idx * 3)})`
-    ).join(',');
+    if (!synced.count) {
+      return reply({
+        content: '⚠️ You don\'t have any assignable roles in this server. Open **#roles** and pick some about you — I will verify those next.',
+        ephemeral: true,
+      });
+    }
 
-    const params = [cordfolUser.id, resolvedGuild.id, resolvedGuild.name, resolvedGuild.icon];
-    roles.forEach((role) => {
-      params.push(role.id, role.name, role.color);
-    });
-
-    await db.query(`
-      INSERT INTO verified_roles
-        (id, user_id, guild_id, guild_name, guild_icon_hash, role_id, role_name, role_color,
-         verified_at, last_checked_at, is_active, proof_type, is_public, display_order)
-      VALUES ${values}
-      ON CONFLICT (user_id, guild_id, role_id)
-      DO UPDATE SET
-        role_name = EXCLUDED.role_name,
-        role_color = EXCLUDED.role_color,
-        is_active = true,
-        last_checked_at = NOW(),
-        proof_type = 'BOT'
-    `, params);
-
-    const roleList = roles.slice(0, 5).map((r) => `• **${r.name}**`).join('\n');
-    const extra = roles.length > 5 ? `\n_...and ${roles.length - 5} more_` : '';
+    const roleList = synced.roles.slice(0, 5).map((r) => `• **${r.name}**`).join('\n');
+    const extra = synced.roles.length > 5 ? `\n_...and ${synced.roles.length - 5} more_` : '';
 
     return reply({
       embeds: [
@@ -598,7 +601,7 @@ async function handleVerify({ user, guildId, guild, reply, defer }) {
           .setColor(0x00FFB2)
           .setTitle('✅ Roles verified with bot-level proof!')
           .setDescription(
-            `Your **${roles.length}** role${roles.length !== 1 ? 's' : ''} in **${resolvedGuild.name}** have been added to your Cordfol.io profile:\n\n${roleList}${extra}\n\n🔗 [View your profile](${buildProfileUrl(cordfolUser.slug)})`
+            `Your **${synced.count}** role${synced.count !== 1 ? 's' : ''} in **${resolvedGuild.name}** have been added to your Cordfol profile:\n\n${roleList}${extra}\n\n🔗 [View your profile](${buildProfileUrl(synced.slug)})`
           )
           .setFooter({ text: `${PUBLIC_HOST} — These roles cannot be faked.` }),
       ],
@@ -824,9 +827,12 @@ async function handlePro({ actorId, action, target, reply, defer }) {
   if (!updated) {
     return reply({ content: `❌ <@${target.id}> has no Cordfol account yet. They need to sign in at ${PUBLIC_HOST} first.` });
   }
+  await onboarding.syncMemberPro(target.id, next === 'PRO').catch((err) => {
+    console.error('[bot] pro role sync:', err.message);
+  });
   return reply({
     content: next === 'PRO'
-      ? `✅ Pro granted to **${updated.discord_username}** · ${buildProfileUrl(updated.slug)}`
+      ? `✅ Pro granted to **${updated.discord_username}** · ${buildProfileUrl(updated.slug)} — Discord Pro role synced.`
       : `✅ Pro removed from **${updated.discord_username}**. They're back on Free.`,
   });
 }
@@ -1072,6 +1078,18 @@ client.once('ready', async () => {
     console.error('[bot] Auto channel setup failed:', err);
   }
 
+  try {
+    const roles = await onboarding.ensureSetup();
+    if (roles.ok) {
+      console.log(`[bot] Onboarding ready · pro=${roles.proRole?.id} roles=#${roles.channel?.name}`);
+      await onboarding.syncAllProRoles();
+    } else {
+      console.warn(`[bot] Onboarding skipped: ${roles.reason}`);
+    }
+  } catch (err) {
+    console.error('[bot] Onboarding setup failed:', err);
+  }
+
   await registerCommands();
 
   if (global.setBotClient) {
@@ -1083,6 +1101,8 @@ client.once('ready', async () => {
 
 client.on('interactionCreate', async (interaction) => {
   try {
+    if (await onboarding.handleInteraction(interaction)) return;
+
     if (interaction.isButton()) {
       await tickets.handleInteraction(interaction);
       return;
@@ -1301,6 +1321,18 @@ client.on('messageCreate', async (message) => {
       });
     }
 
+    if (cmd === 'roles') {
+      if (!isCordfolGuild(message.guild.id)) {
+        return adapter.reply({ content: '❌ Cordfol server only.' });
+      }
+      const channelId = onboarding.rolesChannelId();
+      return adapter.reply({
+        content: channelId
+          ? `Pick roles about you here: <#${channelId}> — or use \`/roles\`.`
+          : 'Use `/roles` to open the picker.',
+      });
+    }
+
     if (cmd === 'cordfol' || cmd === 'profile') {
       return handleCordfol({ user, ...adapter });
     }
@@ -1385,27 +1417,9 @@ client.on('messageCreate', async (message) => {
 
 client.on('guildMemberAdd', async (member) => {
   try {
-    if (!isCordfolGuild(member.guild.id)) return;
-    const channelId = WELCOME_CHANNEL_ID || ANNOUNCE_CHANNEL_ID;
-    if (!channelId) return;
-
-    const embed = new EmbedBuilder()
-      .setColor(COLORS.brand)
-      .setTitle('Welcome to Cordfol')
-      .setDescription(
-        `Hey ${member}, welcome!\n\n` +
-        `• Create your verified profile at **[cordfol.org](https://cordfol.org)**\n` +
-        `• Use \`/verify\` or \`${BOT_PREFIX}verify\` to sync your roles\n` +
-        `• @ me and just say what you need\n` +
-        `• \`${BOT_PREFIX}help\` for commands`
-      )
-      .setThumbnail(member.user.displayAvatarURL({ size: 128 }))
-      .setFooter({ text: `cordfol.org — Discord Identity, Verified.` })
-      .setTimestamp();
-
-    await sendToChannel(channelId, { embeds: [embed] });
+    await onboarding.handleJoin(member);
   } catch (err) {
-    console.error('[bot] guildMemberAdd welcome error:', err.message);
+    console.error('[bot] guildMemberAdd onboarding error:', err.message);
   }
 });
 

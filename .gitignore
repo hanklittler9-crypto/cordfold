@@ -5,4 +5,5 @@ data/hosted-apps/
 bot/data/site-status.json
 bot/data/tickets.json
 bot/data/modmail.json
+bot/data/onboarding.json
 .env.bak*

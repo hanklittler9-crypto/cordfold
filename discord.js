@@ -182,6 +182,10 @@ router.get('/callback', async (req, res) => {
       user.plan = 'PRO';
     }
 
+    if (typeof global.syncMemberProRole === 'function') {
+      global.syncMemberProRole(discordId, user.plan).catch(() => {});
+    }
+
     req.session.userId = user.id;
     req.session.discordId = discordId;
     req.session.plan = user.plan;

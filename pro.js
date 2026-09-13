@@ -17,7 +17,11 @@ async function setUserPlanByDiscordId(db, discordId, plan) {
      RETURNING slug, display_name, discord_username, plan, discord_id`,
     [next, String(discordId)]
   );
-  return row.rows[0] || null;
+  const updated = row.rows[0] || null;
+  if (updated && typeof global.syncMemberProRole === 'function') {
+    global.syncMemberProRole(discordId, next).catch(() => {});
+  }
+  return updated;
 }
 
 async function ensureFounderPro(db, discordId) {
