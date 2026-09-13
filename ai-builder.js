@@ -110,21 +110,65 @@ function parseModelJson(text) {
   return null;
 }
 
-async function ollamaChat({ model, prompt, images }) {
+const CHAT_MODES = {
+  hangout: {
+    id: 'hangout',
+    label: 'Hangout',
+    hint: 'Just talk',
+    prompt: `You are Cordfol's site mascot — a sharp, slightly cocky Discord-native who lives at cordfol.org.
+Have a real conversation. Short replies, 1-4 sentences unless they ask for more.
+You can joke, help, or just vibe. Never invent private user data, never write exploits, never roleplay minors.
+Cordfol facts if asked: free verified Discord profiles, Pro is founder-granted, roles page is cordfol.org/roles, status is cordfol.org/status, sign in with Discord.`,
+  },
+  help: {
+    id: 'help',
+    label: 'Help',
+    hint: 'How Cordfol works',
+    prompt: `You are Cordfol support on the website. Answer only about Cordfol.
+Facts:
+- Site: cordfol.org. Sign in with Discord.
+- Profiles prove Discord roles. Bot verify and OAuth scans. Nobody types fake roles.
+- Dashboard: dashboard.cordfol.org — AI builder, themes, links, hosted bots.
+- Roles page: cordfol.org/roles — pick pronouns / who you are after joining Discord.
+- Status: cordfol.org/status.
+- Pro: founder grants with Discord /pro give. Not Stripe yet.
+- Compare and surprise: /compare /random.
+If you don't know, say so and point them to discord.gg/wcrCgc6pMf.
+Keep answers tight.`,
+  },
+  builder: {
+    id: 'builder',
+    label: 'Builder',
+    hint: 'Design a profile',
+    prompt: null,
+  },
+};
+
+function pickModel(requested, status) {
+  const names = Array.isArray(status?.models) ? status.models : [];
+  const want = String(requested || '').trim();
+  if (want && names.includes(want)) return want;
+  if (want) {
+    const hit = names.find((n) => n === `${want}:latest` || n.split(':')[0] === want || n.startsWith(`${want}:`));
+    if (hit) return hit;
+  }
+  if (status?.model && names.includes(status.model)) return status.model;
+  return status?.model || OLLAMA_MODEL;
+}
+
+async function ollamaChat({ model, prompt, messages, images, json = true }) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), OLLAMA_TIMEOUT_MS);
   try {
-    const message = { role: 'user', content: prompt };
-    if (images && images.length) message.images = images;
+    const payload = messages && messages.length
+      ? messages
+      : [{ role: 'user', content: prompt, ...(images && images.length ? { images } : {}) }];
+    const body = { model, stream: false, messages: payload };
+    if (json) body.format = 'json';
     const res = await fetch(`${OLLAMA_HOST}/api/chat`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model,
-        stream: false,
-        format: 'json',
-        messages: [message],
-      }),
+      body: JSON.stringify(body),
       signal: controller.signal,
     });
     if (!res.ok) {
@@ -224,7 +268,52 @@ Color hints: ${JSON.stringify(colorHints || {})}
 Chat:\n${last}`;
 }
 
-async function chatTurn({ history = [], images = [], colorHints = {}, currentBuild = null, pro = false }) {
+async function siteTalk({ history = [], mode = 'hangout', model } = {}) {
+  const status = await ollamaStatus();
+  const pickedMode = CHAT_MODES[mode] ? mode : 'hangout';
+  if (!status.available) {
+    return {
+      say: 'Ollama is offline on the box right now, so I can’t really talk. Start it and hit me again.',
+      model: null,
+      mode: pickedMode,
+      available: false,
+    };
+  }
+  const picked = pickModel(model, status);
+  const system = CHAT_MODES[pickedMode].prompt || CHAT_MODES.hangout.prompt;
+  const turns = (Array.isArray(history) ? history : []).slice(-16).map((m) => ({
+    role: m.role === 'assistant' ? 'assistant' : 'user',
+    content: String(m.content || '').slice(0, 1200),
+  })).filter((m) => m.content);
+  if (!turns.length) {
+    return { say: 'Say something first.', model: picked, mode: pickedMode, available: true };
+  }
+  try {
+    const content = await ollamaChat({
+      model: picked,
+      json: false,
+      messages: [{ role: 'system', content: system }, ...turns],
+    });
+    return {
+      say: String(content || '…').replace(/\s+/g, ' ').trim().slice(0, 1600),
+      model: picked,
+      mode: pickedMode,
+      available: true,
+    };
+  } catch (err) {
+    console.error('[ai-builder] siteTalk failed:', err.message);
+    return {
+      say: err.message.includes('abort')
+        ? 'That thought timed out. Try a shorter one.'
+        : 'Model hiccup — say it again in a second.',
+      model: picked,
+      mode: pickedMode,
+      available: true,
+    };
+  }
+}
+
+async function chatTurn({ history = [], images = [], colorHints = {}, currentBuild = null, pro = false, model: requestedModel } = {}) {
   const idea = [...history].reverse().find((m) => m.role === 'user')?.content || 'dark neon profile';
   const fallback = heuristicBuild(idea, colorHints);
   const status = await ollamaStatus();
@@ -236,7 +325,9 @@ async function chatTurn({ history = [], images = [], colorHints = {}, currentBui
   }
 
   const visionImages = images.slice(0, 3).map((img) => String(img).replace(/^data:[^;]+;base64,/, '')).filter(Boolean);
-  const model = (visionImages.length && OLLAMA_VISION_MODEL) ? OLLAMA_VISION_MODEL : OLLAMA_MODEL;
+  const model = (visionImages.length && OLLAMA_VISION_MODEL)
+    ? pickModel(OLLAMA_VISION_MODEL, status)
+    : pickModel(requestedModel, status);
 
   try {
     const content = await ollamaChat({
@@ -290,4 +381,14 @@ async function buildProfile({ idea, images = [], colorHints = {} }) {
   }
 }
 
-module.exports = { buildProfile, chatTurn, ollamaStatus, ollamaChat, parseModelJson, OLLAMA_MODEL };
+module.exports = {
+  buildProfile,
+  chatTurn,
+  siteTalk,
+  ollamaStatus,
+  ollamaChat,
+  parseModelJson,
+  pickModel,
+  CHAT_MODES,
+  OLLAMA_MODEL,
+};

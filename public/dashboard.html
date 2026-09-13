@@ -491,7 +491,14 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
       <div class="page-sub">Talk, drop photos, remix someone else’s page. The preview on the right updates live — guns can’t do this.</div>
       <div class="ai-studio">
       <div class="card" style="border-color:rgba(196,107,255,0.22);padding:0;overflow:hidden">
-        <div class="card-title" style="padding:16px 18px 0">Studio <span class="wifi-pill" id="aiStatusPill">CHECKING AI</span></div>
+        <div class="card-title" style="padding:16px 18px 0;display:flex;flex-wrap:wrap;gap:8px;align-items:center">Studio <span class="wifi-pill" id="aiStatusPill">CHECKING AI</span>
+          <select id="aiModeSelect" class="field-input" style="width:auto;min-width:120px;padding:6px 10px;font-size:12px">
+            <option value="builder">Builder</option>
+            <option value="hangout">Hangout</option>
+            <option value="help">Help</option>
+          </select>
+          <select id="aiModelSelect" class="field-input" style="width:auto;min-width:140px;padding:6px 10px;font-size:12px"></select>
+        </div>
         <div class="ai-remix-row">
           <input class="field-input" id="aiRemixInput" placeholder="Remix: cordfol.org/someone or just their handle"/>
           <button class="btn btn-ghost" type="button" onclick="remixFromSlug()">Remix</button>
@@ -1902,7 +1909,7 @@ async function triggerScan(btn){
   finally{setTimeout(()=>{btn.disabled=false;btn.classList.remove('loading');},2500);}
 }
 
-const taken=['admin','discord','cordfol','pro','verify','api','discover','compare','random','dashboard','login','logout','privacy','terms','status','og','roles'];
+const taken=['admin','discord','cordfol','pro','verify','api','discover','compare','random','dashboard','login','logout','privacy','terms','status','og','roles','chat'];
 async function checkSlug(el){
   const hint=document.getElementById('slug-hint');
   const v=el.value.toLowerCase().replace(/[^a-z0-9\-]/g,'');
@@ -3370,6 +3377,12 @@ async function refreshAiStatus(){
     const res=await fetch(`${API_BASE}/profile/ai-status`,{credentials:'include'});
     const data=await res.json();
     pill.textContent=data.available?`OLLAMA · ${data.model}`:'LOCAL MIX READY';
+    const sel=document.getElementById('aiModelSelect');
+    if(sel&&data.models){
+      const cur=sel.value||data.model;
+      sel.innerHTML=data.models.map(m=>`<option value="${m}">${m}</option>`).join('')||`<option>${data.model||'llama3.2'}</option>`;
+      if(cur) sel.value=cur;
+    }
   }catch{pill.textContent='LOCAL MIX READY';}
 }
 function extractColorHints(dataUrl){
@@ -3407,8 +3420,17 @@ async function sendAiChat(){
     }
     const sid=restoreAuthSid();
     const url=sid?`${API_BASE}/profile/ai-chat?sid=${encodeURIComponent(sid)}`:`${API_BASE}/profile/ai-chat`;
-    const res=await fetch(url,{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+    const mode=document.getElementById('aiModeSelect')?.value||'builder';
+    const model=document.getElementById('aiModelSelect')?.value||'';
+    const talk=mode!=='builder';
+    const endpoint=talk
+      ?(sid?`${API_BASE}/ai/talk?sid=${encodeURIComponent(sid)}`:`${API_BASE}/ai/talk`)
+      :url;
+    const res=await fetch(endpoint,{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify(talk?{
+      history:aiChatHistory, mode, model,
+    }:{
       history:aiChatHistory,
+      model,
       images:aiChatFiles.map(f=>String(f.data).replace(/^data:[^;]+;base64,/,'').slice(0,180000)),
       colorHints,
       currentBuild:{
@@ -3420,13 +3442,15 @@ async function sendAiChat(){
     })});
     const data=await res.json().catch(()=>({}));
     if(!res.ok) throw new Error(data.error||'Chat failed');
-    const say=data.say||'Updated the look.';
+    const say=data.say||(talk?'…':'Updated the look.');
     aiChatHistory.push({role:'assistant',content:say});
     appendAiBubble('bot',say);
-    if(data.build) await applyAiBuild(data.build, aiChatFiles);
-    document.getElementById('aiHint').textContent='Look applied. Keep chatting, or Save in the bar to publish.';
-    markProfileDirty();
-    showToast('OK','Page updated.','success');
+    if(!talk && data.build) await applyAiBuild(data.build, aiChatFiles);
+    if(!talk){
+      document.getElementById('aiHint').textContent='Look applied. Keep chatting, or Save in the bar to publish.';
+      markProfileDirty();
+      showToast('OK','Page updated.','success');
+    }
     aiChatFiles.length=0;renderAiThumbs();
   }catch(err){appendAiBubble('bot',err.message||'Could not chat.');showToast('ERR',err.message,'error');}
   finally{btn.classList.remove('loading');btn.disabled=false;}

@@ -308,6 +308,7 @@
 .chat-suggestions{display:flex;flex-wrap:wrap;gap:6px;padding:0 16px 12px;}
 .chat-chip{font-size:11.5px;font-weight:500;padding:7px 12px;border-radius:999px;background:rgba(255,255,255,0.03);border:1px solid var(--line);cursor:pointer;transition:all 0.15s;color:var(--ink);}
 .chat-chip:hover{border-color:rgba(196,107,255,0.4);color:#dfa8ff;}
+.chat-chip.on{background:#fff;color:#050505;border-color:#fff;}
 .chat-input-row{display:flex;gap:6px;padding:12px;border-top:1px solid var(--line);}
 .chat-input{flex:1;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:13px;outline:none;font-family:var(--font-body);background:rgba(255,255,255,0.03);color:var(--ink);}
 .chat-input:focus{border-color:rgba(196,107,255,0.4);}
@@ -352,6 +353,7 @@
     <a href="/discover">Discover</a>
     <a href="/compare">Compare</a>
     <a href="/roles">Roles</a>
+    <a href="/chat">Chat</a>
   </div>
   <a href="https://api.cordfol.org/api/auth/discord" class="brand-signin" data-oauth-link>Sign in</a>
 </nav>
@@ -492,6 +494,7 @@
     <a href="/discover">Discover</a>
     <a href="/compare">Compare</a>
     <a href="/roles">Roles</a>
+    <a href="/chat">Chat</a>
     <a href="/random">Surprise</a>
     <a href="/privacy">Privacy</a>
     <a href="/terms">Terms</a>
@@ -522,16 +525,22 @@
     </svg>
     <div class="chat-head-text">
       <div class="chat-head-name">Ask Cordfol</div>
-      <div class="chat-head-status"><span class="live-dot"></span> Usually replies instantly</div>
+      <div class="chat-head-status"><span class="live-dot"></span> <span id="chatLiveLabel">Live model</span></div>
     </div>
+    <a class="chat-close" href="/chat" title="Open full chat" style="font-size:12px;text-decoration:none;color:var(--ink-faint);padding:4px 6px;">Expand</a>
     <button class="chat-close" id="chatClose" aria-label="Close chat">×</button>
   </div>
+  <div class="chat-suggestions" id="chatModeRow" style="padding-top:10px">
+    <button type="button" class="chat-chip on" data-mode="hangout">Hangout</button>
+    <button type="button" class="chat-chip" data-mode="help">Help</button>
+    <select id="chatModel" class="chat-input" style="flex:1;min-width:120px;padding:6px 10px;height:32px"></select>
+  </div>
   <div class="chat-body" id="chatBody">
-    <div class="chat-bubble bot">Hey! I'm the Cordfol mascot. Ask me anything about verified profiles, or tap a question below.</div>
+    <div class="chat-bubble bot">I’m live on the box now. Hangout or Help, pick a model, then talk. Full page is cordfol.org/chat.</div>
   </div>
   <div class="chat-suggestions" id="chatSuggestions"></div>
   <div class="chat-input-row">
-    <input class="chat-input" id="chatInput" type="text" placeholder="Ask a question…" autocomplete="off"/>
+    <input class="chat-input" id="chatInput" type="text" placeholder="Talk to me…" autocomplete="off"/>
     <button class="chat-send" id="chatSend">Send</button>
   </div>
 </div>
@@ -724,16 +733,6 @@ if (claimForm && claimInput) {
   });
 }
 
-const QA = [
-  { q: "Is Cordfol free?", a: "Yep — creating a profile, verified role badges, and automatic re-checks are all free. Pro ($29.99 once) adds premium themes and analytics.", keys: ["free", "cost", "price", "pricing"] },
-  { q: "How does verification work?", a: "You sign in with Discord OAuth2, and Cordfol checks your roles against Discord directly. Servers running the bot can issue even stronger proof.", keys: ["verif", "work", "how does", "role check"] },
-  { q: "Can someone fake a role?", a: "No — every badge is tied back to live Discord data, not something you type in yourself. If the role changes or disappears, your profile updates automatically.", keys: ["fake", "trust", "lie", "real"] },
-  { q: "What's in Cordfol Pro?", a: "Pro is a one-time $29.99 unlock: premium profile themes, motion, and analytics on who's viewing and clicking your profile. No subscription.", keys: ["pro", "premium", "analytics", "theme"] },
-  { q: "How do I claim my handle?", a: "Type the name you want into the bar up top, hit claim, and sign in with Discord — it carries straight into your builder so nothing's retyped.", keys: ["claim", "handle", "url", "link", "username"] },
-  { q: "Is my Discord data safe?", a: "Cordfol only reads the roles and account info needed to verify you — auth tokens are encrypted, and you control what's shown publicly.", keys: ["safe", "privacy", "data", "secure"] }
-];
-const FALLBACK = "I don't have a canned answer for that one yet — try one of the suggested questions, or sign in to explore the full FAQ.";
-
 const chatLauncher = document.getElementById('chatLauncher');
 const chatPanel = document.getElementById('chatPanel');
 const chatClose = document.getElementById('chatClose');
@@ -741,18 +740,17 @@ const chatBody = document.getElementById('chatBody');
 const chatSuggestions = document.getElementById('chatSuggestions');
 const chatInput = document.getElementById('chatInput');
 const chatSend = document.getElementById('chatSend');
+const chatModel = document.getElementById('chatModel');
+let chatMode = 'hangout';
+let chatHistory = [];
+let chatBusy = false;
 
-function renderSuggestions() {
-  chatSuggestions.innerHTML = '';
-  QA.forEach(item => {
-    const chip = document.createElement('button');
-    chip.className = 'chat-chip';
-    chip.type = 'button';
-    chip.textContent = item.q;
-    chip.addEventListener('click', () => askPredicted(item));
-    chatSuggestions.appendChild(chip);
-  });
-}
+const STARTERS = [
+  'What is Cordfol?',
+  'How do verified roles work?',
+  'What’s Pro?',
+  'just talk to me',
+];
 
 function addBubble(text, who) {
   const bubble = document.createElement('div');
@@ -762,29 +760,73 @@ function addBubble(text, who) {
   chatBody.scrollTop = chatBody.scrollHeight;
 }
 
-function askPredicted(item) {
-  addBubble(item.q, 'user');
-  setTimeout(() => addBubble(item.a, 'bot'), 350);
+function renderSuggestions() {
+  chatSuggestions.innerHTML = '';
+  STARTERS.forEach((q) => {
+    const chip = document.createElement('button');
+    chip.className = 'chat-chip';
+    chip.type = 'button';
+    chip.textContent = q;
+    chip.addEventListener('click', () => askLive(q));
+    chatSuggestions.appendChild(chip);
+  });
 }
 
-function askFreeText(raw) {
-  const text = raw.trim();
-  if (!text) return;
+document.querySelectorAll('#chatModeRow [data-mode]').forEach((btn) => {
+  btn.addEventListener('click', () => {
+    chatMode = btn.dataset.mode;
+    document.querySelectorAll('#chatModeRow [data-mode]').forEach((b) => b.classList.toggle('on', b === btn));
+  });
+});
+
+async function loadChatModels() {
+  try {
+    const res = await fetch(`${API_BASE}/ai/models`);
+    const data = await res.json();
+    const label = document.getElementById('chatLiveLabel');
+    if (label) label.textContent = data.available ? 'Live Ollama' : 'Model offline';
+    chatModel.innerHTML = (data.models || []).map((m) => `<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join('')
+      || `<option>${escapeHtml(data.defaultModel || 'llama3.2')}</option>`;
+  } catch { /* keep empty */ }
+}
+
+async function askLive(raw) {
+  const text = String(raw || '').trim();
+  if (!text || chatBusy) return;
   addBubble(text, 'user');
-  const lower = text.toLowerCase();
-  const match = QA.find(item => item.keys.some(k => lower.includes(k)));
-  setTimeout(() => addBubble(match ? match.a : FALLBACK, 'bot'), 350);
+  chatHistory.push({ role: 'user', content: text });
+  chatInput.value = '';
+  chatBusy = true;
+  chatSend.disabled = true;
+  try {
+    const res = await fetch(`${API_BASE}/ai/talk`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ history: chatHistory, mode: chatMode, model: chatModel.value }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || 'Chat failed');
+    const say = data.say || '…';
+    chatHistory.push({ role: 'assistant', content: say });
+    addBubble(say, 'bot');
+  } catch (err) {
+    addBubble(err.message || 'Could not talk.', 'bot');
+  } finally {
+    chatBusy = false;
+    chatSend.disabled = false;
+  }
 }
 
 renderSuggestions();
+loadChatModels();
 chatLauncher.addEventListener('click', () => {
   chatPanel.classList.toggle('open');
   if (chatPanel.classList.contains('open')) chatInput.focus();
 });
 chatClose.addEventListener('click', () => chatPanel.classList.remove('open'));
-chatSend.addEventListener('click', () => { askFreeText(chatInput.value); chatInput.value = ''; });
+chatSend.addEventListener('click', () => askLive(chatInput.value));
 chatInput.addEventListener('keydown', e => {
-  if (e.key === 'Enter') { askFreeText(chatInput.value); chatInput.value = ''; }
+  if (e.key === 'Enter') { e.preventDefault(); askLive(chatInput.value); }
 });
 </script>
 </body>

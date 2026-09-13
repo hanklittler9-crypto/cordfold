@@ -27,7 +27,7 @@ const {
 } = require('./email');
 const createSpotifyRouter = require('./spotify');
 const createHostedAppsRouter = require('./hosted-apps');
-const { buildProfile: aiBuildProfile, chatTurn: aiChatTurn, ollamaStatus } = require('./ai-builder');
+const { buildProfile: aiBuildProfile, chatTurn: aiChatTurn, siteTalk: aiSiteTalk, ollamaStatus, CHAT_MODES } = require('./ai-builder');
 const { isProPlan, ensureFounderPro, proLimits } = require('./pro');
 const { collectPlatformStatus } = require('./platform-status');
 const { publicCatalog, ROLE_GROUPS, ROLES_PAGE_URL } = require('./bot/onboarding');
@@ -912,6 +912,61 @@ function aiRateLimited(userId) {
   return false;
 }
 
+const talkHits = new Map();
+function talkLimited(key) {
+  const now = Date.now();
+  const rec = talkHits.get(key) || { last: 0, hour: [] };
+  rec.hour = rec.hour.filter((t) => now - t < 60 * 60 * 1000);
+  if (now - rec.last < 5000) return 'slow';
+  if (rec.hour.length >= 36) return 'hour';
+  rec.last = now;
+  rec.hour.push(now);
+  talkHits.set(key, rec);
+  if (talkHits.size > 4000) talkHits.clear();
+  return null;
+}
+
+app.get('/api/ai/models', async (req, res) => {
+  try {
+    res.set('Cache-Control', 'no-store');
+    const status = await ollamaStatus();
+    res.json({
+      available: !!status.available,
+      defaultModel: status.model,
+      models: status.models || [],
+      modes: Object.values(CHAT_MODES).map((m) => ({ id: m.id, label: m.label, hint: m.hint })),
+    });
+  } catch (err) {
+    res.status(500).json({ available: false, models: [], modes: [] });
+  }
+});
+
+app.post('/api/ai/talk', async (req, res) => {
+  try {
+    const key = req.session?.userId || req.ip || 'anon';
+    const limited = talkLimited(key);
+    if (limited === 'slow') return res.status(429).json({ error: 'Give it a few seconds.' });
+    if (limited === 'hour') return res.status(429).json({ error: 'That is enough chatting for a bit. Come back later.' });
+
+    const mode = ['hangout', 'help'].includes(req.body?.mode) ? req.body.mode : 'hangout';
+    const history = Array.isArray(req.body?.history) ? req.body.history.slice(-16).map((m) => ({
+      role: m.role === 'assistant' ? 'assistant' : 'user',
+      content: String(m.content || '').slice(0, 800),
+    })).filter((m) => m.content) : [];
+    if (!history.length) return res.status(400).json({ error: 'Say something first.' });
+
+    const result = await aiSiteTalk({
+      history,
+      mode,
+      model: req.body?.model,
+    });
+    res.json({ ok: true, ...result });
+  } catch (err) {
+    console.error('[server] /api/ai/talk error:', err);
+    res.status(500).json({ error: 'Chat failed' });
+  }
+});
+
 app.get('/api/profile/ai-status', async (req, res) => {
   try {
     res.json(await ollamaStatus());
@@ -970,6 +1025,7 @@ app.post('/api/profile/ai-chat', async (req, res) => {
       colorHints,
       currentBuild: req.body?.currentBuild || null,
       pro,
+      model: req.body?.model,
     });
     res.json({ ok: true, ...result });
   } catch (err) {
@@ -1988,6 +2044,10 @@ app.get('/roles', (req, res) => {
   res.set('Cache-Control', 'no-cache');
   res.sendFile(path.join(__dirname, 'public', 'roles.html'));
 });
+app.get('/chat', (req, res) => {
+  res.set('Cache-Control', 'no-cache');
+  res.sendFile(path.join(__dirname, 'public', 'chat.html'));
+});
 app.get('/api/random', async (req, res) => {
   try {
     const n = Math.min(4, Math.max(1, parseInt(req.query.n, 10) || 1));
@@ -2093,7 +2153,7 @@ function escapeAttr(s) {
 }
 
 app.get('/:slug', async (req, res) => {
-  const reserved = ['api', 'dashboard', 'login', 'logout', 'static', 'status', 'admin', 'og', 'privacy', 'terms', 'discover', 'compare', 'random', 'roles'];
+  const reserved = ['api', 'dashboard', 'login', 'logout', 'static', 'status', 'admin', 'og', 'privacy', 'terms', 'discover', 'compare', 'random', 'roles', 'chat'];
   if (String(req.params.slug || '').toLowerCase() === 'discover') {
     return res.sendFile(path.join(__dirname, 'public', 'discover.html'));
   }
