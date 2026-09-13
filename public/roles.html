@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Pick your roles — Cordfol</title>
+<meta name="description" content="Tell the Cordfol server who you are. Sign in, tap a few chips, and the bot puts the Discord roles on you."/>
+<meta property="og:site_name" content="Cordfol"/>
+<meta property="og:title" content="About you — Cordfol roles"/>
+<meta property="og:description" content="Pick pronouns, what you do, and what we can ping you for."/>
+<meta property="og:url" content="https://cordfol.org/roles"/>
+<meta name="theme-color" content="#c46bff"/>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Outfit:wght@400;500;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="/brand.css"/>
+<style>
+.wrap{position:relative;z-index:1;max-width:760px;margin:0 auto;padding:48px 5vw 88px;}
+.kicker{font-size:12px;letter-spacing:0.16em;text-transform:uppercase;color:var(--ink-faint);font-weight:600;margin-bottom:12px;}
+h1{font-family:var(--font-display);font-weight:800;font-size:clamp(36px,6vw,64px);letter-spacing:-0.03em;text-transform:uppercase;line-height:0.95;margin:0 0 14px;}
+.lead{max-width:520px;color:var(--ink-soft);font-size:15.5px;line-height:1.7;margin:0 0 28px;}
+.who{display:flex;align-items:center;gap:12px;margin-bottom:28px;padding:12px 14px;border:1px solid var(--line);border-radius:14px;background:rgba(255,255,255,0.03);}
+.who img{width:40px;height:40px;border-radius:12px;object-fit:cover;background:#111;}
+.who b{display:block;font-size:14px;}
+.who span{font-size:12px;color:var(--ink-faint);}
+.who .pro{margin-left:auto;font-size:10px;font-weight:800;letter-spacing:0.08em;background:#fff;color:#050505;border-radius:6px;padding:4px 7px;}
+.gate{border:1px solid var(--line);border-radius:18px;padding:28px 24px;background:rgba(255,255,255,0.03);margin-bottom:28px;}
+.gate h2{font-family:var(--font-display);font-size:22px;text-transform:uppercase;margin:0 0 10px;}
+.gate p{color:var(--ink-soft);line-height:1.6;margin:0 0 18px;}
+.group{border:1px solid var(--line);border-radius:18px;padding:20px 20px 16px;background:rgba(255,255,255,0.025);margin-bottom:14px;}
+.group h2{margin:0 0 4px;font-size:16px;}
+.group .hint{font-size:13px;color:var(--ink-faint);margin-bottom:14px;}
+.chips{display:flex;flex-wrap:wrap;gap:8px;}
+.chip{
+  border:1px solid var(--line);background:rgba(255,255,255,0.03);color:var(--ink-soft);
+  border-radius:999px;padding:9px 14px;font-size:13px;font-weight:600;cursor:pointer;
+  font-family:var(--font-body);transition:border-color 0.15s, background 0.15s, color 0.15s, transform 0.15s;
+}
+.chip:hover{border-color:var(--line-strong);color:var(--ink);}
+.chip.on{background:#fff;color:#050505;border-color:#fff;}
+.chip:disabled{opacity:0.45;cursor:not-allowed;}
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:#111;border:1px solid var(--line-strong);color:var(--ink);padding:10px 16px;border-radius:999px;font-size:13px;font-weight:600;z-index:40;opacity:0;pointer-events:none;transition:opacity 0.2s;}
+.toast.show{opacity:1;}
+.note{font-size:12px;color:var(--ink-faint);margin-top:18px;}
+</style>
+</head>
+<body class="brand-body">
+<nav class="brand-nav">
+  <a class="brand-logo" href="/"><img class="brand-mark" src="/logo.svg" alt=""/>Cordfol</a>
+  <div class="brand-links">
+    <a href="/discover">Discover</a>
+    <a href="/compare">Compare</a>
+    <a href="/roles">Roles</a>
+    <a href="/status">Status</a>
+  </div>
+  <a class="brand-signin" id="navAuth" href="https://api.cordfol.org/api/auth/discord?return=/roles">Sign in</a>
+</nav>
+
+<div class="wrap">
+  <div class="kicker">Server onboarding</div>
+  <h1>About you</h1>
+  <p class="lead">Tap what fits. The bot writes those roles into the Cordfol Discord and onto your verified profile. Pro is automatic if you have it.</p>
+  <div id="who"></div>
+  <div id="app"></div>
+  <p class="note">Need the server first? <a href="https://discord.gg/wcrCgc6pMf" target="_blank" rel="noopener" style="color:var(--ink)">Join Discord</a>. Then come back here.</p>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const API = 'https://api.cordfol.org/api';
+const LOGIN = 'https://api.cordfol.org/api/auth/discord?return=/roles';
+const params = new URLSearchParams(location.search);
+const sid = params.get('sid') || '';
+let state = { authenticated: false, groups: [], selections: {} };
+
+function esc(s) {
+  return String(s ?? '').replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => el.classList.remove('show'), 1800);
+}
+
+function apiUrl(path) {
+  return sid ? `${API}${path}${path.includes('?') ? '&' : '?'}sid=${encodeURIComponent(sid)}` : `${API}${path}`;
+}
+
+function render() {
+  const who = document.getElementById('who');
+  const app = document.getElementById('app');
+  const nav = document.getElementById('navAuth');
+
+  if (!state.authenticated) {
+    nav.href = LOGIN;
+    nav.textContent = 'Sign in';
+    who.innerHTML = '';
+    app.innerHTML = `
+      <div class="gate">
+        <h2>Sign in to pick roles</h2>
+        <p>Discord login creates your Cordfol profile if you don’t have one yet. After that, this page assigns the server roles for you.</p>
+        <a class="brand-signin" href="${LOGIN}">Continue with Discord</a>
+      </div>`;
+    return;
+  }
+
+  nav.href = state.user?.slug ? `/${esc(state.user.slug)}` : '/dashboard';
+  nav.textContent = 'My profile';
+
+  const avatar = state.user?.discordId
+    ? `https://cdn.discordapp.com/avatars/${state.user.discordId}/${state.user.discordId}.png`
+    : '/logo.svg';
+  who.innerHTML = `
+    <div class="who">
+      <img src="${esc(state.user?.avatarUrl || avatar)}" alt="" onerror="this.src='/logo.svg'"/>
+      <div>
+        <b>${esc(state.user?.displayName || state.user?.slug || 'You')}</b>
+        <span>${state.inGuild ? 'In the Cordfol server' : 'Join Discord so I can pin the roles'} · cordfol.org/${esc(state.user?.slug || '')}</span>
+      </div>
+      ${state.user?.pro ? '<div class="pro">PRO</div>' : ''}
+    </div>`;
+
+  if (!state.inGuild) {
+    app.innerHTML = `
+      <div class="gate">
+        <h2>Join the server first</h2>
+        <p>You’re signed in. Jump into Discord, then come back — I’ll verify you and keep whatever you tap.</p>
+        <a class="brand-signin" href="${esc(state.invite || 'https://discord.gg/wcrCgc6pMf')}" target="_blank" rel="noopener">Join Cordfol Discord</a>
+      </div>`;
+    return;
+  }
+
+  app.innerHTML = state.groups.map((g) => `
+    <section class="group">
+      <h2>${esc(g.title)}</h2>
+      <div class="hint">${esc(g.hint)}${g.exclusive ? ' · pick one' : ' · pick any'}</div>
+      <div class="chips">
+        ${(g.options || []).map((opt) => `
+          <button type="button" class="chip ${(state.selections[g.id] || []).includes(opt.key) ? 'on' : ''}"
+            data-group="${esc(g.id)}" data-key="${esc(opt.key)}" data-exclusive="${g.exclusive ? '1' : '0'}">${esc(opt.name)}</button>
+        `).join('')}
+      </div>
+    </section>
+  `).join('');
+}
+
+async function load() {
+  const res = await fetch(apiUrl('/community-roles'), { credentials: 'include' });
+  const data = await res.json();
+  state = data;
+  state.selections = {};
+  (data.groups || []).forEach((g) => { state.selections[g.id] = [...(g.selected || [])]; });
+  if (data.user && !data.user.avatarUrl && data.user.discordId) {
+    /* avatar comes from /me sometimes; keep placeholder */
+  }
+  render();
+  if (sid) history.replaceState({}, '', '/roles');
+}
+
+async function save() {
+  const res = await fetch(apiUrl('/community-roles'), {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ selections: state.selections }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (res.status === 409) {
+    toast(data.error || 'Join the Discord server first');
+    state.inGuild = false;
+    state.invite = data.invite;
+    render();
+    return;
+  }
+  if (!res.ok) {
+    toast(data.error || 'Could not save');
+    return;
+  }
+  toast('Saved · Discord roles updated');
+}
+
+document.getElementById('app').addEventListener('click', (e) => {
+  const btn = e.target.closest('.chip');
+  if (!btn) return;
+  const group = btn.dataset.group;
+  const key = btn.dataset.key;
+  const exclusive = btn.dataset.exclusive === '1';
+  const cur = new Set(state.selections[group] || []);
+  if (exclusive) {
+    state.selections[group] = cur.has(key) ? [] : [key];
+  } else if (cur.has(key)) {
+    cur.delete(key);
+    state.selections[group] = [...cur];
+  } else {
+    cur.add(key);
+    state.selections[group] = [...cur];
+  }
+  render();
+  save();
+});
+
+load().catch(() => {
+  document.getElementById('app').innerHTML = '<div class="gate"><h2>Could not load</h2><p>Refresh in a second. The bot may still be coming up.</p></div>';
+});
+</script>
+</body>
+</html>

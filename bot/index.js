@@ -259,7 +259,7 @@ function helpEmbed() {
           `\`/cordfol\` · \`${BOT_PREFIX}cordfol\` — your profile link`,
           `\`/whois\` · \`${BOT_PREFIX}whois @user\` — look up a profile`,
           `\`/help\` · \`${BOT_PREFIX}help\` — this message`,
-          `\`/roles\` · \`${BOT_PREFIX}roles\` — pick roles about you`,
+          `\`/roles\` · \`${BOT_PREFIX}roles\` — open cordfol.org/roles`,
           `\`${BOT_PREFIX}ping\` — latency check`,
           `\`/pro\` · \`${BOT_PREFIX}pro give|take|check @user\` — founder only`,
           `@ the bot and just talk — it reads the request and finishes it`,
@@ -393,6 +393,11 @@ global.syncMemberProRole = async (discordId, plan) => {
   }
 };
 
+global.communityRoles = {
+  snapshot: (discordId) => onboarding.snapshotForDiscordId(discordId),
+  apply: (discordId, selections) => onboarding.applyWebSelections(discordId, selections),
+};
+
 // ── Slash command definitions ─────────────────────────────────────────────────
 
 const globalCommands = [
@@ -482,7 +487,7 @@ const guildCommands = [
     .toJSON(),
   new SlashCommandBuilder()
     .setName('roles')
-    .setDescription('Pick roles about you')
+    .setDescription('Open cordfol.org/roles to pick who you are')
     .toJSON(),
   new SlashCommandBuilder()
     .setName('roles-panel')
@@ -587,7 +592,7 @@ async function handleVerify({ user, guildId, guild, reply, defer }) {
 
     if (!synced.count) {
       return reply({
-        content: '⚠️ You don\'t have any assignable roles in this server. Open **#roles** and pick some about you — I will verify those next.',
+        content: '⚠️ You don\'t have any assignable roles in this server. Open **cordfol.org/roles** and pick some about you — I will verify those next.',
         ephemeral: true,
       });
     }
@@ -1322,14 +1327,8 @@ client.on('messageCreate', async (message) => {
     }
 
     if (cmd === 'roles') {
-      if (!isCordfolGuild(message.guild.id)) {
-        return adapter.reply({ content: '❌ Cordfol server only.' });
-      }
-      const channelId = onboarding.rolesChannelId();
       return adapter.reply({
-        content: channelId
-          ? `Pick roles about you here: <#${channelId}> — or use \`/roles\`.`
-          : 'Use `/roles` to open the picker.',
+        content: `Pick roles about you here: ${onboarding.ROLES_PAGE_URL}`,
       });
     }
 

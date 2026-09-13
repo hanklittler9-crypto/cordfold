@@ -30,6 +30,7 @@ const createHostedAppsRouter = require('./hosted-apps');
 const { buildProfile: aiBuildProfile, chatTurn: aiChatTurn, ollamaStatus } = require('./ai-builder');
 const { isProPlan, ensureFounderPro, proLimits } = require('./pro');
 const { collectPlatformStatus } = require('./platform-status');
+const { publicCatalog, ROLE_GROUPS, ROLES_PAGE_URL } = require('./bot/onboarding');
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
@@ -1645,6 +1646,125 @@ app.get('/api/showcase', async (req, res) => {
 // ── Server Status ──────────────────────────────────────────────────────────────
 let botClient = null;
 
+async function hydrateSessionFromSid(req) {
+  const sid = req.query.sid || req.body?.sid;
+  if (!sid || req.session?.userId) return;
+  try {
+    const result = await db.query('SELECT sess FROM user_sessions WHERE sid = $1', [sid]);
+    const sess = result.rows[0]?.sess;
+    if (sess?.userId) {
+      req.session.userId = sess.userId;
+      if (sess.discordId) req.session.discordId = sess.discordId;
+    }
+  } catch (err) {
+    console.error('[roles] session hydrate:', err.message);
+  }
+}
+
+app.get('/api/community-roles', async (req, res) => {
+  try {
+    await hydrateSessionFromSid(req);
+    res.set('Cache-Control', 'no-store');
+    const catalog = publicCatalog();
+    if (!req.session?.userId) {
+      return res.json({
+        authenticated: false,
+        groups: catalog.map((g) => ({ ...g, selected: [] })),
+        invite: process.env.DISCORD_INVITE_URL || 'https://discord.gg/wcrCgc6pMf',
+        page: ROLES_PAGE_URL,
+      });
+    }
+
+    const user = await db.query(
+      'SELECT discord_id, slug, display_name, plan, avatar_hash FROM users WHERE id = $1',
+      [req.session.userId]
+    );
+    if (!user.rowCount) {
+      return res.json({ authenticated: false, groups: catalog.map((g) => ({ ...g, selected: [] })) });
+    }
+
+    const row = user.rows[0];
+    let live = { groups: catalog.map((g) => ({ ...g, selected: [] })), inGuild: false };
+    if (global.communityRoles?.snapshot) {
+      live = await global.communityRoles.snapshot(row.discord_id);
+    }
+
+    res.json({
+      authenticated: true,
+      user: {
+        discordId: row.discord_id,
+        slug: row.slug,
+        displayName: row.display_name,
+        plan: row.plan,
+        pro: isProPlan(row.plan),
+        avatarUrl: row.avatar_hash
+          ? `https://cdn.discordapp.com/avatars/${row.discord_id}/${row.avatar_hash}.png`
+          : null,
+      },
+      ...live,
+    });
+  } catch (err) {
+    console.error('[roles] GET /api/community-roles:', err);
+    res.status(500).json({ error: 'Failed to load roles' });
+  }
+});
+
+app.post('/api/community-roles', async (req, res) => {
+  try {
+    await hydrateSessionFromSid(req);
+    if (!req.session?.userId) {
+      return res.status(401).json({ error: 'Sign in with Discord first.' });
+    }
+    if (!global.communityRoles?.apply) {
+      return res.status(503).json({ error: 'The bot is still starting. Try again in a few seconds.' });
+    }
+
+    const user = await db.query(
+      'SELECT discord_id, slug, plan FROM users WHERE id = $1',
+      [req.session.userId]
+    );
+    if (!user.rowCount) {
+      return res.status(401).json({ error: 'Account not found.' });
+    }
+
+    const selections = req.body?.selections && typeof req.body.selections === 'object'
+      ? req.body.selections
+      : {};
+    const allowed = new Set(ROLE_GROUPS.map((g) => g.id));
+    const clean = {};
+    for (const [key, value] of Object.entries(selections)) {
+      if (!allowed.has(key)) continue;
+      clean[key] = Array.isArray(value) ? value.map((v) => String(v).slice(0, 32)).slice(0, 8) : [];
+    }
+
+    const result = await global.communityRoles.apply(user.rows[0].discord_id, clean);
+    if (!result.ok && result.error === 'not_in_guild') {
+      return res.status(409).json({
+        error: 'Join the Cordfol Discord first, then pick roles.',
+        invite: result.invite || process.env.DISCORD_INVITE_URL || 'https://discord.gg/wcrCgc6pMf',
+      });
+    }
+    if (!result.ok) {
+      return res.status(500).json({ error: result.error || 'Could not assign roles.' });
+    }
+
+    res.json({
+      ok: true,
+      authenticated: true,
+      user: {
+        discordId: user.rows[0].discord_id,
+        slug: user.rows[0].slug,
+        plan: user.rows[0].plan,
+        pro: isProPlan(user.rows[0].plan),
+      },
+      ...result,
+    });
+  } catch (err) {
+    console.error('[roles] POST /api/community-roles:', err);
+    res.status(500).json({ error: 'Failed to save roles' });
+  }
+});
+
 app.get('/api/platform', async (req, res) => {
   try {
     res.set('Cache-Control', 'no-store');
@@ -1864,6 +1984,10 @@ app.get('/terms', (req, res) => {
 app.get('/compare', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'compare.html'));
 });
+app.get('/roles', (req, res) => {
+  res.set('Cache-Control', 'no-cache');
+  res.sendFile(path.join(__dirname, 'public', 'roles.html'));
+});
 app.get('/api/random', async (req, res) => {
   try {
     const n = Math.min(4, Math.max(1, parseInt(req.query.n, 10) || 1));
@@ -1969,7 +2093,7 @@ function escapeAttr(s) {
 }
 
 app.get('/:slug', async (req, res) => {
-  const reserved = ['api', 'dashboard', 'login', 'logout', 'static', 'status', 'admin', 'og', 'privacy', 'terms', 'discover', 'compare', 'random'];
+  const reserved = ['api', 'dashboard', 'login', 'logout', 'static', 'status', 'admin', 'og', 'privacy', 'terms', 'discover', 'compare', 'random', 'roles'];
   if (String(req.params.slug || '').toLowerCase() === 'discover') {
     return res.sendFile(path.join(__dirname, 'public', 'discover.html'));
   }

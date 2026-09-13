@@ -4,7 +4,6 @@ const {
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
-  StringSelectMenuBuilder,
   ChannelType,
   PermissionFlagsBits,
 } = require('discord.js');
@@ -15,6 +14,7 @@ const { isProPlan } = require('../pro');
 const STORE = path.join(__dirname, 'data', 'onboarding.json');
 const OPEN_BTN = 'cf_roles_open';
 const SELECT_PREFIX = 'cf_roles:';
+const ROLES_PAGE_URL = (process.env.PUBLIC_BASE_URL || 'https://cordfol.org').replace(/\/$/, '') + '/roles';
 
 const ROLE_GROUPS = [
   {
@@ -82,6 +82,19 @@ function loadStore() {
 
 function saveStore(data) {
   writeJson(STORE, data);
+}
+
+function publicCatalog(store = loadStore()) {
+  return ROLE_GROUPS.map((group) => ({
+    id: group.id,
+    title: group.title,
+    hint: group.placeholder,
+    exclusive: group.exclusive,
+    options: group.roles.map((role) => ({
+      key: role.key,
+      name: role.name,
+    })),
+  }));
 }
 
 function createOnboarding(ctx) {
@@ -185,33 +198,12 @@ function createOnboarding(ctx) {
     return { ok: true, store, guild, channel, proRole };
   }
 
-  function pickerRows(store) {
-    return ROLE_GROUPS.map((group) => {
-      const ids = store.groups?.[group.id] || {};
-      const menu = new StringSelectMenuBuilder()
-        .setCustomId(`${SELECT_PREFIX}${group.id}`)
-        .setPlaceholder(group.placeholder)
-        .setMinValues(0)
-        .setMaxValues(group.exclusive ? 1 : group.roles.length);
-
-      for (const role of group.roles) {
-        const roleId = ids[role.key];
-        if (!roleId) continue;
-        menu.addOptions({
-          label: role.name,
-          value: roleId,
-        });
-      }
-      return new ActionRowBuilder().addComponents(menu);
-    });
-  }
-
-  function openButtonRow() {
+  function pageButtonRow() {
     return new ActionRowBuilder().addComponents(
       new ButtonBuilder()
-        .setCustomId(OPEN_BTN)
-        .setLabel('Pick roles about you')
-        .setStyle(ButtonStyle.Primary)
+        .setStyle(ButtonStyle.Link)
+        .setURL(ROLES_PAGE_URL)
+        .setLabel('Open roles page')
     );
   }
 
@@ -220,17 +212,17 @@ function createOnboarding(ctx) {
       .setColor(COLORS?.brand ?? 0xc84dff)
       .setTitle('About you')
       .setDescription(
-        'Use the menus below — or the button — to tell the server who you are.\n\n' +
+        `Pick who you are on **[cordfol.org/roles](${ROLES_PAGE_URL})**.\n\n` +
         'Pronouns, what you do, what you care about, and what we can ping you for.\n' +
-        'The bot assigns the roles. **Pro** is granted automatically if you have it on cordfol.org.'
+        'Sign in, tap the chips, and I put the Discord roles on you. **Pro** is granted automatically if you have it.'
       )
-      .setFooter({ text: `${PUBLIC_HOST} · Self-serve roles` });
+      .setFooter({ text: `${PUBLIC_HOST}/roles` });
   }
 
   async function ensurePanel(channel, store) {
     const payload = {
       embeds: [panelEmbed()],
-      components: [openButtonRow(), ...pickerRows(store)],
+      components: [pageButtonRow()],
     };
 
     if (store.panelMessageId) {
@@ -303,13 +295,6 @@ function createOnboarding(ctx) {
     }
   }
 
-  function pickerPayload(store, extra) {
-    return {
-      embeds: extra ? [extra, panelEmbed()] : [panelEmbed()],
-      components: [openButtonRow(), ...pickerRows(store)],
-    };
-  }
-
   async function applyGroupSelection(member, groupId, selectedIds) {
     const store = loadStore();
     const group = ROLE_GROUPS.find((g) => g.id === groupId);
@@ -323,6 +308,60 @@ function createOnboarding(ctx) {
     if (toRemove.length) await member.roles.remove(toRemove, `About-you ${group.title}`);
     if (toAdd.length) await member.roles.add(toAdd, `About-you ${group.title}`);
     return { ok: true, group: group.title, count: selected.size };
+  }
+
+  async function snapshotForDiscordId(discordId) {
+    await ensureSetup().catch(() => {});
+    const store = loadStore();
+    const guild = await cordfolGuild();
+    const member = discordId && guild
+      ? await guild.members.fetch(String(discordId)).catch(() => null)
+      : null;
+    const groups = publicCatalog(store).map((group) => {
+      const ids = store.groups?.[group.id] || {};
+      const selected = group.options
+        .filter((opt) => member?.roles.cache.has(ids[opt.key]))
+        .map((opt) => opt.key);
+      return { ...group, selected };
+    });
+    return {
+      groups,
+      inGuild: !!member,
+      invite: ops.DISCORD_INVITE_URL || 'https://discord.gg/wcrCgc6pMf',
+      page: ROLES_PAGE_URL,
+    };
+  }
+
+  async function applyWebSelections(discordId, selections = {}) {
+    const setup = await ensureSetup();
+    if (!setup.ok) return { ok: false, error: 'Roles are still spinning up. Try again in a minute.' };
+    const guild = setup.guild || await cordfolGuild();
+    if (!guild) return { ok: false, error: 'Cordfol server is not available.' };
+    const member = await guild.members.fetch(String(discordId)).catch(() => null);
+    if (!member) {
+      return { ok: false, error: 'not_in_guild', invite: ops.DISCORD_INVITE_URL || 'https://discord.gg/wcrCgc6pMf' };
+    }
+
+    const store = loadStore();
+    for (const group of ROLE_GROUPS) {
+      const raw = Array.isArray(selections[group.id]) ? selections[group.id] : [];
+      const keys = group.exclusive ? raw.slice(0, 1) : raw;
+      const allowed = new Set(group.roles.map((r) => r.key));
+      const ids = keys
+        .filter((key) => allowed.has(key))
+        .map((key) => store.groups?.[group.id]?.[key])
+        .filter(Boolean);
+      await applyGroupSelection(member, group.id, ids);
+    }
+
+    try {
+      await syncVerifiedRoles(db, member);
+    } catch (err) {
+      console.error('[bot/onboarding] verify after web pick:', err.message);
+    }
+
+    const snap = await snapshotForDiscordId(discordId);
+    return { ok: true, ...snap };
   }
 
   async function handleJoin(member) {
@@ -355,14 +394,13 @@ function createOnboarding(ctx) {
       verified = { ok: false, reason: 'error' };
     }
 
-    const rolesUrl = store.rolesChannelId ? `https://discord.com/channels/${member.guild.id}/${store.rolesChannelId}` : null;
     let verifyLine = 'I could not sync a Cordfol profile yet.';
     if (verified.reason === 'no_account') {
-      verifyLine = `No Cordfol account yet — [sign in once](${DASHBOARD_LOGIN_URL}) and I will pick it up.`;
+      verifyLine = `No Cordfol account yet — [sign in on the roles page](${ROLES_PAGE_URL}) and I will pick it up.`;
     } else if (verified.ok && verified.count) {
       verifyLine = `Verified **${verified.count}** role${verified.count === 1 ? '' : 's'} onto [${PUBLIC_HOST}/${verified.slug}](${buildProfileUrl(verified.slug)}).`;
     } else if (verified.ok) {
-      verifyLine = `You're on Cordfol as **${verified.slug}**. Pick roles below and I will keep the profile in sync.`;
+      verifyLine = `You're on Cordfol as **${verified.slug}**.`;
     }
 
     const embed = new EmbedBuilder()
@@ -372,10 +410,10 @@ function createOnboarding(ctx) {
         `Hey ${member}, I already handled the boring part.\n\n` +
         `${verifyLine}\n` +
         `${isProPlan(plan) ? '⭐ You have **Pro** — I gave you the Pro role.\n' : ''}` +
-        `${rolesUrl ? `\nOpen **[the roles page](${rolesUrl})** and pick who you are.` : '\nUse the button to pick roles about you.'}`
+        `\nOpen **[cordfol.org/roles](${ROLES_PAGE_URL})** and pick who you are.`
       )
       .setThumbnail(member.user.displayAvatarURL({ size: 128 }))
-      .setFooter({ text: `${PUBLIC_HOST} — Discord Identity, Verified.` });
+      .setFooter({ text: `${PUBLIC_HOST}/roles` });
 
     const channelId = ops.WELCOME_CHANNEL_ID || ops.ANNOUNCE_CHANNEL_ID || store.rolesChannelId;
     if (channelId) {
@@ -385,7 +423,7 @@ function createOnboarding(ctx) {
           await channel.send({
             content: `${member}`,
             embeds: [embed],
-            components: [openButtonRow()],
+            components: [pageButtonRow()],
           });
         }
       } catch (err) {
@@ -396,13 +434,7 @@ function createOnboarding(ctx) {
     try {
       await member.send({
         embeds: [embed],
-        components: rolesUrl
-          ? [
-            new ActionRowBuilder().addComponents(
-              new ButtonBuilder().setStyle(ButtonStyle.Link).setURL(rolesUrl).setLabel('Open roles page')
-            ),
-          ]
-          : [],
+        components: [pageButtonRow()],
       });
     } catch {
       // DMs closed — channel message is enough
@@ -411,14 +443,10 @@ function createOnboarding(ctx) {
 
   async function handleInteraction(interaction) {
     if (interaction.isButton() && interaction.customId === OPEN_BTN) {
-      if (!isCordfolGuild(interaction.guildId)) {
-        await interaction.reply({ content: 'Role picks are only in the Cordfol server.', ephemeral: true });
-        return true;
-      }
-      const store = loadStore();
       await interaction.reply({
         ephemeral: true,
-        ...pickerPayload(store),
+        content: `Pick your roles here: ${ROLES_PAGE_URL}`,
+        components: [pageButtonRow()],
       });
       return true;
     }
@@ -455,12 +483,11 @@ function createOnboarding(ctx) {
     }
 
     if (interaction.isChatInputCommand() && interaction.commandName === 'roles') {
-      if (!isCordfolGuild(interaction.guildId)) {
-        await interaction.reply({ content: '❌ Cordfol server only.', ephemeral: true });
-        return true;
-      }
-      const store = loadStore();
-      await interaction.reply({ ephemeral: true, ...pickerPayload(store) });
+      await interaction.reply({
+        ephemeral: true,
+        content: `Pick roles about you on the site: ${ROLES_PAGE_URL}`,
+        components: [pageButtonRow()],
+      });
       return true;
     }
 
@@ -479,7 +506,7 @@ function createOnboarding(ctx) {
         await interaction.editReply({ content: `❌ Could not set up roles: ${setup.reason}` });
         return true;
       }
-      await interaction.editReply({ content: `✅ Roles page is live in ${setup.channel}.` });
+      await interaction.editReply({ content: `✅ Discord pointer is live in ${setup.channel}. The picker is ${ROLES_PAGE_URL}` });
       return true;
     }
 
@@ -496,9 +523,12 @@ function createOnboarding(ctx) {
     syncAllProRoles,
     handleJoin,
     handleInteraction,
+    snapshotForDiscordId,
+    applyWebSelections,
     rolesChannelId,
+    ROLES_PAGE_URL,
     OPEN_BTN,
   };
 }
 
-module.exports = { createOnboarding, ROLE_GROUPS };
+module.exports = { createOnboarding, ROLE_GROUPS, publicCatalog, ROLES_PAGE_URL };
