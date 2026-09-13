@@ -290,4 +290,4 @@ async function buildProfile({ idea, images = [], colorHints = {} }) {
   }
 }
 
-module.exports = { buildProfile, chatTurn, ollamaStatus };
+module.exports = { buildProfile, chatTurn, ollamaStatus, ollamaChat, parseModelJson, OLLAMA_MODEL };

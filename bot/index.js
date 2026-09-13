@@ -25,6 +25,7 @@ const { createModmail } = require('./modmail');
 const { createModeration } = require('./moderation');
 const { ensureGuildOps } = require('./guild-setup');
 const { setUserPlanByDiscordId, isProPlan } = require('../pro');
+const { interpretBotRequest } = require('./ai-chat');
 
 const {
   BOT_TOKEN,
@@ -247,6 +248,7 @@ function helpEmbed() {
           `\`/help\` · \`${BOT_PREFIX}help\` — this message`,
           `\`${BOT_PREFIX}ping\` — latency check`,
           `\`/pro\` · \`${BOT_PREFIX}pro give|take|check @user\` — founder only`,
+          `@ the bot and just talk — it reads the request and finishes it`,
         ].join('\n'),
       }
     )
@@ -908,13 +910,121 @@ function interactionAdapter(interaction) {
 }
 
 function messageAdapter(message) {
+  let used = false;
   return {
     async defer() {},
     async reply(payload) {
       const { embeds, content } = payload;
-      return message.reply({ content: content || undefined, embeds: embeds || undefined });
+      const body = { content: content || undefined, embeds: embeds || undefined };
+      if (!used) {
+        used = true;
+        return message.reply(body);
+      }
+      return message.channel.send(body);
     },
   };
+}
+
+const aiTalkCooldown = new Map();
+
+async function wasTalkingToBot(message) {
+  if (message.mentions.users.has(client.user.id)) return true;
+  if (!message.reference?.messageId) return false;
+  try {
+    const ref = message.reference.message || await message.fetchReference();
+    return ref?.author?.id === client.user.id;
+  } catch {
+    return false;
+  }
+}
+
+function stripBotAddress(text, botId) {
+  return String(text || '')
+    .replace(new RegExp(`<@!?${botId}>`, 'g'), '')
+    .replace(/^cordfol[,:]?\s+/i, '')
+    .trim();
+}
+
+async function runAiAction(action, message, adapter) {
+  const user = message.author;
+  if (action.type === 'verify') {
+    return handleVerify({ user, guildId: message.guild.id, guild: message.guild, ...adapter });
+  }
+  if (action.type === 'profile') {
+    return handleCordfol({ user, ...adapter });
+  }
+  if (action.type === 'whois') {
+    const id = action.userId || [...message.mentions.users.keys()].find((id) => id !== client.user.id);
+    if (!id) return adapter.reply({ content: 'Tell me who — mention them.' });
+    const target = message.mentions.users.get(id) || await client.users.fetch(id).catch(() => null);
+    if (!target) return adapter.reply({ content: 'Could not find that user.' });
+    return handleWhois({ target, ...adapter });
+  }
+  if (action.type === 'help') {
+    return adapter.reply({ embeds: [helpEmbed()] });
+  }
+  if (action.type === 'pro') {
+    const id = action.userId || [...message.mentions.users.keys()].find((x) => x !== client.user.id);
+    const target = id
+      ? (message.mentions.users.get(id) || await client.users.fetch(id).catch(() => null))
+      : null;
+    return handlePro({ actorId: user.id, action: action.op || 'check', target, reply: adapter.reply });
+  }
+  if (action.type === 'status') {
+    if (!isCordfolGuild(message.guild.id)) {
+      return adapter.reply({ content: 'Status is only in the Cordfol server.' });
+    }
+    return handleStatusView(adapter);
+  }
+  if (action.type === 'announce') {
+    const gate = await assertOps(message);
+    if (!gate.ok) return adapter.reply({ content: gate.reply });
+    if (!action.message) return adapter.reply({ content: 'What should I announce?' });
+    return handleAnnounce({ message: action.message, user, ...adapter });
+  }
+  return null;
+}
+
+async function handleNaturalRequest(message, rawText) {
+  const text = stripBotAddress(rawText, client.user.id);
+  if (text.length < 2) {
+    return message.reply({ content: 'Say what you need — verify me, drop my link, look this person up, or how Pro works.' });
+  }
+  const now = Date.now();
+  const last = aiTalkCooldown.get(message.author.id) || 0;
+  if (now - last < 4000) {
+    return message.reply({ content: 'One sec — still finishing the last one.' });
+  }
+  aiTalkCooldown.set(message.author.id, now);
+
+  try { await message.channel.sendTyping(); } catch { /* ignore */ }
+
+  const mentionIds = [...message.mentions.users.values()]
+    .filter((u) => u.id !== client.user.id)
+    .map((u) => u.id);
+
+  const plan = await interpretBotRequest({
+    text,
+    mentionIds,
+    authorName: message.author.username,
+    isFounder: message.author.id === EXCLUSIVE_USER_ID,
+    isOps: memberIsOps(message.member, message.author.id),
+  });
+
+  const adapter = messageAdapter(message);
+  const onlyTalk = plan.actions.length === 1 && plan.actions[0].type === 'reply';
+  if (plan.say) await adapter.reply({ content: plan.say });
+  if (onlyTalk) return;
+
+  for (const action of plan.actions) {
+    if (action.type === 'reply') continue;
+    try {
+      await runAiAction(action, message, adapter);
+    } catch (err) {
+      console.error('[bot] ai action failed:', action.type, err.message);
+      await adapter.reply({ content: `Could not finish \`${action.type}\`.` });
+    }
+  }
 }
 
 // ── Ready / registration ──────────────────────────────────────────────────────
@@ -1121,7 +1231,14 @@ client.on('messageCreate', async (message) => {
     console.error('[bot] modmail relay error:', err);
   }
 
-  if (!message.content.startsWith(BOT_PREFIX)) return;
+  const talkingToBot = await wasTalkingToBot(message);
+  if (!message.content.startsWith(BOT_PREFIX)) {
+    if (talkingToBot) {
+      try { await handleNaturalRequest(message, message.content); }
+      catch (err) { console.error('[bot] natural request error:', err.message); }
+    }
+    return;
+  }
 
   const body = message.content.slice(BOT_PREFIX.length).trim();
   if (!body) return;
@@ -1221,6 +1338,12 @@ client.on('messageCreate', async (message) => {
         return handleBroadcast({ message: argsText, user, ...adapter });
       }
     }
+
+    if (cmd === 'ask' || cmd === 'ai') {
+      return handleNaturalRequest(message, argsText || body);
+    }
+
+    return handleNaturalRequest(message, body);
   } catch (err) {
     console.error(`[bot] prefix ${cmd} error:`, err.message);
     try {
@@ -1244,6 +1367,7 @@ client.on('guildMemberAdd', async (member) => {
         `Hey ${member}, welcome!\n\n` +
         `• Create your verified profile at **[cordfol.org](https://cordfol.org)**\n` +
         `• Use \`/verify\` or \`${BOT_PREFIX}verify\` to sync your roles\n` +
+        `• @ me and just say what you need\n` +
         `• \`${BOT_PREFIX}help\` for commands`
       )
       .setThumbnail(member.user.displayAvatarURL({ size: 128 }))
