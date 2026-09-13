@@ -77,6 +77,7 @@ function loadStore() {
     rolesChannelId: '',
     panelMessageId: '',
     groups: {},
+    orgRoles: {},
   }));
 }
 
@@ -327,7 +328,7 @@ function createOnboarding(ctx) {
     return {
       groups,
       inGuild: !!member,
-      invite: ops.DISCORD_INVITE_URL || 'https://discord.gg/wcrCgc6pMf',
+      invite: ops.DISCORD_INVITE_URL || 'https://discord.gg/3PCM24s9WT',
       page: ROLES_PAGE_URL,
     };
   }
@@ -339,7 +340,7 @@ function createOnboarding(ctx) {
     if (!guild) return { ok: false, error: 'Cordfol server is not available.' };
     const member = await guild.members.fetch(String(discordId)).catch(() => null);
     if (!member) {
-      return { ok: false, error: 'not_in_guild', invite: ops.DISCORD_INVITE_URL || 'https://discord.gg/wcrCgc6pMf' };
+      return { ok: false, error: 'not_in_guild', invite: ops.DISCORD_INVITE_URL || 'https://discord.gg/3PCM24s9WT' };
     }
 
     const store = loadStore();
@@ -362,6 +363,75 @@ function createOnboarding(ctx) {
 
     const snap = await snapshotForDiscordId(discordId);
     return { ok: true, ...snap };
+  }
+
+  function cleanOrgName(raw) {
+    return String(raw || '')
+      .replace(/<@!?\d+>/g, '')
+      .replace(/["'`]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .slice(0, 80);
+  }
+
+  async function grantOrgRole({ name, targetId } = {}) {
+    const guild = await cordfolGuild();
+    if (!guild) return { ok: false, error: 'Cordfol server is not available.' };
+
+    const me = guild.members.me || await guild.members.fetchMe().catch(() => null);
+    if (!me?.permissions?.has(PermissionFlagsBits.ManageRoles)) {
+      return { ok: false, error: 'I need Manage Roles, above the org roles.' };
+    }
+
+    const roleName = cleanOrgName(name);
+    if (roleName.length < 2) {
+      return { ok: false, error: 'Which org? Say something like “add org role Nightfall”.' };
+    }
+
+    await guild.roles.fetch().catch(() => {});
+    const store = loadStore();
+    store.orgRoles = store.orgRoles || {};
+    const key = roleName.toLowerCase();
+
+    let role = null;
+    const savedId = store.orgRoles[key]?.id;
+    if (savedId) role = await guild.roles.fetch(savedId).catch(() => null);
+    if (!role) {
+      role = guild.roles.cache.find((r) => r.name.toLowerCase() === key) || null;
+    }
+    const created = !role;
+    if (!role) {
+      role = await guild.roles.create({
+        name: roleName,
+        color: 0xff8a3d,
+        hoist: true,
+        mentionable: true,
+        reason: 'Cordfol org role (founder asked)',
+      });
+    }
+
+    store.orgRoles[key] = { id: role.id, name: role.name };
+    saveStore(store);
+
+    let assigned = null;
+    if (targetId) {
+      const member = await guild.members.fetch(String(targetId)).catch(() => null);
+      if (!member) return { ok: false, error: 'That person is not in the Cordfol server.' };
+      if (!member.roles.cache.has(role.id)) {
+        await member.roles.add(role, 'Cordfol org role');
+        assigned = 'added';
+      } else {
+        assigned = 'already';
+      }
+    }
+
+    return {
+      ok: true,
+      created,
+      assigned,
+      role,
+      name: role.name,
+    };
   }
 
   async function handleJoin(member) {
@@ -523,6 +593,8 @@ function createOnboarding(ctx) {
     syncAllProRoles,
     handleJoin,
     handleInteraction,
+    grantOrgRole,
+    cleanOrgName,
     snapshotForDiscordId,
     applyWebSelections,
     rolesChannelId,

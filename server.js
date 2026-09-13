@@ -1730,7 +1730,7 @@ app.get('/api/community-roles', async (req, res) => {
       return res.json({
         authenticated: false,
         groups: catalog.map((g) => ({ ...g, selected: [] })),
-        invite: process.env.DISCORD_INVITE_URL || 'https://discord.gg/wcrCgc6pMf',
+        invite: process.env.DISCORD_INVITE_URL || 'https://discord.gg/3PCM24s9WT',
         page: ROLES_PAGE_URL,
       });
     }
@@ -1801,7 +1801,7 @@ app.post('/api/community-roles', async (req, res) => {
     if (!result.ok && result.error === 'not_in_guild') {
       return res.status(409).json({
         error: 'Join the Cordfol Discord first, then pick roles.',
-        invite: result.invite || process.env.DISCORD_INVITE_URL || 'https://discord.gg/wcrCgc6pMf',
+        invite: result.invite || process.env.DISCORD_INVITE_URL || 'https://discord.gg/3PCM24s9WT',
       });
     }
     if (!result.ok) {

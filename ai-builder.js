@@ -134,7 +134,7 @@ Facts:
 - Status: cordfol.org/status.
 - Pro: founder grants with Discord /pro give. Not Stripe yet.
 - Compare and surprise: /compare /random.
-If you don't know, say so and point them to discord.gg/wcrCgc6pMf.
+If you don't know, say so and point them to discord.gg/3PCM24s9WT.
 Keep answers tight.`,
   },
   builder: {

@@ -2,7 +2,7 @@ const { ollamaStatus, ollamaChat, parseModelJson, OLLAMA_MODEL } = require('../a
 const { SEP11_MESSAGE, isIncidentQuestion } = require('../platform-status');
 
 const ALLOWED = new Set([
-  'verify', 'profile', 'whois', 'help', 'pro', 'status', 'announce', 'reply', 'roles', 'servers',
+  'verify', 'profile', 'whois', 'help', 'pro', 'status', 'announce', 'reply', 'roles', 'servers', 'orgrole',
 ]);
 
 const FACTS = `Cordfol facts:
@@ -13,7 +13,8 @@ const FACTS = `Cordfol facts:
 - Compare / random: https://cordfol.org/compare and /random
 - Status: https://cordfol.org/status
 - Pro is founder-granted with /pro give. Not Stripe.
-- Support Discord: https://discord.gg/wcrCgc6pMf
+- Org roles are created only when Astro pings the bot and asks. Nobody else. Example: “add org role Nightfall” or “give @user the Nightfall org role”.
+- Support Discord: https://discord.gg/3PCM24s9WT
 - Prefix is usually "." — .verify .cordfol .whois .roles .help`;
 
 function heuristicPlan(text, mentionIds, ctx = {}) {
@@ -38,6 +39,10 @@ function heuristicPlan(text, mentionIds, ctx = {}) {
   }
   if (/\bservers?\b/.test(t) && /\b(page|hub|directory|list|where)\b/.test(t)) {
     actions.push({ type: 'servers' });
+  }
+  if (/\borg(anisation|anization)?s?\s+roles?\b|\borg\s+role\b/.test(t)
+    && /\b(add|create|make|give|set\s*up|grant|assign)\b/.test(t)) {
+    actions.push({ type: 'orgrole', name: parseOrgRoleName(text), userId: target });
   }
   if (/\bpro\b/.test(t) && (/\bgive\b|\bgrant\b/.test(t))) {
     actions.push({ type: 'pro', op: 'give', userId: target });
@@ -65,6 +70,30 @@ function heuristicPlan(text, mentionIds, ctx = {}) {
   };
 }
 
+function tidyOrgName(name) {
+  const cleaned = String(name || '')
+    .replace(/\b(please|here|now|to|them|him|her|the|a|an)\b/ig, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+  if (cleaned.length < 2) return '';
+  if (/^(role|roles|org|give|add|create|make|grant|assign)$/i.test(cleaned)) return '';
+  return cleaned.slice(0, 80);
+}
+
+function parseOrgRoleName(text) {
+  const stripped = String(text || '').replace(/<@!?\d+>/g, ' ').replace(/\s+/g, ' ').trim();
+  const patterns = [
+    /(?:add|create|make|set\s*up|grant|assign)\s+(?:an?\s+)?org(?:anisation|anization)?s?\s+roles?\s+(?:called|named|for)?\s*["']?([a-z0-9](?:[\w .&'\-]{0,38}[a-z0-9])?)["']?/i,
+    /(?:give|add)\s+(?:them|him|her|this)?\s*(?:the\s+)?["']?([a-z0-9][\w .&'\-]{1,32}?)["']?\s+org(?:anisation|anization)?s?\s+roles?/i,
+    /\borg(?:anisation|anization)?s?\s+roles?\s+(?:called|named|for)\s+["']?([a-z0-9][\w .&'\-]{1,40})/i,
+  ];
+  for (const re of patterns) {
+    const name = tidyOrgName(stripped.match(re)?.[1]);
+    if (name) return name;
+  }
+  return '';
+}
+
 function faqReply(t, ctx = {}) {
   if (/\b(claim|sign ?up|create|make).{0,20}\b(profile|page|account|handle)\b|\bhow do i (start|join|get (a )?page)\b/.test(t)) {
     return 'Sign in with Discord at cordfol.org, pick a handle, then ask me to verify you.';
@@ -76,7 +105,7 @@ function faqReply(t, ctx = {}) {
     return 'Pro is not checkout yet. Astro grants it in Discord with /pro give.';
   }
   if (/\b(invite|join).{0,16}(cordfol|server|discord)\b|\bdiscord\.gg\b/.test(t)) {
-    return 'Cordfol Discord: https://discord.gg/wcrCgc6pMf';
+    return 'Cordfol Discord: https://discord.gg/3PCM24s9WT';
   }
   if (ctx.slug && /\b(my (link|url|handle)|what('?s| is) my slug)\b/.test(t)) {
     return `You're cordfol.org/${ctx.slug}`;
@@ -91,12 +120,15 @@ function sanitizePlan(parsed, fallback, mentionIds) {
   const actions = raw.slice(0, 4).map((a) => {
     const type = ALLOWED.has(a?.type) ? a.type : 'reply';
     const out = { type };
-    if (type === 'whois' || type === 'pro') {
+    if (type === 'whois' || type === 'pro' || type === 'orgrole') {
       const id = String(a.userId || mentionIds[0] || '').replace(/\D/g, '');
       if (id) out.userId = id;
     }
     if (type === 'pro') {
       out.op = ['give', 'take', 'check'].includes(a.op) ? a.op : 'check';
+    }
+    if (type === 'orgrole') {
+      out.name = String(a.name || '').trim().slice(0, 80);
     }
     if (type === 'announce') {
       out.message = String(a.message || '').slice(0, 400);
@@ -119,7 +151,8 @@ This message is from ${authorName} (founder=${!!isFounder}, staff=${!!isOps}, pl
 Rules:
 - Answer the thing they said. 1-5 short sentences. Casual.
 - Use their page link if it helps. Never invent other people's handles or Discord IDs.
-- If they want you to verify, look someone up, or grant Pro, say you'll do it in one short line — the bot runs the action separately.
+- If they want you to verify, look someone up, grant Pro, or add an org role, say you'll do it in one short line — the bot runs the action separately.
+- Org roles: only Astro. Do not offer to create them for anyone else.
 - September 11 outage: if asked, use this exact line and nothing extra: ${JSON.stringify(SEP11_MESSAGE)}
 - No exploits, no sexual content involving minors, no fake private data.`;
 }
@@ -151,11 +184,11 @@ async function talkWithOllama({ text, history = [], ctx, model }) {
 
 async function planWithOllama({ text, mentionIds, ctx, model }) {
   const prompt = `Turn this Discord message into JSON only:
-{"say":"short line or empty","actions":[{"type":"verify|profile|whois|help|pro|status|announce|roles|servers|reply","userId":"","op":"give|take|check","message":""}]}
+{"say":"short line or empty","actions":[{"type":"verify|profile|whois|help|pro|status|announce|roles|servers|orgrole|reply","userId":"","op":"give|take|check","name":"org name","message":""}]}
 Rules:
 - Do the thing they asked. Multiple actions ok.
 - Never invent Discord IDs. Mentions: ${JSON.stringify(mentionIds)}
-- pro/announce only if they clearly asked.
+- pro/announce/orgrole only if they clearly asked. orgrole needs the org name in "name".
 - "do I have pro" → pro check, empty userId.
 - How-to questions → type reply and put the answer in say.
 - Keep say under 2 sentences.
@@ -203,7 +236,7 @@ async function interpretBotRequest({
       return fallback;
     }
 
-    const looksLikeCommand = /^(verify|profile|whois|help|pro|status|roles|servers|announce)\b/i.test(String(text || '').trim());
+    const looksLikeCommand = /^(verify|profile|whois|help|pro|status|roles|servers|announce|orgrole|org)\b/i.test(String(text || '').trim());
     if (looksLikeCommand) {
       const parsed = await planWithOllama({ text, mentionIds, ctx, model });
       return sanitizePlan(parsed, fallback, mentionIds);
@@ -225,4 +258,4 @@ async function interpretBotRequest({
   }
 }
 
-module.exports = { interpretBotRequest, heuristicPlan };
+module.exports = { interpretBotRequest, heuristicPlan, parseOrgRoleName };

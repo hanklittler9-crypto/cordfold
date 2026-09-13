@@ -27,7 +27,7 @@ function liveGuild(botClient, guildId) {
 
 function inviteFor(guildId, live, env = process.env) {
   if (String(guildId) === String(env.CORDFOL_GUILD_ID || '1537671204465541182')) {
-    return env.DISCORD_INVITE_URL || 'https://discord.gg/wcrCgc6pMf';
+    return env.DISCORD_INVITE_URL || 'https://discord.gg/3PCM24s9WT';
   }
   if (live?.vanity) return `https://discord.gg/${live.vanity}`;
   return null;

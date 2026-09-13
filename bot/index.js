@@ -25,7 +25,7 @@ const { createModmail } = require('./modmail');
 const { createModeration } = require('./moderation');
 const { ensureGuildOps } = require('./guild-setup');
 const { setUserPlanByDiscordId, isProPlan } = require('../pro');
-const { interpretBotRequest } = require('./ai-chat');
+const { interpretBotRequest, parseOrgRoleName } = require('./ai-chat');
 const { SEP11_MESSAGE, isIncidentQuestion, collectPlatformStatus } = require('../platform-status');
 const { syncVerifiedRoles } = require('./verify-sync');
 const { createOnboarding } = require('./onboarding');
@@ -41,7 +41,7 @@ const CORDFOL_GUILD_ID = process.env.CORDFOL_GUILD_ID || '1537671204465541182';
 const STATUS_CHANNEL_ID = process.env.STATUS_CHANNEL_ID || '';
 const ANNOUNCE_CHANNEL_ID = process.env.ANNOUNCE_CHANNEL_ID || '';
 const WELCOME_CHANNEL_ID = process.env.WELCOME_CHANNEL_ID || '';
-const DISCORD_INVITE_URL = process.env.DISCORD_INVITE_URL || 'https://discord.gg/wcrCgc6pMf';
+const DISCORD_INVITE_URL = process.env.DISCORD_INVITE_URL || 'https://discord.gg/3PCM24s9WT';
 const BOT_PREFIX = (process.env.BOT_PREFIX || '.').trim() || '.';
 const ADMIN_ROLE_IDS = (process.env.ADMIN_ROLE_IDS || '')
   .split(',')
@@ -262,6 +262,7 @@ function helpEmbed() {
           `\`/roles\` · \`${BOT_PREFIX}roles\` — open cordfol.org/roles`,
           `\`${BOT_PREFIX}ping\` — latency check`,
           `\`/pro\` · \`${BOT_PREFIX}pro give|take|check @user\` — founder only`,
+          `@ the bot “add org role Name” — founder only, not automatic`,
           `@ the bot and just talk — it reads the request and finishes it`,
         ].join('\n'),
       }
@@ -842,6 +843,26 @@ async function handlePro({ actorId, action, target, reply, defer }) {
   });
 }
 
+async function handleOrgRole({ actorId, name, target, reply }) {
+  if (String(actorId) !== EXCLUSIVE_USER_ID) {
+    return reply({ content: 'Only Astro can add org roles. Ping me and ask.' });
+  }
+  const result = await onboarding.grantOrgRole({
+    name,
+    targetId: target?.id || null,
+  });
+  if (!result.ok) {
+    return reply({ content: result.error || 'Could not add that org role.' });
+  }
+  const bits = [];
+  bits.push(result.created
+    ? `Created org role **${result.name}**.`
+    : `Org role **${result.name}** is already there.`);
+  if (result.assigned === 'added' && target) bits.push(`Gave it to <@${target.id}>.`);
+  if (result.assigned === 'already' && target) bits.push(`<@${target.id}> already has it.`);
+  return reply({ content: bits.join(' ') });
+}
+
 async function handleStatusSet({ state, message, user, reply }) {
   const defaults = {
     up: 'All systems operational.',
@@ -1016,6 +1037,19 @@ async function runAiAction(action, message, adapter) {
   }
   if (action.type === 'servers') {
     return adapter.reply({ content: 'Server hubs: https://cordfol.org/servers' });
+  }
+  if (action.type === 'orgrole') {
+    const mentioned = [...message.mentions.users.keys()].find((x) => x !== client.user.id);
+    const id = action.userId || mentioned;
+    const target = id
+      ? (message.mentions.users.get(id) || await client.users.fetch(id).catch(() => null))
+      : null;
+    return handleOrgRole({
+      actorId: user.id,
+      name: action.name || parseOrgRoleName(stripBotAddress(message.content, client.user.id)),
+      target,
+      reply: adapter.reply,
+    });
   }
   return null;
 }
@@ -1371,6 +1405,12 @@ client.on('messageCreate', async (message) => {
 
     if (cmd === 'cordfol' || cmd === 'profile') {
       return handleCordfol({ user, ...adapter });
+    }
+
+    if (cmd === 'orgrole' || cmd === 'org') {
+      const target = message.mentions.users.first();
+      const name = parseOrgRoleName(argsText) || onboarding.cleanOrgName(argsText.replace(/<@!?\d+>/g, ''));
+      return handleOrgRole({ actorId: user.id, name, target, reply: adapter.reply });
     }
 
     if (cmd === 'pro') {
