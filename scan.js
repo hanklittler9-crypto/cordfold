@@ -192,10 +192,14 @@ async function runScanForUser(userId) {
         { headers: { Authorization: `Bearer ${accessToken}` } }
       );
 
-      // 403 = bot required / not in server / missing permissions — skip
-      // 404 = user not in server anymore
-      if (memberRes.status === 403 || memberRes.status === 404) {
-        // Mark all roles in this guild as inactive
+      // 403 = Discord won't show this member (app not in guild / missing scope).
+      // That is "could not check", not "they lost the role" — leave rows alone.
+      if (memberRes.status === 403) {
+        console.warn(`[scan] Skip guild ${guild.id} for ${userId}: member endpoint 403`);
+        continue;
+      }
+      // 404 = user is not in that server anymore
+      if (memberRes.status === 404) {
         await db.query(`
           UPDATE verified_roles SET is_active = false, last_checked_at = NOW()
           WHERE user_id = $1 AND guild_id = $2 AND proof_type = 'OAUTH'
@@ -292,7 +296,11 @@ async function runScanForUser(userId) {
           roleName: r.custom_label || r.role_name,
           roleId: r.role_id,
           guildName: r.guild_name,
-        }));
+        }))
+        .filter((r) => {
+          const label = String(r.roleName || '');
+          return label && !/^\d{16,22}$/.test(label);
+        });
 
       if (lostRoles.length) {
         maybeSendRoleChangeAlert(db, userId, lostRoles).catch(err =>

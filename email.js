@@ -1,8 +1,20 @@
 const nodemailer = require('nodemailer');
 
 const PUBLIC_HOST = 'cordfol.org';
-const DASHBOARD_URL = process.env.DASHBOARD_URL || 'https://cordfol.org/dashboard.html';
+const DASHBOARD_URL = (() => {
+  const raw = process.env.DASHBOARD_URL || 'https://dashboard.cordfol.org/dashboard.html';
+  if (/vercel\.app/i.test(raw)) return 'https://dashboard.cordfol.org/dashboard.html';
+  return raw;
+})();
 const API_BASE = process.env.PUBLIC_API_URL || 'https://api.cordfol.org';
+
+function prettyRoleLabel(role) {
+  const name = String(role?.roleName || '').trim();
+  if (name && !/^\d{16,22}$/.test(name)) return name;
+  const guild = String(role?.guildName || '').trim();
+  if (guild && !/^\d{16,22}$/.test(guild)) return `A role in ${guild}`;
+  return 'A Discord role';
+}
 
 let transporter = null;
 
@@ -207,11 +219,11 @@ async function sendRoleChangeEmail({ to, displayName, slug, lostRoles }) {
   const profileUrl = `https://${PUBLIC_HOST}/${slug}`;
   const roleLines = lostRoles
     .slice(0, 6)
-    .map(r => `— ${r.roleName || r.roleId} (${r.guildName || 'Unknown server'})`)
+    .map(r => `— ${prettyRoleLabel(r)} (${r.guildName || 'Unknown server'})`)
     .join('\n');
   const roleHtml = lostRoles
     .slice(0, 6)
-    .map(r => `<p style="margin:0 0 6px;padding:10px 14px;background:#1b1c26;border:1px solid #262836;border-radius:10px;color:#f5f7fb;">${esc(r.roleName || r.roleId)} <span style="color:#6b6f7b;">· ${esc(r.guildName || 'Unknown server')}</span></p>`)
+    .map(r => `<p style="margin:0 0 6px;padding:10px 14px;background:#1b1c26;border:1px solid #262836;border-radius:10px;color:#f5f7fb;">${esc(prettyRoleLabel(r))} <span style="color:#6b6f7b;">· ${esc(r.guildName || 'Unknown server')}</span></p>`)
     .join('');
   const extra = lostRoles.length > 6
     ? `<p style="margin:8px 0 0;color:#6b6f7b;">…and ${lostRoles.length - 6} more.</p>`
