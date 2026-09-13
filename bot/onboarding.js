@@ -603,4 +603,9 @@ function createOnboarding(ctx) {
   };
 }
 
-module.exports = { createOnboarding, ROLE_GROUPS, publicCatalog, ROLES_PAGE_URL };
+function listedOrgRoles() {
+  const store = loadStore();
+  return Object.values(store.orgRoles || {}).filter((r) => r && r.id && r.name);
+}
+
+module.exports = { createOnboarding, ROLE_GROUPS, publicCatalog, ROLES_PAGE_URL, listedOrgRoles };

@@ -179,4 +179,93 @@ function createServersRouter({ db, botClientRef, discordAvatarFromUser }) {
   return router;
 }
 
-module.exports = { createServersRouter, guildIconUrl };
+async function roomsForProfile(db, { userId, visitorId, discordAvatarFromUser, orgRoleIds = [] }) {
+  const mine = await db.query(`
+    WITH mine AS (
+      SELECT guild_id,
+        MAX(guild_name) AS guild_name,
+        MAX(guild_icon_hash) AS guild_icon_hash
+      FROM verified_roles
+      WHERE user_id = $1 AND is_active = true AND is_public = true
+        AND guild_id IS NOT NULL AND guild_id <> ''
+      GROUP BY guild_id
+    ),
+    counts AS (
+      SELECT vr.guild_id, COUNT(DISTINCT vr.user_id)::int AS people
+      FROM verified_roles vr
+      JOIN mine ON mine.guild_id = vr.guild_id
+      WHERE vr.is_active = true AND vr.is_public = true
+      GROUP BY vr.guild_id
+    )
+    SELECT mine.guild_id, mine.guild_name, mine.guild_icon_hash, counts.people
+    FROM mine
+    JOIN counts ON counts.guild_id = mine.guild_id
+    ORDER BY counts.people DESC, mine.guild_name ASC
+    LIMIT 8
+  `, [userId]);
+
+  let shared = new Set();
+  if (visitorId && String(visitorId) !== String(userId)) {
+    const overlap = await db.query(`
+      SELECT DISTINCT a.guild_id
+      FROM verified_roles a
+      JOIN verified_roles b ON a.guild_id = b.guild_id
+      WHERE a.user_id = $1 AND b.user_id = $2
+        AND a.is_active = true AND a.is_public = true
+        AND b.is_active = true AND b.is_public = true
+    `, [userId, visitorId]);
+    shared = new Set(overlap.rows.map((r) => r.guild_id));
+  }
+
+  const guildIds = mine.rows.map((r) => r.guild_id);
+  let faces = [];
+  if (guildIds.length) {
+    const people = await db.query(`
+      SELECT DISTINCT ON (u.id)
+        u.slug, u.display_name, u.discord_username, u.avatar_url, u.avatar_hash, u.discord_id
+      FROM verified_roles vr
+      JOIN users u ON u.id = vr.user_id
+      WHERE vr.guild_id = ANY($1::text[])
+        AND vr.user_id <> $2
+        AND vr.is_active = true AND vr.is_public = true
+        AND u.slug IS NOT NULL AND u.slug <> ''
+      ORDER BY u.id
+      LIMIT 6
+    `, [guildIds, userId]);
+    faces = people.rows.map((u) => ({
+      slug: u.slug,
+      name: u.display_name || u.discord_username,
+      avatarUrl: u.avatar_url || (typeof discordAvatarFromUser === 'function' ? discordAvatarFromUser(u) : null),
+    }));
+  }
+
+  let orgs = [];
+  if (orgRoleIds.length) {
+    const hit = await db.query(`
+      SELECT role_id, MAX(role_name) AS role_name
+      FROM verified_roles
+      WHERE user_id = $1 AND is_active = true AND is_public = true
+        AND role_id = ANY($2::text[])
+      GROUP BY role_id
+    `, [userId, orgRoleIds]);
+    orgs = hit.rows.map((r) => ({
+      id: r.role_id,
+      name: r.role_name,
+    }));
+  }
+
+  return {
+    servers: mine.rows.map((r) => ({
+      id: r.guild_id,
+      name: r.guild_name || 'Discord server',
+      iconUrl: guildIconUrl(r.guild_id, r.guild_icon_hash, 64),
+      people: r.people,
+      shared: shared.has(r.guild_id),
+    })),
+    sharedCount: shared.size,
+    faces,
+    orgs,
+  };
+}
+
+module.exports = { createServersRouter, guildIconUrl, roomsForProfile };

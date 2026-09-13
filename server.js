@@ -30,8 +30,8 @@ const createHostedAppsRouter = require('./hosted-apps');
 const { buildProfile: aiBuildProfile, chatTurn: aiChatTurn, siteTalk: aiSiteTalk, ollamaStatus, CHAT_MODES } = require('./ai-builder');
 const { isProPlan, ensureFounderPro, proLimits } = require('./pro');
 const { collectPlatformStatus } = require('./platform-status');
-const { publicCatalog, ROLE_GROUPS, ROLES_PAGE_URL } = require('./bot/onboarding');
-const { createServersRouter } = require('./servers');
+const { publicCatalog, ROLE_GROUPS, ROLES_PAGE_URL, listedOrgRoles } = require('./bot/onboarding');
+const { createServersRouter, roomsForProfile } = require('./servers');
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
@@ -497,11 +497,21 @@ app.get('/api/profile/:slug', async (req, res) => {
     }
 
     const featuredServerPromise = resolveFeaturedServer(user.featured_invite);
+    const roomsPromise = roomsForProfile(db, {
+      userId: user.id,
+      visitorId,
+      discordAvatarFromUser,
+      orgRoleIds: listedOrgRoles().map((r) => r.id),
+    }).catch((err) => {
+      console.error('[server] rooms:', err.message);
+      return { servers: [], sharedCount: 0, faces: [], orgs: [] };
+    });
 
     res.set('Cache-Control', 'private, no-store, must-revalidate');
     res.set('Pragma', 'no-cache');
     res.json({
       isOwner: !!(visitorId && String(visitorId) === String(user.id)),
+      rooms: await roomsPromise,
       profile: {
         slug,
         discordId:   user.discord_id,
@@ -1234,6 +1244,7 @@ const DEFAULT_DISPLAY_OPTIONS = {
   showLocalTime: true,
   showGuestbook: true,
   showServerCard: true,
+  showRooms: true,
   showVerifiedBadge: true,
   showHandle: true,
   showPresence: true,

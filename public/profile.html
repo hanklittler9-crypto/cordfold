@@ -932,6 +932,59 @@
       background: #3ba55d;
       margin-right: 4px;
     }
+    .rooms-block { margin-top: 18px; text-align: left; }
+    .rooms-note {
+      font-size: 12px;
+      color: var(--muted);
+      margin: 0 0 10px;
+    }
+    .rooms-orgs, .rooms-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .room-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 10px 7px 7px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.04);
+      color: inherit;
+      text-decoration: none;
+      font-size: 12px;
+      max-width: 100%;
+    }
+    .room-chip:hover { border-color: rgba(255,255,255,0.16); background: rgba(255,255,255,0.07); }
+    .room-chip.shared { border-color: rgba(61,214,140,0.35); background: rgba(61,214,140,0.08); }
+    .room-chip img, .room-chip .room-fallback {
+      width: 22px; height: 22px; border-radius: 7px; object-fit: cover; flex-shrink: 0;
+      background: rgba(255,255,255,0.08);
+    }
+    .room-chip .room-fallback {
+      display: grid; place-items: center; font-size: 10px; font-weight: 700;
+    }
+    .room-chip b { font-weight: 600; }
+    .room-chip span { color: var(--muted); }
+    .org-chip {
+      display: inline-flex; align-items: center;
+      padding: 5px 10px; border-radius: 999px;
+      background: rgba(255,138,61,0.14);
+      border: 1px solid rgba(255,138,61,0.28);
+      font-size: 11px; font-weight: 700; letter-spacing: 0.04em;
+      text-transform: uppercase; color: #ffd2b3;
+    }
+    .rooms-faces { display: flex; align-items: center; gap: 8px; margin-top: 4px; }
+    .rooms-faces a {
+      width: 28px; height: 28px; border-radius: 50%; overflow: hidden;
+      border: 2px solid rgba(0,0,0,0.35); margin-left: -8px;
+    }
+    .rooms-faces a:first-child { margin-left: 0; }
+    .rooms-faces img { width: 100%; height: 100%; object-fit: cover; }
+    .rooms-faces em { font-style: normal; font-size: 11px; color: var(--muted); }
+
     .server-join-btn {
       margin-left: auto;
       flex-shrink: 0;
@@ -3004,6 +3057,7 @@ async function renderProfile() {
     showMemberSince: true,
     showRoleStats: true,
     showRoles: true,
+    showRooms: true,
     showSocials: true,
     showSpotifyWidget: true,
   }, p.displayOptions || {});
@@ -3254,6 +3308,37 @@ async function renderProfile() {
     </div>
   ` : '';
 
+  const rooms = data.rooms || { servers: [], faces: [], orgs: [], sharedCount: 0 };
+  const roomsHtml = (disp.showRooms !== false && (rooms.servers?.length || rooms.orgs?.length)) ? `
+    <div class="divider"></div>
+    <div class="roles-title">${isCenteredLayout ? 'Rooms' : 'Verified rooms'}</div>
+    <div class="rooms-block">
+      ${rooms.orgs?.length ? `<div class="rooms-orgs">${rooms.orgs.map((o) => `<span class="org-chip">${escapeHtml(o.name)}</span>`).join('')}</div>` : ''}
+      ${rooms.sharedCount ? `<p class="rooms-note">You share ${rooms.sharedCount} server${rooms.sharedCount === 1 ? '' : 's'} with ${escapeHtml(p.displayName)}.</p>` : ''}
+      <div class="rooms-chips">
+        ${(rooms.servers || []).map((s) => `
+          <a class="room-chip${s.shared ? ' shared' : ''}" href="/s/${escapeHtml(s.id)}">
+            ${s.iconUrl
+              ? `<img src="${escapeHtml(s.iconUrl)}" alt="" onerror="this.style.display='none'"/>`
+              : `<span class="room-fallback">${escapeHtml((s.name || '?').charAt(0))}</span>`}
+            <b>${escapeHtml(s.name)}</b>
+            <span>${s.people} on Cordfol</span>
+          </a>
+        `).join('')}
+      </div>
+      ${rooms.faces?.length ? `
+        <div class="rooms-faces">
+          ${rooms.faces.map((f) => `
+            <a href="/${escapeHtml(f.slug)}" title="${escapeHtml(f.name)}">
+              <img src="${escapeHtml(f.avatarUrl || 'https://cdn.discordapp.com/embed/avatars/0.png')}" alt="${escapeHtml(f.name)}" onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'"/>
+            </a>
+          `).join('')}
+          <em>Also verified in these rooms</em>
+        </div>
+      ` : ''}
+    </div>
+  ` : '';
+
   const guestbookShellHtml = (disp.showGuestbook !== false) ? `
     <div class="divider"></div>
     <div class="roles-title">Guestbook</div>
@@ -3288,6 +3373,7 @@ async function renderProfile() {
       <div id="spotifySlot"></div>
       ${customLinksHtml}
       ${serverCardHtml}
+      ${roomsHtml}
       ${rolesHtml}
       ${guestbookShellHtml}
   ` : `
@@ -3313,6 +3399,7 @@ async function renderProfile() {
       ${hasMusic ? '<div id="musicSlot"></div>' : ''}
       <div id="spotifySlot"></div>
       ${serverCardHtml}
+      ${roomsHtml}
       ${customLinksHtml}
       ${summaryHtml}
       ${rolesHtml}

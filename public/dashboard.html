@@ -685,6 +685,7 @@ textarea.field-input{height:80px;padding:10px 12px;resize:none;line-height:1.6;}
               <div class="fx-card active" id="disp-showSpotifyWidget" onclick="toggleDisplayOpt('showSpotifyWidget')"><div><div class="fx-label">Spotify widget</div><div class="fx-sub">Now playing on profile</div></div><div class="toggle on" id="disp-toggle-showSpotifyWidget"></div></div>
               <div class="fx-card active" id="disp-showGuestbook" onclick="toggleDisplayOpt('showGuestbook')"><div><div class="fx-label">Guestbook</div><div class="fx-sub">Visitors sign your profile</div></div><div class="toggle on" id="disp-toggle-showGuestbook"></div></div>
               <div class="fx-card active" id="disp-showServerCard" onclick="toggleDisplayOpt('showServerCard')"><div><div class="fx-label">Server card</div><div class="fx-sub">Featured Discord server</div></div><div class="toggle on" id="disp-toggle-showServerCard"></div></div>
+              <div class="fx-card active" id="disp-showRooms" onclick="toggleDisplayOpt('showRooms')"><div><div class="fx-label">Verified rooms</div><div class="fx-sub">Servers you share, plus people in them</div></div><div class="toggle on" id="disp-toggle-showRooms"></div></div>
               <div class="fx-card" id="disp-hideBrand" onclick="toggleProDisplay('hideBrand')"><div><div class="fx-label">Hide Cordfol mark</div><div class="fx-sub">Pro — drop the footer watermark</div></div><div class="toggle" id="disp-toggle-hideBrand"></div></div>
             </div>
           </div>
@@ -1359,7 +1360,7 @@ let activeThemePreset=null;
 const DEFAULT_DISPLAY_OPTS={
   showBadges:true,showVerifiedBadge:true,showHandle:true,showPresence:true,showBio:true,
   showCustomLinks:true,showViews:true,showMemberSince:true,showLocalTime:true,showRoleStats:true,
-  showRoles:true,showSocials:true,showSpotifyWidget:true,showGuestbook:true,showServerCard:true,
+  showRoles:true,showSocials:true,showSpotifyWidget:true,showGuestbook:true,showServerCard:true,showRooms:true,
   spotlightLink:false,aiDesigned:false,hideBrand:false,
 };
 let displayOpts={...DEFAULT_DISPLAY_OPTS};
