@@ -24,7 +24,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Outfit:wght@400;500;600;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet"/>
-<link rel="stylesheet" href="/brand.css"/>
+<link rel="stylesheet" href="/brand.css?v=navchip"/>
 <style>
 .hero{
   position:relative;z-index:1;min-height:calc(100vh - 110px);
@@ -314,6 +314,39 @@
 .chat-input:focus{border-color:rgba(196,107,255,0.4);}
 .chat-send{background:var(--ink);color:#050505;border:none;border-radius:10px;padding:0 14px;font-weight:700;font-size:11.5px;letter-spacing:0.06em;text-transform:uppercase;cursor:pointer;}
 
+.nav-account{position:relative;flex-shrink:0;margin-left:auto;}
+.nav-account.is-on #navSignIn,
+#navSignIn[hidden]{display:none!important;}
+.nav-account:not(.is-on) #navUser,
+#navUser[hidden]{display:none!important;}
+.nav-user-btn{
+  display:inline-flex!important;align-items:center;gap:8px;
+  padding:5px 12px 5px 5px;border:none;border-radius:999px;
+  background:#fff;color:#050505;cursor:pointer;
+  font:500 13px var(--font-body);
+}
+.nav-user-ava{
+  width:28px;height:28px;border-radius:50%;background:#111;color:#fff;
+  display:inline-flex!important;align-items:center;justify-content:center;
+  font-size:12px;font-weight:700;flex-shrink:0;line-height:1;
+}
+.nav-user-caret{font-size:10px;color:#777;}
+.nav-user-menu{
+  display:none;flex-direction:column;gap:2px;
+  position:absolute;top:calc(100% + 8px);right:0;width:220px;padding:6px;
+  border-radius:14px;background:#0c0c0c;border:1px solid var(--line);
+  box-shadow:0 16px 40px rgba(0,0,0,0.45);z-index:200;
+}
+.nav-account.open .nav-user-menu{display:flex;}
+.nav-user-menu a,.nav-user-menu button{
+  display:block;width:100%;box-sizing:border-box;text-align:left;
+  padding:10px 12px;border:none;border-radius:10px;background:transparent;
+  color:#f5f5f5;text-decoration:none;font:500 13px var(--font-body);
+  letter-spacing:0;text-transform:none;cursor:pointer;
+}
+.nav-user-menu a:hover,.nav-user-menu button:hover{background:rgba(255,255,255,0.06);}
+.nav-user-menu button.danger{color:#ff6b6b;}
+
 @media (max-width:900px){
   .hero{grid-template-columns:1fr;padding-top:40px;min-height:auto;gap:36px;}
   .hero-title{max-width:none;}
@@ -357,17 +390,17 @@
     <a href="/chat">Chat</a>
   </div>
   <div class="nav-account" id="navAccount">
-    <a href="https://api.cordfol.org/api/auth/discord" class="brand-signin" data-oauth-link id="navSignIn">Sign in</a>
+    <a href="https://api.cordfol.org/api/auth/discord" class="brand-signin" data-oauth-link id="navSignIn" style="display:inline-flex">Sign in</a>
     <div class="nav-user" id="navUser" hidden>
-      <button type="button" class="nav-user-btn" id="navUserBtn" aria-haspopup="true" aria-expanded="false">
-        <span class="nav-user-ava" id="navUserAva">?</span>
+      <button type="button" class="nav-user-btn" id="navUserBtn" aria-haspopup="true" aria-expanded="false" style="display:inline-flex;align-items:center;gap:8px;padding:5px 12px 5px 5px;border:none;border-radius:999px;background:#fff;color:#050505;cursor:pointer;font:500 13px Outfit,sans-serif">
+        <span class="nav-user-ava" id="navUserAva" style="width:28px;height:28px;border-radius:50%;background:#111;color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;line-height:1">?</span>
         <span class="nav-user-name" id="navUserName">You</span>
         <span class="nav-user-caret" aria-hidden="true">▾</span>
       </button>
-      <div class="nav-user-menu" id="navUserMenu" hidden>
-        <a href="/dashboard">Dashboard</a>
-        <a href="#" id="navUserProfile">My page</a>
-        <button type="button" class="danger" id="navUserOut">Sign out</button>
+      <div class="nav-user-menu" id="navUserMenu" style="display:none;flex-direction:column;position:absolute;top:calc(100% + 8px);right:0;width:220px;padding:6px;border-radius:14px;background:#0c0c0c;border:1px solid rgba(255,255,255,0.1);z-index:200">
+        <a href="/dashboard" style="display:block;padding:10px 12px;color:#f5f5f5;text-decoration:none;font:500 13px Outfit,sans-serif">Dashboard</a>
+        <a href="#" id="navUserProfile" style="display:block;padding:10px 12px;color:#f5f5f5;text-decoration:none;font:500 13px Outfit,sans-serif">My page</a>
+        <button type="button" class="danger" id="navUserOut" style="display:block;width:100%;text-align:left;padding:10px 12px;border:none;border-radius:10px;background:transparent;color:#ff6b6b;cursor:pointer;font:500 13px Outfit,sans-serif">Sign out</button>
       </div>
     </div>
   </div>
@@ -596,15 +629,20 @@ async function paintHomeAccount(){
     if (res.ok && data.authenticated && data.user) user = data.user;
   } catch {}
   if (!user) {
+    account?.classList.remove('is-on','open');
     signIn.hidden = false;
+    signIn.style.display = 'inline-flex';
     userWrap.hidden = true;
-    account?.classList.remove('open');
+    userWrap.style.display = 'none';
     const menu = document.getElementById('navUserMenu');
-    if (menu) menu.hidden = true;
+    if (menu) menu.style.display = 'none';
     return;
   }
+  account?.classList.add('is-on');
   signIn.hidden = true;
+  signIn.style.display = 'none';
   userWrap.hidden = false;
+  userWrap.style.display = '';
   const name = user.displayName || user.username || 'You';
   const short = String(name).split(/[\s.]+/)[0] || 'You';
   document.getElementById('navUserName').textContent = short;
@@ -613,21 +651,21 @@ async function paintHomeAccount(){
   const profile = document.getElementById('navUserProfile');
   if (profile) profile.href = user.slug ? `/${encodeURIComponent(user.slug)}` : '/dashboard';
 }
+function setHomeMenuOpen(open){
+  const account = document.getElementById('navAccount');
+  const menu = document.getElementById('navUserMenu');
+  const btn = document.getElementById('navUserBtn');
+  account?.classList.toggle('open', open);
+  if (menu) menu.style.display = open ? 'flex' : 'none';
+  btn?.setAttribute('aria-expanded', open ? 'true' : 'false');
+}
 document.getElementById('navUserBtn')?.addEventListener('click', (e) => {
   e.stopPropagation();
   const account = document.getElementById('navAccount');
-  const menu = document.getElementById('navUserMenu');
-  const open = account.classList.toggle('open');
-  if (menu) menu.hidden = !open;
-  e.currentTarget.setAttribute('aria-expanded', open ? 'true' : 'false');
+  setHomeMenuOpen(!account.classList.contains('open'));
 });
 document.getElementById('navUserMenu')?.addEventListener('click', (e) => e.stopPropagation());
-document.addEventListener('click', () => {
-  document.getElementById('navAccount')?.classList.remove('open');
-  const menu = document.getElementById('navUserMenu');
-  if (menu) menu.hidden = true;
-  document.getElementById('navUserBtn')?.setAttribute('aria-expanded', 'false');
-});
+document.addEventListener('click', () => setHomeMenuOpen(false));
 document.getElementById('navUserOut')?.addEventListener('click', () => {
   try { sessionStorage.removeItem(AUTH_SID_KEY); } catch {}
   fetch(`${API_BASE}/auth/discord/logout`, { method: 'POST', credentials: 'include' })

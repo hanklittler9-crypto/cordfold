@@ -122,7 +122,7 @@ app.use(express.static(path.join(__dirname, 'public'), {
   setHeaders(res, filePath) {
     if (/\.(png|jpe?g|gif|webp|svg|woff2?)$/i.test(filePath)) {
       res.setHeader('Cache-Control', 'public, max-age=86400');
-    } else if (/\.html$/i.test(filePath)) {
+    } else if (/\.(html|css|js)$/i.test(filePath)) {
       res.setHeader('Cache-Control', 'no-cache');
     }
   },
