@@ -168,20 +168,25 @@ body.brand-body::before {
   margin-left: auto;
 }
 
-.nav-user-btn {
+.brand-nav .nav-user-btn {
   display: inline-flex;
   align-items: center;
   gap: 8px;
   padding: 5px 12px 5px 5px;
-  border: none;
+  border: 1px solid transparent;
   border-radius: 999px;
   background: #fff;
   color: #050505;
   cursor: pointer;
-  font: 600 13px var(--font-body);
+  font: 500 13px var(--font-body);
 }
 
-.nav-user-ava {
+.brand-nav .nav-user-btn:hover,
+.nav-account.open .nav-user-btn {
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+.brand-nav .nav-user-ava {
   width: 28px;
   height: 28px;
   border-radius: 50%;
@@ -194,41 +199,58 @@ body.brand-body::before {
   font-weight: 700;
   overflow: hidden;
   flex-shrink: 0;
+  line-height: 1;
 }
 
-.nav-user-ava img {
+.brand-nav .nav-user-ava img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-.nav-user-caret {
+.brand-nav .nav-user-caret {
   font-size: 10px;
-  color: #666;
+  color: #777;
+  transition: transform 0.15s;
 }
 
-.nav-user-menu {
-  display: none;
+.nav-account.open .nav-user-caret {
+  transform: rotate(180deg);
+}
+
+.brand-nav .nav-user-menu {
   position: absolute;
   top: calc(100% + 8px);
   right: 0;
-  min-width: 180px;
+  width: 220px;
   padding: 6px;
   border-radius: 14px;
   background: rgba(12, 12, 12, 0.96);
   border: 1px solid var(--line);
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);
-  z-index: 120;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(-6px);
 }
 
 .nav-account.open .nav-user-menu {
-  display: block;
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: none;
 }
 
-.nav-user-menu a,
-.nav-user-menu button {
-  display: block;
+.brand-nav .nav-user-menu a,
+.brand-nav .nav-user-menu button {
+  display: flex;
+  align-items: center;
   width: 100%;
+  box-sizing: border-box;
   text-align: left;
   padding: 10px 12px;
   border: none;
@@ -237,15 +259,17 @@ body.brand-body::before {
   color: var(--ink);
   text-decoration: none;
   font: 500 13px var(--font-body);
+  letter-spacing: 0;
+  text-transform: none;
   cursor: pointer;
 }
 
-.nav-user-menu a:hover,
-.nav-user-menu button:hover {
+.brand-nav .nav-user-menu a:hover,
+.brand-nav .nav-user-menu button:hover {
   background: rgba(255, 255, 255, 0.06);
 }
 
-.nav-user-menu button.danger {
+.brand-nav .nav-user-menu button.danger {
   color: #ff6b6b;
 }
 

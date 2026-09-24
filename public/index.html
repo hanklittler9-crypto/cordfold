@@ -364,9 +364,9 @@
         <span class="nav-user-name" id="navUserName">You</span>
         <span class="nav-user-caret" aria-hidden="true">▾</span>
       </button>
-      <div class="nav-user-menu" id="navUserMenu">
+      <div class="nav-user-menu" id="navUserMenu" hidden>
         <a href="/dashboard">Dashboard</a>
-        <a href="/dashboard" id="navUserProfile">My page</a>
+        <a href="#" id="navUserProfile">My page</a>
         <button type="button" class="danger" id="navUserOut">Sign out</button>
       </div>
     </div>
@@ -599,6 +599,8 @@ async function paintHomeAccount(){
     signIn.hidden = false;
     userWrap.hidden = true;
     account?.classList.remove('open');
+    const menu = document.getElementById('navUserMenu');
+    if (menu) menu.hidden = true;
     return;
   }
   signIn.hidden = true;
@@ -607,19 +609,23 @@ async function paintHomeAccount(){
   const short = String(name).split(/[\s.]+/)[0] || 'You';
   document.getElementById('navUserName').textContent = short;
   const ava = document.getElementById('navUserAva');
-  if (user.avatarUrl) ava.innerHTML = `<img src="${escHome(user.avatarUrl)}" alt=""/>`;
-  else ava.textContent = short[0] || '?';
+  ava.textContent = (short[0] || '?').toUpperCase();
   const profile = document.getElementById('navUserProfile');
   if (profile) profile.href = user.slug ? `/${encodeURIComponent(user.slug)}` : '/dashboard';
 }
 document.getElementById('navUserBtn')?.addEventListener('click', (e) => {
   e.stopPropagation();
   const account = document.getElementById('navAccount');
+  const menu = document.getElementById('navUserMenu');
   const open = account.classList.toggle('open');
+  if (menu) menu.hidden = !open;
   e.currentTarget.setAttribute('aria-expanded', open ? 'true' : 'false');
 });
+document.getElementById('navUserMenu')?.addEventListener('click', (e) => e.stopPropagation());
 document.addEventListener('click', () => {
   document.getElementById('navAccount')?.classList.remove('open');
+  const menu = document.getElementById('navUserMenu');
+  if (menu) menu.hidden = true;
   document.getElementById('navUserBtn')?.setAttribute('aria-expanded', 'false');
 });
 document.getElementById('navUserOut')?.addEventListener('click', () => {
