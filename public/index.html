@@ -356,7 +356,21 @@
     <a href="/roles">Roles</a>
     <a href="/chat">Chat</a>
   </div>
-  <a href="https://api.cordfol.org/api/auth/discord" class="brand-signin" data-oauth-link>Sign in</a>
+  <div class="nav-account" id="navAccount">
+    <a href="https://api.cordfol.org/api/auth/discord" class="brand-signin" data-oauth-link id="navSignIn">Sign in</a>
+    <div class="nav-user" id="navUser" hidden>
+      <button type="button" class="nav-user-btn" id="navUserBtn" aria-haspopup="true" aria-expanded="false">
+        <span class="nav-user-ava" id="navUserAva">?</span>
+        <span class="nav-user-name" id="navUserName">You</span>
+        <span class="nav-user-caret" aria-hidden="true">▾</span>
+      </button>
+      <div class="nav-user-menu" id="navUserMenu">
+        <a href="/dashboard">Dashboard</a>
+        <a href="/dashboard" id="navUserProfile">My page</a>
+        <button type="button" class="danger" id="navUserOut">Sign out</button>
+      </div>
+    </div>
+  </div>
 </nav>
 
 <section class="hero">
@@ -554,6 +568,66 @@ const FEATURED_SLUG = 'fkastro';
 const CLAIM_COOKIE_NAME = 'cordfol_claim_slug';
 document.querySelectorAll('[data-oauth-link]').forEach(link => { link.href = OAUTH_LOGIN_URL; });
 document.getElementById('footerYear').textContent = new Date().getFullYear();
+
+const AUTH_SID_KEY = 'cordfol_auth_sid';
+function restoreAuthSid(){
+  try { return sessionStorage.getItem(AUTH_SID_KEY) || ''; } catch { return ''; }
+}
+(function persistHomeSid(){
+  const sid = new URLSearchParams(location.search).get('sid');
+  if (!sid) return;
+  try { sessionStorage.setItem(AUTH_SID_KEY, sid); } catch {}
+  history.replaceState({}, '', '/');
+})();
+function escHome(s){
+  return String(s ?? '').replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+async function paintHomeAccount(){
+  const signIn = document.getElementById('navSignIn');
+  const userWrap = document.getElementById('navUser');
+  const account = document.getElementById('navAccount');
+  if (!signIn || !userWrap) return;
+  let user = null;
+  const sid = restoreAuthSid();
+  try {
+    const url = sid ? `${API_BASE}/auth/token?sid=${encodeURIComponent(sid)}` : `${API_BASE}/auth/me`;
+    const res = await fetch(url, { credentials: 'include', cache: 'no-store' });
+    const data = await res.json().catch(() => ({}));
+    if (res.ok && data.authenticated && data.user) user = data.user;
+  } catch {}
+  if (!user) {
+    signIn.hidden = false;
+    userWrap.hidden = true;
+    account?.classList.remove('open');
+    return;
+  }
+  signIn.hidden = true;
+  userWrap.hidden = false;
+  const name = user.displayName || user.username || 'You';
+  const short = String(name).split(/[\s.]+/)[0] || 'You';
+  document.getElementById('navUserName').textContent = short;
+  const ava = document.getElementById('navUserAva');
+  if (user.avatarUrl) ava.innerHTML = `<img src="${escHome(user.avatarUrl)}" alt=""/>`;
+  else ava.textContent = short[0] || '?';
+  const profile = document.getElementById('navUserProfile');
+  if (profile) profile.href = user.slug ? `/${encodeURIComponent(user.slug)}` : '/dashboard';
+}
+document.getElementById('navUserBtn')?.addEventListener('click', (e) => {
+  e.stopPropagation();
+  const account = document.getElementById('navAccount');
+  const open = account.classList.toggle('open');
+  e.currentTarget.setAttribute('aria-expanded', open ? 'true' : 'false');
+});
+document.addEventListener('click', () => {
+  document.getElementById('navAccount')?.classList.remove('open');
+  document.getElementById('navUserBtn')?.setAttribute('aria-expanded', 'false');
+});
+document.getElementById('navUserOut')?.addEventListener('click', () => {
+  try { sessionStorage.removeItem(AUTH_SID_KEY); } catch {}
+  fetch(`${API_BASE}/auth/discord/logout`, { method: 'POST', credentials: 'include' })
+    .finally(() => { window.location.href = '/'; });
+});
+paintHomeAccount();
 
 const SOCIAL_ICONS = {
   twitter: '<svg viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.727-8.835L1.254 2.25H8.08l4.253 5.622L18.244 2.25zm-1.161 17.52h1.833L7.084 4.126H5.117L17.083 19.77z"/></svg>',
